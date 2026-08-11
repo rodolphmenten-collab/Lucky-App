@@ -1,7 +1,10 @@
 import { redirect } from 'next/navigation';
+import { revalidatePath } from 'next/cache';
 import Link from 'next/link';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { isPlatformAdminEmail } from '@/lib/admin';
+import { DEFAULT_CHECKIN_DURATION_MINUTES } from '@/lib/presence';
+import type { VenueType } from '@/lib/types';
 
 export default async function AdminPage() {
   const supabase = createClient();
@@ -99,7 +102,7 @@ export default async function AdminPage() {
         <h2 className="mt-12 font-display text-xl italic text-bone">New venue requests</h2>
         <div className="mt-4 divide-y hairline rounded-2xl border hairline">
           {(leads ?? []).map((l: any) => (
-            <form key={l.id} action={markLeadHandled} className="flex items-center justify-between gap-4 px-5 py-4">
+            <form key={l.id} action={allowLeadAccess} className="flex items-center justify-between gap-4 px-5 py-4">
               <input type="hidden" name="leadId" value={l.id} />
               <div>
                 <p className="text-sm text-bone">
@@ -115,9 +118,9 @@ export default async function AdminPage() {
               </div>
               <button
                 type="submit"
-                className="shrink-0 rounded-full border border-brass/50 px-3 py-1.5 text-[11px] text-brass"
+                className="shrink-0 rounded-full bg-bone px-4 py-2 text-[11px] font-medium text-ink hover:bg-brass-bright"
               >
-                Mark handled
+                Allow access
               </button>
             </form>
           ))}
@@ -177,6 +180,7 @@ async function reviewReport(formData: FormData) {
   const id = formData.get('reportId') as string;
   const service = createServiceClient();
   await service.from('reports').update({ status: 'reviewed' }).eq('id', id);
+  revalidatePath('/admin');
 }
 
 async function dismissReport(formData: FormData) {
@@ -184,6 +188,7 @@ async function dismissReport(formData: FormData) {
   const id = formData.get('reportId') as string;
   const service = createServiceClient();
   await service.from('reports').update({ status: 'dismissed' }).eq('id', id);
+  revalidatePath('/admin');
 }
 
 async function markLeadHandled(formData: FormData) {
@@ -191,4 +196,93 @@ async function markLeadHandled(formData: FormData) {
   const id = formData.get('leadId') as string;
   const service = createServiceClient();
   await service.from('venue_leads').update({ status: 'handled' }).eq('id', id);
+  revalidatePath('/admin');
+}
+
+function slugify(name: string): string {
+  return name
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '')
+    .slice(0, 60);
+}
+
+const VENUE_TYPE_MAP: Record<string, VenueType> = {
+  hotel: 'hotel',
+  restaurant: 'restaurant',
+  bar: 'bar',
+  rooftop: 'rooftop',
+  'beach club': 'beach_club',
+  coworking: 'coworking',
+  event: 'event',
+};
+
+async function allowLeadAccess(formData: FormData) {
+  'use server';
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user || !isPlatformAdminEmail(user.email)) return;
+
+  const leadId = formData.get('leadId') as string;
+  const service = createServiceClient();
+
+  const { data: lead } = await service.from('venue_leads').select('*').eq('id', leadId).maybeSingle();
+  if (!lead) return;
+
+  const venueType: VenueType = VENUE_TYPE_MAP[(lead.venue_type ?? '').toLowerCase()] ?? 'bar';
+  const baseSlug = slugify(lead.venue_name) || 'venue';
+  let slug = baseSlug;
+  let suffix = 1;
+  // Ensure the slug is unique.
+  while (true) {
+    const { data: existing } = await service.from('venues').select('id').eq('slug', slug).maybeSingle();
+    if (!existing) break;
+    slug = `${baseSlug}-${++suffix}`;
+  }
+
+  const { data: venue, error: venueError } = await service
+    .from('venues')
+    .insert({
+      slug,
+      name: lead.venue_name,
+      city: lead.venue_city || 'Unknown',
+      type: venueType,
+      // Placeholder coordinates — the venue owner or an admin must set the real
+      // location from /admin/venues/[id] before guests can check in on-site.
+      latitude: 0,
+      longitude: 0,
+      verification_radius_m: 75,
+      checkin_duration_minutes: DEFAULT_CHECKIN_DURATION_MINUTES[venueType],
+      plan: (lead.plan_interest as any) || 'basique',
+    })
+    .select('id')
+    .single();
+
+  if (venueError || !venue) return;
+
+  // Create (or reuse) the contact's account and email them an invite/sign-in link.
+  const { data: invited, error: inviteError } = await service.auth.admin.inviteUserByEmail(lead.contact_email, {
+    redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard`,
+  });
+
+  let userId = invited?.user?.id;
+
+  if (inviteError) {
+    // Most likely cause: this email already has an account (e.g. they tried the
+    // consumer app first). Fall back to looking them up instead of failing silently.
+    const { data: list } = await service.auth.admin.listUsers();
+    const existingUser = list?.users?.find((u: any) => u.email?.toLowerCase() === lead.contact_email.toLowerCase());
+    userId = existingUser?.id;
+  }
+
+  if (userId) {
+    await service.from('venue_admins').insert({ venue_id: venue.id, user_id: userId, role: 'owner' });
+  }
+
+  await service.from('venue_leads').update({ status: 'handled' }).eq('id', leadId);
+  revalidatePath('/admin');
 }

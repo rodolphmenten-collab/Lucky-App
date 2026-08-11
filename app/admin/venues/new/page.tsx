@@ -81,12 +81,12 @@ export default async function NewVenuePage() {
           <label className="mb-1 block text-xs text-bone-faint">Plan</label>
           <select
             name="plan"
-            defaultValue="starter"
+            defaultValue="basique"
             className="w-full rounded-full border hairline bg-ink-900 px-5 py-3 text-sm text-bone"
           >
-            <option value="starter">Starter</option>
-            <option value="premium">Premium</option>
-            <option value="enterprise">Enterprise</option>
+            <option value="basique">Basique — 99€</option>
+            <option value="essentiel">Essentiel — 149€</option>
+            <option value="premium">Premium — 299€</option>
           </select>
         </div>
         <button

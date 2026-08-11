@@ -128,9 +128,9 @@ export default async function EditVenuePage({ params }: { params: { id: string }
             defaultValue={venue.plan}
             className="w-full rounded-full border hairline bg-ink-900 px-5 py-3 text-sm text-bone"
           >
-            <option value="starter">Starter</option>
-            <option value="premium">Premium</option>
-            <option value="enterprise">Enterprise</option>
+            <option value="basique">Basique — 99€</option>
+            <option value="essentiel">Essentiel — 149€</option>
+            <option value="premium">Premium — 299€</option>
           </select>
         </div>
         <button
