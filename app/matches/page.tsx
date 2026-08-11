@@ -15,6 +15,15 @@ export default async function MatchesPage() {
     .or(`user_a.eq.${user.id},user_b.eq.${user.id}`)
     .order('created_at', { ascending: false });
 
+  // If the person is currently checked in somewhere, offer a quick way back to it.
+  const { data: activeCheckIn } = await supabase
+    .from('check_ins')
+    .select('venues(name, slug)')
+    .eq('user_id', user.id)
+    .in('presence_status', ['verified_now', 'recently_verified'])
+    .maybeSingle();
+  const activeVenue = (activeCheckIn as any)?.venues;
+
   const otherIds = (matches ?? []).map((m: any) => (m.user_a === user.id ? m.user_b : m.user_a));
   const { data: profiles } = otherIds.length
     ? await supabase.from('profiles').select('id, first_name, photo_url').in('id', otherIds)
@@ -26,6 +35,15 @@ export default async function MatchesPage() {
     <main className="mx-auto min-h-screen max-w-lg px-6 py-16">
       <p className="font-mono text-xs uppercase tracking-[0.3em] text-brass">Connections</p>
       <h1 className="mt-4 font-display text-3xl italic text-bone">Your matches</h1>
+
+      {activeVenue && (
+        <Link
+          href={`/venue/${activeVenue.slug}`}
+          className="mt-6 flex items-center justify-center gap-2 rounded-full border border-white/20 bg-ink-800 py-2.5 text-xs tracking-wide text-bone-dim transition-colors hover:border-brass hover:text-brass"
+        >
+          &larr; Back to {activeVenue.name}
+        </Link>
+      )}
 
       {!matches || matches.length === 0 ? (
         <p className="mt-10 text-sm text-bone-faint">

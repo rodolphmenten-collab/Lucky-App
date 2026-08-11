@@ -112,12 +112,20 @@ export function ProfileEditor({
       </div>
 
       {currentVenue && (
-        <button
-          onClick={leaveVenue}
-          className="mt-4 w-full rounded-full border hairline py-3 text-xs tracking-wide text-bone-dim hover:border-white/30"
-        >
-          Leave {currentVenue.name}
-        </button>
+        <div className="mt-4 flex gap-3">
+          <Link
+            href={`/venue/${currentVenue.slug}`}
+            className="flex-1 rounded-full border border-white/20 bg-ink-800 py-3 text-center text-xs tracking-wide text-bone-dim hover:border-brass hover:text-brass"
+          >
+            &larr; Back to {currentVenue.name}
+          </Link>
+          <button
+            onClick={leaveVenue}
+            className="flex-1 rounded-full border hairline py-3 text-xs tracking-wide text-bone-dim hover:border-white/30"
+          >
+            Leave venue
+          </button>
+        </div>
       )}
 
       <div className="mt-10 flex justify-between text-xs text-bone-faint">
