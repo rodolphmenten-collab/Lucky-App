@@ -15,7 +15,7 @@ export default async function AdminPage({
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) redirect('/admin-login');
+  if (!user) redirect('/login?next=/admin');
   if (!(await isPlatformAdminEmail(user.email))) {
     return (
       <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 text-center">

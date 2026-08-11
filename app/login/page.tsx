@@ -63,12 +63,12 @@ function LoginForm() {
     <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center px-6">
       <p className="font-mono text-xs uppercase tracking-[0.3em] text-brass">Sign in</p>
       <h1 className="mt-4 font-display text-3xl italic text-bone">Enter the room.</h1>
-      <p className="mt-3 text-sm text-bone-dim">We&rsquo;ll email you a 6-digit code.</p>
+      <p className="mt-3 text-sm text-bone-dim">We&rsquo;ll email you a sign-in code.</p>
 
       {codeSent ? (
         <form onSubmit={handleVerifyCode} className="mt-8 space-y-4">
           <p className="rounded-2xl border hairline bg-ink-800 p-5 text-sm text-bone-dim">
-            Check <span className="text-bone">{email}</span> and enter the 6-digit code below.
+            Check <span className="text-bone">{email}</span> and enter the code below.
           </p>
           <input
             type="text"
