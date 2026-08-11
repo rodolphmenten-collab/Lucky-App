@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef } from 'react';
+import Link from 'next/link';
 import { QRCodeSVG } from 'qrcode.react';
 
 interface Stats {
@@ -69,6 +70,12 @@ export function DashboardView({
             <p className="mt-1 text-xs text-bone-faint">
               {venue.city} · {venue.plan} plan
             </p>
+            <Link
+              href={`/dashboard/edit?venue=${venue.id}`}
+              className="mt-3 inline-block text-xs text-brass underline"
+            >
+              Edit venue details
+            </Link>
           </div>
           {venues.length > 1 && (
             <p className="text-xs text-bone-faint">{venues.length} venues linked to this account</p>
