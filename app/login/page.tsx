@@ -28,17 +28,15 @@ function LoginForm() {
     e.preventDefault();
     setStatus('sending');
     setErrorMsg('');
-    const supabase = createClient();
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
-        shouldCreateUser: true,
-      },
+    const res = await fetch('/api/send-code', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
     });
-    if (error) {
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
       setStatus('error');
-      setErrorMsg(error.message);
+      setErrorMsg(data.error ?? 'Something went wrong.');
       return;
     }
     setStatus('sent');
@@ -65,15 +63,12 @@ function LoginForm() {
     <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center px-6">
       <p className="font-mono text-xs uppercase tracking-[0.3em] text-brass">Sign in</p>
       <h1 className="mt-4 font-display text-3xl italic text-bone">Enter the room.</h1>
-      <p className="mt-3 text-sm text-bone-dim">
-        We&rsquo;ll email you a 6-digit code (and a link, if you prefer that instead).
-      </p>
+      <p className="mt-3 text-sm text-bone-dim">We&rsquo;ll email you a 6-digit code.</p>
 
       {codeSent ? (
         <form onSubmit={handleVerifyCode} className="mt-8 space-y-4">
           <p className="rounded-2xl border hairline bg-ink-800 p-5 text-sm text-bone-dim">
-            Check <span className="text-bone">{email}</span> — enter the 6-digit code below,
-            or tap the link in the email.
+            Check <span className="text-bone">{email}</span> and enter the 6-digit code below.
           </p>
           <input
             type="text"
