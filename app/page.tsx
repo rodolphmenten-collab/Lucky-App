@@ -1,25 +1,13 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { VenueLeadForm } from '@/components/VenueLeadForm';
+import { LanguageToggle } from '@/components/LanguageToggle';
+import { landingCopy, type Lang } from '@/lib/i18n/landing';
 
 const VENUE_TYPES = [
   'Hotels', 'Restaurants', 'Bars', 'Rooftops', 'Beach Clubs', 'Coworkings', 'Events',
-];
-
-const HOW_IT_WORKS = [
-  {
-    mark: 'I.',
-    title: 'Your QR, everywhere',
-    body: 'One code at reception, the bar, or every table. Guests scan it — no app to download, no friction.',
-  },
-  {
-    mark: 'II.',
-    title: 'Verified presence',
-    body: 'Not a check-in from six hours ago. Location and activity signals confirm who is actually still on-site.',
-  },
-  {
-    mark: 'III.',
-    title: 'Your venue, alive',
-    body: 'Guests connect with each other while they are with you — Dating, Business, or Social — not after they have left.',
-  },
 ];
 
 const PLANS = [
@@ -68,24 +56,46 @@ const PLANS = [
 ];
 
 export default function LandingPage() {
+  const [lang, setLang] = useState<Lang>('en');
+
+  useEffect(() => {
+    const saved = window.localStorage.getItem('here-lang') as Lang | null;
+    if (saved === 'en' || saved === 'fr') setLang(saved);
+  }, []);
+
+  function changeLang(next: Lang) {
+    setLang(next);
+    window.localStorage.setItem('here-lang', next);
+  }
+
+  const t = landingCopy[lang];
+
   return (
     <main className="relative min-h-screen overflow-hidden">
+      {/* Top nav */}
+      <div className="relative z-10 mx-auto flex max-w-5xl items-center justify-end gap-4 px-6 pt-8">
+        <LanguageToggle lang={lang} onChange={changeLang} />
+        <Link href="/login?next=/dashboard" className="text-xs tracking-wide text-bone-dim hover:text-brass">
+          {t.signIn}
+        </Link>
+      </div>
+
       {/* Hero */}
-      <section className="relative mx-auto flex min-h-[92vh] max-w-5xl flex-col justify-center px-6 pt-24">
+      <section className="relative mx-auto flex min-h-[85vh] max-w-5xl flex-col justify-center px-6">
         <div className="absolute inset-0 -z-10">
           <div className="absolute left-1/2 top-0 h-[560px] w-[560px] -translate-x-1/2 rounded-full bg-brass/10 blur-[140px]" />
         </div>
 
         <p className="animate-fade_up font-mono text-xs uppercase tracking-[0.3em] text-brass">
-          For hotels, restaurants, bars & beach clubs
+          {t.eyebrow}
         </p>
 
         <h1 className="mt-6 max-w-3xl animate-fade_up font-display text-5xl italic leading-[1.05] text-bone text-balance sm:text-7xl">
-          Turn your venue into the room everyone wants to be in.
+          {t.heroTitle}
         </h1>
 
         <p className="mt-6 max-w-lg animate-fade_up text-lg text-bone-dim text-balance">
-          A QR code at your door. Verified guests connecting with each other — Dating, Business, Social — while they&rsquo;re with you.
+          {t.heroSubtitle}
         </p>
 
         <div className="mt-10 flex animate-fade_up flex-wrap items-center gap-4">
@@ -93,26 +103,26 @@ export default function LandingPage() {
             href="#request-access"
             className="inline-flex items-center justify-center gap-2 rounded-full bg-bone px-6 py-3 text-sm font-medium tracking-wide text-ink transition-colors duration-200 hover:bg-brass-bright"
           >
-            Get your venue set up
+            {t.ctaPrimary}
           </a>
           <a
             href="#pricing"
             className="inline-flex items-center justify-center gap-2 rounded-full border border-white/20 px-6 py-3 text-sm font-medium tracking-wide text-bone transition-colors duration-200 hover:border-brass"
           >
-            See pricing
+            {t.ctaSecondary}
           </a>
         </div>
 
         <p className="mt-20 max-w-md animate-fade_up font-display text-xl italic text-bone-dim/80 text-balance">
-          The people your guests want to meet might already be in the room.
+          {t.heroQuote}
         </p>
       </section>
 
       {/* How it works */}
       <section className="mx-auto max-w-5xl border-t hairline px-6 py-28">
-        <p className="font-mono text-xs uppercase tracking-[0.3em] text-brass">How it works</p>
+        <p className="font-mono text-xs uppercase tracking-[0.3em] text-brass">{t.howItWorksEyebrow}</p>
         <div className="mt-12 grid gap-12 sm:grid-cols-3 sm:gap-8">
-          {HOW_IT_WORKS.map((step) => (
+          {t.steps.map((step) => (
             <div key={step.mark}>
               <p className="font-display text-2xl italic text-brass">{step.mark}</p>
               <h3 className="mt-3 font-display text-2xl text-bone">{step.title}</h3>
@@ -126,15 +136,11 @@ export default function LandingPage() {
       <section className="mx-auto max-w-5xl border-t hairline px-6 py-28">
         <div className="grid gap-12 sm:grid-cols-2 sm:items-center">
           <div>
-            <p className="font-mono text-xs uppercase tracking-[0.3em] text-brass">What guests see</p>
+            <p className="font-mono text-xs uppercase tracking-[0.3em] text-brass">{t.previewEyebrow}</p>
             <h2 className="mt-4 font-display text-4xl italic leading-tight text-bone text-balance">
-              Not a check-in from six hours ago.
+              {t.previewTitle}
             </h2>
-            <p className="mt-5 max-w-md text-sm leading-relaxed text-bone-dim">
-              Every profile is confirmed present through location and activity
-              signals, re-verified as the evening goes on. When someone leaves,
-              they disappear from the room — no stale ghosts, no guessing.
-            </p>
+            <p className="mt-5 max-w-md text-sm leading-relaxed text-bone-dim">{t.previewBody}</p>
           </div>
           <div className="rounded-3xl border hairline bg-ink-800 p-8">
             <div className="flex items-center justify-between">
@@ -166,9 +172,9 @@ export default function LandingPage() {
 
       {/* Pricing */}
       <section id="pricing" className="mx-auto max-w-5xl border-t hairline px-6 py-28">
-        <p className="font-mono text-xs uppercase tracking-[0.3em] text-brass">Pricing</p>
+        <p className="font-mono text-xs uppercase tracking-[0.3em] text-brass">{t.pricingEyebrow}</p>
         <h2 className="mt-4 max-w-2xl font-display text-4xl italic leading-tight text-bone text-balance">
-          Simple plans, no setup fees.
+          {t.pricingTitle}
         </h2>
         <div className="mt-12 grid gap-6 sm:grid-cols-3">
           {PLANS.map((plan) => (
@@ -200,7 +206,7 @@ export default function LandingPage() {
                     : 'border hairline text-bone-dim hover:border-white/30'
                 }`}
               >
-                Choose {plan.name}
+                {t.choosePlan} {plan.name}
               </a>
             </div>
           ))}
@@ -210,9 +216,9 @@ export default function LandingPage() {
       {/* Venue types */}
       <section className="mx-auto max-w-5xl border-t hairline px-6 py-16">
         <div className="flex flex-wrap gap-2">
-          {VENUE_TYPES.map((t) => (
-            <span key={t} className="rounded-full border hairline px-4 py-2 text-xs text-bone-dim">
-              {t}
+          {VENUE_TYPES.map((tType) => (
+            <span key={tType} className="rounded-full border hairline px-4 py-2 text-xs text-bone-dim">
+              {tType}
             </span>
           ))}
         </div>
@@ -220,14 +226,11 @@ export default function LandingPage() {
 
       {/* Request access */}
       <section id="request-access" className="mx-auto max-w-2xl border-t hairline px-6 py-28">
-        <p className="font-mono text-xs uppercase tracking-[0.3em] text-brass">Get started</p>
+        <p className="font-mono text-xs uppercase tracking-[0.3em] text-brass">{t.requestEyebrow}</p>
         <h2 className="mt-4 font-display text-4xl italic leading-tight text-bone text-balance">
-          Let&rsquo;s set up your venue.
+          {t.requestTitle}
         </h2>
-        <p className="mt-4 text-sm leading-relaxed text-bone-dim">
-          Tell us about your venue and we&rsquo;ll set up your account, your QR code,
-          and your page — usually within a day.
-        </p>
+        <p className="mt-4 text-sm leading-relaxed text-bone-dim">{t.requestBody}</p>
         <div className="mt-10">
           <VenueLeadForm />
         </div>

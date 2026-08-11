@@ -1,10 +1,23 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/Button';
 
 export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginForm />
+    </Suspense>
+  );
+}
+
+function LoginForm() {
+  const searchParams = useSearchParams();
+  const next = searchParams.get('next') || '/onboarding';
+  const isVenueLogin = next.startsWith('/dashboard');
+
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
 
@@ -14,15 +27,19 @@ export default function LoginPage() {
     const supabase = createClient();
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+      options: { emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}` },
     });
     setStatus(error ? 'error' : 'sent');
   }
 
   return (
     <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center px-6">
-      <p className="font-mono text-xs uppercase tracking-[0.3em] text-brass">Sign in</p>
-      <h1 className="mt-4 font-display text-3xl italic text-bone">Enter the room.</h1>
+      <p className="font-mono text-xs uppercase tracking-[0.3em] text-brass">
+        {isVenueLogin ? 'Venue sign in' : 'Sign in'}
+      </p>
+      <h1 className="mt-4 font-display text-3xl italic text-bone">
+        {isVenueLogin ? 'Welcome back.' : 'Enter the room.'}
+      </h1>
       <p className="mt-3 text-sm text-bone-dim">
         We&rsquo;ll email you a one-time link. No password to remember.
       </p>
