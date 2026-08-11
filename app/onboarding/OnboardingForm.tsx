@@ -60,9 +60,12 @@ export function OnboardingForm({
       const { error: uploadErr } = await supabase.storage.from('avatars').upload(path, photoFile, {
         upsert: true,
       });
-      if (!uploadErr) {
-        photoUrl = supabase.storage.from('avatars').getPublicUrl(path).data.publicUrl;
+      if (uploadErr) {
+        setSubmitting(false);
+        setError(`Photo upload failed: ${uploadErr.message}`);
+        return;
       }
+      photoUrl = supabase.storage.from('avatars').getPublicUrl(path).data.publicUrl;
     }
 
     const payload = {

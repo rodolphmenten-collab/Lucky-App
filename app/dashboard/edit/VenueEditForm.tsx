@@ -65,9 +65,12 @@ export function VenueEditForm({ venue }: { venue: Venue }) {
       const { error: uploadErr } = await supabase.storage.from('venue-photos').upload(path, coverFile, {
         upsert: true,
       });
-      if (!uploadErr) {
-        coverUrl = supabase.storage.from('venue-photos').getPublicUrl(path).data.publicUrl;
+      if (uploadErr) {
+        setSaving(false);
+        setError(`Photo upload failed: ${uploadErr.message}`);
+        return;
       }
+      coverUrl = supabase.storage.from('venue-photos').getPublicUrl(path).data.publicUrl;
     }
 
     const { error: updateErr } = await supabase

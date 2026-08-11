@@ -55,12 +55,22 @@ export function RoomNav() {
   }, []);
 
   return (
-    <div className="mb-6 flex items-center justify-between border-b hairline pb-4">
-      <Link href="/matches" className="relative flex items-center gap-1.5 text-xs tracking-wide text-bone-dim hover:text-brass">
+    <div className="mb-6 flex items-center gap-3 border-b hairline pb-5">
+      <Link
+        href="/matches"
+        className="relative flex flex-1 items-center justify-center gap-2 rounded-full border border-white/20 bg-ink-800 py-3 text-sm font-medium tracking-wide text-bone shadow-sm transition-colors hover:border-brass hover:text-brass"
+      >
         Messages
-        {hasUnread && <span className="h-1.5 w-1.5 rounded-full bg-brass" />}
+        {hasUnread && (
+          <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-brass">
+            <span className="h-2 w-2 rounded-full bg-ink-900" />
+          </span>
+        )}
       </Link>
-      <Link href="/profile" className="text-xs tracking-wide text-bone-dim hover:text-brass">
+      <Link
+        href="/profile"
+        className="flex flex-1 items-center justify-center rounded-full border border-white/20 bg-ink-800 py-3 text-sm font-medium tracking-wide text-bone shadow-sm transition-colors hover:border-brass hover:text-brass"
+      >
         Your profile
       </Link>
     </div>

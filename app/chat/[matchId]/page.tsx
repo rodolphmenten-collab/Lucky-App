@@ -17,7 +17,7 @@ export default async function ChatPage({
 
   const { data: match } = await supabase
     .from('matches')
-    .select('id, user_a, user_b, venues(name)')
+    .select('id, user_a, user_b, venues(name, slug)')
     .eq('id', params.matchId)
     .maybeSingle();
 
@@ -42,6 +42,7 @@ export default async function ChatPage({
       currentUserId={user.id}
       other={other}
       venueName={(match as any).venues?.name}
+      venueSlug={(match as any).venues?.slug}
       initialMessages={messages ?? []}
       justMatched={searchParams.justMatched === '1'}
     />

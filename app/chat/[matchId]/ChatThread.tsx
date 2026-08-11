@@ -16,6 +16,7 @@ export function ChatThread({
   currentUserId,
   other,
   venueName,
+  venueSlug,
   initialMessages,
   justMatched,
 }: {
@@ -23,6 +24,7 @@ export function ChatThread({
   currentUserId: string;
   other: OtherProfile | null;
   venueName?: string;
+  venueSlug?: string;
   initialMessages: Message[];
   justMatched: boolean;
 }) {
@@ -117,6 +119,15 @@ export function ChatThread({
           )}
         </div>
       </div>
+
+      {venueSlug && (
+        <Link
+          href={`/venue/${venueSlug}`}
+          className="mt-4 flex items-center justify-center gap-2 rounded-full border hairline bg-ink-800 py-2.5 text-xs tracking-wide text-bone-dim transition-colors hover:border-brass hover:text-brass"
+        >
+          &larr; Back to {venueName ?? 'the room'}
+        </Link>
+      )}
 
       {actionDone && (
         <p className="mt-3 text-center text-xs text-bone-faint">
