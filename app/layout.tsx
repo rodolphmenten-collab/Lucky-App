@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { Fraunces, Inter, IBM_Plex_Mono } from 'next/font/google';
+import { AuthRecoveryListener } from '@/components/AuthRecoveryListener';
 import './globals.css';
 
 const fraunces = Fraunces({
@@ -44,7 +45,10 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${fraunces.variable} ${inter.variable} ${plexMono.variable}`}>
-      <body>{children}</body>
+      <body>
+        <AuthRecoveryListener />
+        {children}
+      </body>
     </html>
   );
 }
