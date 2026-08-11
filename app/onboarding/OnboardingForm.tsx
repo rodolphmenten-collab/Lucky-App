@@ -12,9 +12,11 @@ const ALL_INTENTIONS: Intention[] = ['dating', 'business', 'social', 'looking'];
 export function OnboardingForm({
   userId,
   existingProfile,
+  next,
 }: {
   userId: string;
   existingProfile?: Profile;
+  next?: string;
 }) {
   const router = useRouter();
   const supabase = createClient();
@@ -85,7 +87,7 @@ export function OnboardingForm({
       return;
     }
 
-    router.push('/profile');
+    router.push(next || '/profile');
   }
 
   return (

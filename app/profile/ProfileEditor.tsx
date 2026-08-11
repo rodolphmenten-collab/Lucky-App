@@ -64,6 +64,22 @@ export function ProfileEditor({
         </div>
       </div>
 
+      {(profile.bio || profile.linkedin_url) && (
+        <div className="mt-6 space-y-2">
+          {profile.bio && <p className="text-sm leading-relaxed text-bone-dim">{profile.bio}</p>}
+          {profile.linkedin_url && (
+            <a
+              href={profile.linkedin_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-xs text-brass underline"
+            >
+              LinkedIn profile ↗
+            </a>
+          )}
+        </div>
+      )}
+
       <div className="mt-8 grid grid-cols-2 gap-3">
         <Link href="/matches" className="rounded-2xl border hairline p-4">
           <p className="font-display text-xl text-bone">{connectionCount}</p>

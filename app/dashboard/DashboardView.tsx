@@ -92,6 +92,12 @@ export function DashboardView({
               >
                 Shop
               </Link>
+              <Link
+                href="/dashboard/account"
+                className="rounded-full border hairline px-4 py-2 text-xs tracking-wide text-bone-dim hover:border-brass hover:text-brass"
+              >
+                Account
+              </Link>
             </div>
           </div>
           {venues.length > 1 && (

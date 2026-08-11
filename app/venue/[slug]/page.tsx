@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { JoinRoom } from './JoinRoom';
 import { PeopleHere } from './PeopleHere';
@@ -21,6 +21,14 @@ export default async function VenuePage({ params }: { params: { slug: string } }
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
+  // A profile is required before anyone can join a room — without this check, a
+  // brand-new user could check in and appear to others with no name, no photo,
+  // nothing to go on.
+  if (user) {
+    const { data: profile } = await supabase.from('profiles').select('id').eq('id', user.id).maybeSingle();
+    if (!profile) redirect(`/onboarding?next=${encodeURIComponent(`/venue/${params.slug}`)}`);
+  }
 
   let hasActiveCheckIn = false;
   if (user) {

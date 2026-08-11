@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { RoomNav } from '@/components/RoomNav';
 import { createClient } from '@/lib/supabase/client';
 import { PersonCard, type PersonCardData } from '@/components/PersonCard';
 import { Button } from '@/components/ui/Button';
@@ -136,14 +137,7 @@ export function PeopleHere({
         </div>
       )}
 
-      <div className="mb-6 flex items-center justify-between border-b hairline pb-4">
-        <Link href="/matches" className="text-xs tracking-wide text-bone-dim hover:text-brass">
-          Messages
-        </Link>
-        <Link href="/profile" className="text-xs tracking-wide text-bone-dim hover:text-brass">
-          Your profile
-        </Link>
-      </div>
+      <RoomNav />
 
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex gap-2">
