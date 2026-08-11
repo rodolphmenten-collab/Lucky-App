@@ -1,7 +1,7 @@
 'use client';
 
 import { Suspense, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/Button';
 
@@ -14,42 +14,96 @@ export default function LoginPage() {
 }
 
 function LoginForm() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const next = searchParams.get('next') || '/onboarding';
-  const isVenueLogin = next.startsWith('/dashboard');
 
   const [email, setEmail] = useState('');
-  const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
+  const [code, setCode] = useState('');
+  const [codeSent, setCodeSent] = useState(false);
+  const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'verifying' | 'error'>('idle');
+  const [errorMsg, setErrorMsg] = useState('');
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSendCode(e: React.FormEvent) {
     e.preventDefault();
     setStatus('sending');
+    setErrorMsg('');
     const supabase = createClient();
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}` },
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
+        shouldCreateUser: true,
+      },
     });
-    setStatus(error ? 'error' : 'sent');
+    if (error) {
+      setStatus('error');
+      setErrorMsg(error.message);
+      return;
+    }
+    setStatus('sent');
+    setCodeSent(true);
+  }
+
+  async function handleVerifyCode(e: React.FormEvent) {
+    e.preventDefault();
+    setStatus('verifying');
+    setErrorMsg('');
+    const supabase = createClient();
+    const { error } = await supabase.auth.verifyOtp({ email, token: code, type: 'email' });
+    if (error) {
+      setStatus('error');
+      setErrorMsg(error.message);
+      return;
+    }
+    // Verified in-browser — no link click needed, so no cross-browser-context issue.
+    router.push(next);
+    router.refresh();
   }
 
   return (
     <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center px-6">
-      <p className="font-mono text-xs uppercase tracking-[0.3em] text-brass">
-        {isVenueLogin ? 'Venue sign in' : 'Sign in'}
-      </p>
-      <h1 className="mt-4 font-display text-3xl italic text-bone">
-        {isVenueLogin ? 'Welcome back.' : 'Enter the room.'}
-      </h1>
+      <p className="font-mono text-xs uppercase tracking-[0.3em] text-brass">Sign in</p>
+      <h1 className="mt-4 font-display text-3xl italic text-bone">Enter the room.</h1>
       <p className="mt-3 text-sm text-bone-dim">
-        We&rsquo;ll email you a one-time link. No password to remember.
+        We&rsquo;ll email you a 6-digit code (and a link, if you prefer that instead).
       </p>
 
-      {status === 'sent' ? (
-        <p className="mt-8 rounded-2xl border hairline bg-ink-800 p-5 text-sm text-bone-dim">
-          Check <span className="text-bone">{email}</span> for your link.
-        </p>
+      {codeSent ? (
+        <form onSubmit={handleVerifyCode} className="mt-8 space-y-4">
+          <p className="rounded-2xl border hairline bg-ink-800 p-5 text-sm text-bone-dim">
+            Check <span className="text-bone">{email}</span> — enter the 6-digit code below,
+            or tap the link in the email.
+          </p>
+          <input
+            type="text"
+            inputMode="numeric"
+            required
+            placeholder="123456"
+            maxLength={6}
+            value={code}
+            onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
+            className="w-full rounded-full border hairline bg-transparent px-5 py-3 text-center text-lg tracking-[0.3em] text-bone placeholder:text-bone-faint focus:border-brass"
+          />
+          <Button type="submit" disabled={status === 'verifying' || code.length < 6} className="w-full">
+            {status === 'verifying' ? 'Verifying…' : 'Continue'}
+          </Button>
+          {status === 'error' && <p className="text-xs text-red-400">{errorMsg || 'Invalid code — try again.'}</p>}
+          <button
+            type="button"
+            onClick={() => {
+              setCodeSent(false);
+              setStatus('idle');
+              setCode('');
+              setErrorMsg('');
+            }}
+            className="w-full text-center text-xs text-bone-faint underline"
+          >
+            Use a different email
+          </button>
+        </form>
       ) : (
-        <form onSubmit={handleSubmit} className="mt-8 space-y-4">
+        <form onSubmit={handleSendCode} className="mt-8 space-y-4">
           <input
             type="email"
             required
@@ -59,10 +113,10 @@ function LoginForm() {
             className="w-full rounded-full border hairline bg-transparent px-5 py-3 text-sm text-bone placeholder:text-bone-faint focus:border-brass"
           />
           <Button type="submit" disabled={status === 'sending'} className="w-full">
-            {status === 'sending' ? 'Sending…' : 'Send magic link'}
+            {status === 'sending' ? 'Sending…' : 'Send code'}
           </Button>
           {status === 'error' && (
-            <p className="text-xs text-red-400">Something went wrong — try again.</p>
+            <p className="text-xs text-red-400">{errorMsg || 'Something went wrong — try again.'}</p>
           )}
         </form>
       )}

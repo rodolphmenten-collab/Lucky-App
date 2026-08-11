@@ -13,6 +13,7 @@ export interface PersonCardData {
   city: string | null;
   job: string | null;
   photo_url: string | null;
+  linkedin_url: string | null;
   intentions: Intention[];
   presence_status: PresenceStatus;
   last_verified_at: string;
@@ -54,6 +55,18 @@ export function PersonCard({
         <div className="absolute left-3 top-3">
           <PresenceBadge status={person.presence_status} lastVerifiedAt={person.last_verified_at} />
         </div>
+        {person.linkedin_url && (
+          <a
+            href={person.linkedin_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="absolute right-3 top-3 flex h-6 w-6 items-center justify-center rounded-full bg-ink-900/80 text-[10px] font-semibold text-bone-dim backdrop-blur transition-colors hover:text-brass"
+            aria-label="LinkedIn profile"
+          >
+            in
+          </a>
+        )}
         <div className="absolute inset-x-3 bottom-3">
           <p className="font-display text-lg italic leading-tight text-bone">
             {person.first_name}

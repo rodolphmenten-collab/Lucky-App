@@ -2,7 +2,8 @@ export type Lang = 'en' | 'fr';
 
 export const landingCopy = {
   en: {
-    signIn: 'Venue sign in',
+    logIn: 'Log in',
+    signUp: 'Sign up',
     eyebrow: 'For hotels, restaurants, bars & beach clubs',
     heroTitle: 'Turn your venue into the room everyone wants to be in.',
     heroSubtitle:
@@ -41,7 +42,8 @@ export const landingCopy = {
       'Tell us about your venue and we\u2019ll set up your account, your QR code, and your page — usually within a day.',
   },
   fr: {
-    signIn: 'Espace établissements',
+    logIn: 'Connexion',
+    signUp: "S'inscrire",
     eyebrow: 'Pour hôtels, restaurants, bars & beach clubs',
     heroTitle: 'Faites de votre lieu la salle où tout le monde veut être.',
     heroSubtitle:

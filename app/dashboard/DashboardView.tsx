@@ -2,7 +2,9 @@
 
 import { useRef } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { QRCodeSVG } from 'qrcode.react';
+import { createClient } from '@/lib/supabase/client';
 
 interface Stats {
   people_here_now: number;
@@ -31,8 +33,15 @@ export function DashboardView({
   venues: VenueLite[];
 }) {
   const qrRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? '';
   const venueUrl = `${siteUrl}/venue/${venue.slug}`;
+
+  async function handleSignOut() {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push('/');
+  }
 
   const connectionRate =
     stats && stats.checkins_today > 0
@@ -70,16 +79,30 @@ export function DashboardView({
             <p className="mt-1 text-xs text-bone-faint">
               {venue.city} · {venue.plan} plan
             </p>
-            <Link
-              href={`/dashboard/edit?venue=${venue.id}`}
-              className="mt-3 inline-block text-xs text-brass underline"
-            >
-              Edit venue details
-            </Link>
+            <div className="mt-4 flex gap-3">
+              <Link
+                href={`/dashboard/edit?venue=${venue.id}`}
+                className="rounded-full border hairline px-4 py-2 text-xs tracking-wide text-bone-dim hover:border-brass hover:text-brass"
+              >
+                Edit venue profile
+              </Link>
+              <Link
+                href={`/dashboard/shop?venue=${venue.id}`}
+                className="rounded-full border hairline px-4 py-2 text-xs tracking-wide text-bone-dim hover:border-brass hover:text-brass"
+              >
+                Shop
+              </Link>
+            </div>
           </div>
           {venues.length > 1 && (
             <p className="text-xs text-bone-faint">{venues.length} venues linked to this account</p>
           )}
+          <button
+            onClick={handleSignOut}
+            className="ml-4 shrink-0 rounded-full border border-red-400/40 px-4 py-2 text-xs tracking-wide text-red-400 hover:bg-red-400/10"
+          >
+            Sign out
+          </button>
         </div>
 
         <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3">

@@ -3,8 +3,7 @@ import { revalidatePath } from 'next/cache';
 import Link from 'next/link';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { isPlatformAdminEmail } from '@/lib/admin';
-import { DEFAULT_CHECKIN_DURATION_MINUTES } from '@/lib/presence';
-import type { VenueType } from '@/lib/types';
+import { createVenueRecord } from '@/lib/venues';
 
 export default async function AdminPage() {
   const supabase = createClient();
@@ -199,26 +198,6 @@ async function markLeadHandled(formData: FormData) {
   revalidatePath('/admin');
 }
 
-function slugify(name: string): string {
-  return name
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)/g, '')
-    .slice(0, 60);
-}
-
-const VENUE_TYPE_MAP: Record<string, VenueType> = {
-  hotel: 'hotel',
-  restaurant: 'restaurant',
-  bar: 'bar',
-  rooftop: 'rooftop',
-  'beach club': 'beach_club',
-  coworking: 'coworking',
-  event: 'event',
-};
-
 async function allowLeadAccess(formData: FormData) {
   'use server';
   const supabase = createClient();
@@ -233,34 +212,12 @@ async function allowLeadAccess(formData: FormData) {
   const { data: lead } = await service.from('venue_leads').select('*').eq('id', leadId).maybeSingle();
   if (!lead) return;
 
-  const venueType: VenueType = VENUE_TYPE_MAP[(lead.venue_type ?? '').toLowerCase()] ?? 'bar';
-  const baseSlug = slugify(lead.venue_name) || 'venue';
-  let slug = baseSlug;
-  let suffix = 1;
-  // Ensure the slug is unique.
-  while (true) {
-    const { data: existing } = await service.from('venues').select('id').eq('slug', slug).maybeSingle();
-    if (!existing) break;
-    slug = `${baseSlug}-${++suffix}`;
-  }
-
-  const { data: venue, error: venueError } = await service
-    .from('venues')
-    .insert({
-      slug,
-      name: lead.venue_name,
-      city: lead.venue_city || 'Unknown',
-      type: venueType,
-      // Placeholder coordinates — the venue owner or an admin must set the real
-      // location from /admin/venues/[id] before guests can check in on-site.
-      latitude: 0,
-      longitude: 0,
-      verification_radius_m: 75,
-      checkin_duration_minutes: DEFAULT_CHECKIN_DURATION_MINUTES[venueType],
-      plan: (lead.plan_interest as any) || 'basique',
-    })
-    .select('id')
-    .single();
+  const { data: venue, error: venueError } = await createVenueRecord(service, {
+    name: lead.venue_name,
+    city: lead.venue_city,
+    type: lead.venue_type,
+    plan: lead.plan_interest,
+  });
 
   if (venueError || !venue) return;
 

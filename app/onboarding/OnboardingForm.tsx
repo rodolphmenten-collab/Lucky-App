@@ -25,6 +25,7 @@ export function OnboardingForm({
   const [city, setCity] = useState(existingProfile?.city ?? '');
   const [job, setJob] = useState(existingProfile?.job ?? '');
   const [bio, setBio] = useState(existingProfile?.bio ?? '');
+  const [linkedinUrl, setLinkedinUrl] = useState(existingProfile?.linkedin_url ?? '');
   const [intentions, setIntentions] = useState<Intention[]>(existingProfile?.intentions ?? []);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(existingProfile?.photo_url ?? null);
@@ -70,6 +71,7 @@ export function OnboardingForm({
       job: job || null,
       bio: bio || null,
       photo_url: photoUrl,
+      linkedin_url: linkedinUrl || null,
       intentions,
       visible: existingProfile?.visible ?? true,
     };
@@ -141,6 +143,14 @@ export function OnboardingForm({
         onChange={(e) => setBio(e.target.value)}
         rows={2}
         className="w-full rounded-2xl border hairline bg-transparent px-5 py-3 text-sm text-bone placeholder:text-bone-faint focus:border-brass"
+      />
+
+      <input
+        type="url"
+        placeholder="LinkedIn profile (optional)"
+        value={linkedinUrl}
+        onChange={(e) => setLinkedinUrl(e.target.value)}
+        className="w-full rounded-full border hairline bg-transparent px-5 py-3 text-sm text-bone placeholder:text-bone-faint focus:border-brass"
       />
 
       <div>

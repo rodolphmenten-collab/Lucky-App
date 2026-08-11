@@ -73,10 +73,19 @@ export default function LandingPage() {
   return (
     <main className="relative min-h-screen overflow-hidden">
       {/* Top nav */}
-      <div className="relative z-10 mx-auto flex max-w-5xl items-center justify-end gap-4 px-6 pt-8">
+      <div className="relative z-10 mx-auto flex max-w-5xl items-center justify-end gap-3 px-6 pt-8">
         <LanguageToggle lang={lang} onChange={changeLang} />
-        <Link href="/login?next=/dashboard" className="text-xs tracking-wide text-bone-dim hover:text-brass">
-          {t.signIn}
+        <Link
+          href="/venue-login"
+          className="rounded-full border hairline px-4 py-2 text-xs tracking-wide text-bone-dim transition-colors hover:border-brass hover:text-brass"
+        >
+          {t.logIn}
+        </Link>
+        <Link
+          href="/venue-signup"
+          className="rounded-full bg-bone px-4 py-2 text-xs font-medium tracking-wide text-ink transition-colors hover:bg-brass-bright"
+        >
+          {t.signUp}
         </Link>
       </div>
 
