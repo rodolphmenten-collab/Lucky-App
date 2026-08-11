@@ -1,15 +1,1 @@
-import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
-
-export async function GET(request: Request) {
-  const { searchParams, origin } = new URL(request.url);
-  const code = searchParams.get('code');
-  const next = searchParams.get('next') ?? '/onboarding';
-
-  if (code) {
-    const supabase = createClient();
-    await supabase.auth.exchangeCodeForSession(code);
-  }
-
-  return NextResponse.redirect(`${origin}${next}`);
-}
+import { NextResponse } from 'next/server'; import { createClient } from '@/lib/supabase/server'; export async function GET(request: Request) { const { searchParams, origin } = new URL(request.url); const code = searchParams.get('code'); const next = searchParams.get('next') ?? '/onboarding'; if (code) { const supabase = createClient(); await supabase.auth.exchangeCodeForSession(code); } const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || origin; return NextResponse.redirect(`${baseUrl}${next}`); }
