@@ -264,24 +264,34 @@ async function allowLeadAccess(formData: FormData) {
 
   if (venueError || !venue) return;
 
-  // Create (or reuse) the contact's account and email them an invite/sign-in link.
-  const { data: invited, error: inviteError } = await service.auth.admin.inviteUserByEmail(lead.contact_email, {
-    redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard`,
-  });
+  // Find or create the contact's account, then ALWAYS trigger a sign-in email —
+  // whether they're brand new or already had a personal account (e.g. from testing
+  // the consumer app themselves). This guarantees they're notified either way.
+  const { data: userList } = await service.auth.admin.listUsers();
+  let userId = userList?.users?.find((u: any) => u.email?.toLowerCase() === lead.contact_email.toLowerCase())?.id;
 
-  let userId = invited?.user?.id;
-
-  if (inviteError) {
-    // Most likely cause: this email already has an account (e.g. they tried the
-    // consumer app first). Fall back to looking them up instead of failing silently.
-    const { data: list } = await service.auth.admin.listUsers();
-    const existingUser = list?.users?.find((u: any) => u.email?.toLowerCase() === lead.contact_email.toLowerCase());
-    userId = existingUser?.id;
+  if (!userId) {
+    const { data: created, error: createError } = await service.auth.admin.createUser({
+      email: lead.contact_email,
+      email_confirm: true,
+    });
+    if (createError) return;
+    userId = created?.user?.id;
   }
 
   if (userId) {
     await service.from('venue_admins').insert({ venue_id: venue.id, user_id: userId, role: 'owner' });
   }
+
+  // Send the actual notification email (magic-link sign-in), via whatever SMTP
+  // provider is configured in Supabase (Resend, in this project's case).
+  await service.auth.signInWithOtp({
+    email: lead.contact_email,
+    options: {
+      shouldCreateUser: false,
+      emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard`,
+    },
+  });
 
   await service.from('venue_leads').update({ status: 'handled' }).eq('id', leadId);
   revalidatePath('/admin');
