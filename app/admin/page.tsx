@@ -221,34 +221,30 @@ async function allowLeadAccess(formData: FormData) {
 
   if (venueError || !venue) return;
 
-  // Find or create the contact's account, then ALWAYS trigger a sign-in email —
-  // whether they're brand new or already had a personal account (e.g. from testing
-  // the consumer app themselves). This guarantees they're notified either way.
-  const { data: userList } = await service.auth.admin.listUsers();
-  let userId = userList?.users?.find((u: any) => u.email?.toLowerCase() === lead.contact_email.toLowerCase())?.id;
+  // Find or create the contact's account, then send them a link that lets them
+  // set a password and lands them on /venue-set-password. New contacts get a
+  // Supabase "invite" email; contacts who already have an account (e.g. they'd
+  // tried the consumer app first) get a password-reset email instead — both
+  // land the same way, authenticated, ready to choose a password.
+  const redirectTo = `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback?next=${encodeURIComponent('/venue-set-password')}`;
 
-  if (!userId) {
-    const { data: created, error: createError } = await service.auth.admin.createUser({
-      email: lead.contact_email,
-      email_confirm: true,
-    });
-    if (createError) return;
-    userId = created?.user?.id;
+  const { data: invited, error: inviteError } = await service.auth.admin.inviteUserByEmail(lead.contact_email, {
+    redirectTo,
+  });
+
+  let userId = invited?.user?.id;
+
+  if (inviteError) {
+    // Most likely cause: this email is already registered. Fall back to a
+    // password-reset email, which works the same way for an existing account.
+    const { data: userList } = await service.auth.admin.listUsers();
+    userId = userList?.users?.find((u: any) => u.email?.toLowerCase() === lead.contact_email.toLowerCase())?.id;
+    await service.auth.resetPasswordForEmail(lead.contact_email, { redirectTo });
   }
 
   if (userId) {
     await service.from('venue_admins').insert({ venue_id: venue.id, user_id: userId, role: 'owner' });
   }
-
-  // Send the actual notification email (magic-link sign-in), via whatever SMTP
-  // provider is configured in Supabase (Resend, in this project's case).
-  await service.auth.signInWithOtp({
-    email: lead.contact_email,
-    options: {
-      shouldCreateUser: false,
-      emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard`,
-    },
-  });
 
   await service.from('venue_leads').update({ status: 'handled' }).eq('id', leadId);
   revalidatePath('/admin');

@@ -82,7 +82,7 @@ export default function LandingPage() {
           {t.logIn}
         </Link>
         <Link
-          href="/venue-signup"
+          href="#request-access"
           className="rounded-full bg-bone px-4 py-2 text-xs font-medium tracking-wide text-ink transition-colors hover:bg-brass-bright"
         >
           {t.signUp}
