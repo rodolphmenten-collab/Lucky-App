@@ -74,8 +74,8 @@ function LoginForm() {
             type="text"
             inputMode="numeric"
             required
-            placeholder="123456"
-            maxLength={6}
+            placeholder="Code"
+            maxLength={10}
             value={code}
             onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
             className="w-full rounded-full border hairline bg-transparent px-5 py-3 text-center text-lg tracking-[0.3em] text-bone placeholder:text-bone-faint focus:border-brass"
