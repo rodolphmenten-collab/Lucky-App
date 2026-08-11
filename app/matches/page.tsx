@@ -29,7 +29,7 @@ export default async function MatchesPage() {
 
       {!matches || matches.length === 0 ? (
         <p className="mt-10 text-sm text-bone-faint">
-          No matches yet. Wave at someone at a venue you\u2019re both in.
+          No matches yet. Wave at someone at a venue you’re both in.
         </p>
       ) : (
         <div className="mt-10 divide-y hairline">

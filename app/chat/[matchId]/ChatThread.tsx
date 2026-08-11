@@ -120,7 +120,7 @@ export function ChatThread({
 
       {actionDone && (
         <p className="mt-3 text-center text-xs text-bone-faint">
-          {actionDone === 'blocked' ? 'User blocked.' : 'Thanks \u2014 we\u2019ll review this.'}
+          {actionDone === 'blocked' ? 'User blocked.' : 'Thanks — we’ll review this.'}
         </p>
       )}
 
@@ -156,7 +156,7 @@ export function ChatThread({
         <input
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
-          placeholder="Say hello\u2026"
+          placeholder="Say hello…"
           className="flex-1 rounded-full border hairline bg-transparent px-5 py-3 text-sm text-bone placeholder:text-bone-faint focus:border-brass"
         />
         <button

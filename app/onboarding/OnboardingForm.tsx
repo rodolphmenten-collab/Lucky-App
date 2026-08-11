@@ -45,7 +45,7 @@ export function OnboardingForm({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!firstName || intentions.length === 0) {
-      setError('Add your name and at least one reason you\u2019re here.');
+      setError('Add your name and at least one reason you’re here.');
       return;
     }
     setSubmitting(true);
@@ -166,7 +166,7 @@ export function OnboardingForm({
       {error && <p className="text-xs text-red-400">{error}</p>}
 
       <Button type="submit" disabled={submitting} className="w-full">
-        {submitting ? 'Saving\u2026' : isEdit ? 'Save changes' : 'Continue'}
+        {submitting ? 'Saving…' : isEdit ? 'Save changes' : 'Continue'}
       </Button>
     </form>
   );

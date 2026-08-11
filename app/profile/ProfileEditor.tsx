@@ -60,7 +60,7 @@ export function ProfileEditor({
             {profile.first_name}
             {profile.age ? `, ${profile.age}` : ''}
           </p>
-          <p className="text-xs text-bone-dim">{[profile.job, profile.city].filter(Boolean).join(' \u00b7 ')}</p>
+          <p className="text-xs text-bone-dim">{[profile.job, profile.city].filter(Boolean).join(' · ')}</p>
         </div>
       </div>
 
@@ -79,7 +79,7 @@ export function ProfileEditor({
         <div>
           <p className="text-sm text-bone">Visible here</p>
           <p className="mt-0.5 text-xs text-bone-faint">
-            {visible ? 'Others at your venue can see you.' : 'You\u2019re invisible in People Here.'}
+            {visible ? 'Others at your venue can see you.' : 'You’re invisible in People Here.'}
           </p>
         </div>
         <button

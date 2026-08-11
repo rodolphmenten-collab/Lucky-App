@@ -67,7 +67,7 @@ export function DashboardView({
             <p className="font-mono text-xs uppercase tracking-[0.3em] text-brass">Dashboard</p>
             <h1 className="mt-2 font-display text-3xl italic text-bone">{venue.name}</h1>
             <p className="mt-1 text-xs text-bone-faint">
-              {venue.city} \u00b7 {venue.plan} plan
+              {venue.city} · {venue.plan} plan
             </p>
           </div>
           {venues.length > 1 && (
@@ -109,7 +109,7 @@ export function DashboardView({
             <p className="text-sm text-bone">Privacy</p>
             <p className="mt-3 text-xs leading-relaxed text-bone-dim">
               This dashboard only ever shows aggregated numbers. {venue.name} cannot see
-              individual coordinates, message content, or who blocked whom \u2014 those
+              individual coordinates, message content, or who blocked whom — those
               are excluded from every table this dashboard reads from at the database
               level, not just hidden in the UI.
             </p>

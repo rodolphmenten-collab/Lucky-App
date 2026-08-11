@@ -27,7 +27,7 @@ export function JoinRoom({
 
     if (!('geolocation' in navigator)) {
       setState('error');
-      setErrorMsg('Your browser doesn\u2019t support location \u2014 try a different device.');
+      setErrorMsg('Your browser doesn’t support location — try a different device.');
       return;
     }
 
@@ -66,7 +66,7 @@ export function JoinRoom({
       },
       () => {
         setState('error');
-        setErrorMsg('We need your location to confirm you\u2019re actually here.');
+        setErrorMsg('We need your location to confirm you’re actually here.');
       },
       { enableHighAccuracy: true, timeout: 10000 }
     );
@@ -76,17 +76,17 @@ export function JoinRoom({
     <div className="mx-auto max-w-sm text-center">
       <p className="font-display text-2xl italic text-bone">Join the room</p>
       <p className="mt-3 text-sm text-bone-dim">
-        We\u2019ll confirm you\u2019re at {venueName} using your location \u2014 just once, just to verify.
+        We’ll confirm you’re at {venueName} using your location — just once, just to verify.
         We never share your exact position with anyone.
       </p>
 
       <Button onClick={handleJoin} disabled={state === 'locating'} className="mt-8 w-full">
-        {state === 'locating' ? 'Confirming\u2026' : 'Join the room'}
+        {state === 'locating' ? 'Confirming…' : 'Join the room'}
       </Button>
 
       {state === 'out_of_range' && (
         <p className="mt-4 text-xs text-brass">
-          You don\u2019t look close enough to {venueName} yet. Move inside the venue and try again.
+          You don’t look close enough to {venueName} yet. Move inside the venue and try again.
         </p>
       )}
       {state === 'error' && <p className="mt-4 text-xs text-red-400">{errorMsg}</p>}

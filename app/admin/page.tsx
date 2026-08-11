@@ -25,7 +25,14 @@ export default async function AdminPage() {
   // Service role: admin overview needs to see across every venue, bypassing RLS.
   const service = createServiceClient();
 
-  const [{ count: venueCount }, { count: userCount }, { count: activeCheckIns }, { data: reports }, { data: venues }] =
+  const [
+    { count: venueCount },
+    { count: userCount },
+    { count: activeCheckIns },
+    { data: reports },
+    { data: venues },
+    { data: leads },
+  ] =
     await Promise.all([
       service.from('venues').select('*', { count: 'exact', head: true }),
       service.from('profiles').select('*', { count: 'exact', head: true }),
@@ -40,6 +47,12 @@ export default async function AdminPage() {
         .order('created_at', { ascending: false })
         .limit(20),
       service.from('venues').select('id, slug, name, city, type, plan, created_at').order('created_at', { ascending: false }),
+      service
+        .from('venue_leads')
+        .select('id, contact_name, contact_email, venue_name, venue_city, venue_type, plan_interest, message, status, created_at')
+        .eq('status', 'new')
+        .order('created_at', { ascending: false })
+        .limit(20),
     ]);
 
   return (
@@ -70,7 +83,7 @@ export default async function AdminPage() {
               <div>
                 <p className="text-sm text-bone">{v.name}</p>
                 <p className="font-mono text-[11px] text-bone-faint">
-                  {v.city} \u00b7 {v.type} \u00b7 {v.plan} \u00b7 /venue/{v.slug}
+                  {v.city} · {v.type} · {v.plan} · /venue/{v.slug}
                 </p>
               </div>
               <Link href={`/admin/venues/${v.id}`} className="text-xs text-brass underline">
@@ -80,6 +93,36 @@ export default async function AdminPage() {
           ))}
           {(!venues || venues.length === 0) && (
             <p className="px-5 py-6 text-center text-sm text-bone-faint">No venues yet.</p>
+          )}
+        </div>
+
+        <h2 className="mt-12 font-display text-xl italic text-bone">New venue requests</h2>
+        <div className="mt-4 divide-y hairline rounded-2xl border hairline">
+          {(leads ?? []).map((l: any) => (
+            <form key={l.id} action={markLeadHandled} className="flex items-center justify-between gap-4 px-5 py-4">
+              <input type="hidden" name="leadId" value={l.id} />
+              <div>
+                <p className="text-sm text-bone">
+                  {l.venue_name} {l.venue_city ? `— ${l.venue_city}` : ''}
+                </p>
+                <p className="mt-1 text-xs text-bone-dim">
+                  {l.contact_name} · {l.contact_email} · {l.venue_type ?? 'n/a'} · plan: {l.plan_interest ?? 'n/a'}
+                </p>
+                {l.message && <p className="mt-1 text-xs text-bone-faint">{l.message}</p>}
+                <p className="mt-1 font-mono text-[11px] text-bone-faint">
+                  {new Date(l.created_at).toLocaleString()}
+                </p>
+              </div>
+              <button
+                type="submit"
+                className="shrink-0 rounded-full border border-brass/50 px-3 py-1.5 text-[11px] text-brass"
+              >
+                Mark handled
+              </button>
+            </form>
+          ))}
+          {(!leads || leads.length === 0) && (
+            <p className="px-5 py-6 text-center text-sm text-bone-faint">No pending requests.</p>
           )}
         </div>
 
@@ -141,4 +184,11 @@ async function dismissReport(formData: FormData) {
   const id = formData.get('reportId') as string;
   const service = createServiceClient();
   await service.from('reports').update({ status: 'dismissed' }).eq('id', id);
+}
+
+async function markLeadHandled(formData: FormData) {
+  'use server';
+  const id = formData.get('leadId') as string;
+  const service = createServiceClient();
+  await service.from('venue_leads').update({ status: 'handled' }).eq('id', id);
 }

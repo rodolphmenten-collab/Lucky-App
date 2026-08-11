@@ -42,10 +42,10 @@ export default function LoginPage() {
             className="w-full rounded-full border hairline bg-transparent px-5 py-3 text-sm text-bone placeholder:text-bone-faint focus:border-brass"
           />
           <Button type="submit" disabled={status === 'sending'} className="w-full">
-            {status === 'sending' ? 'Sending\u2026' : 'Send magic link'}
+            {status === 'sending' ? 'Sending…' : 'Send magic link'}
           </Button>
           {status === 'error' && (
-            <p className="text-xs text-red-400">Something went wrong \u2014 try again.</p>
+            <p className="text-xs text-red-400">Something went wrong — try again.</p>
           )}
         </form>
       )}
