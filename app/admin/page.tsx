@@ -15,14 +15,14 @@ export default async function AdminPage({
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) redirect('/login?next=/admin');
-  if (!isPlatformAdminEmail(user.email)) {
+  if (!user) redirect('/admin-login');
+  if (!(await isPlatformAdminEmail(user.email))) {
     return (
       <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 text-center">
         <p className="font-display text-2xl italic text-bone">Not authorized.</p>
         <p className="mt-3 text-sm text-bone-dim">
-          This account isn&rsquo;t in ADMIN_EMAILS. Add it to your environment variables to
-          get access to the back-office.
+          This account isn&rsquo;t on the Lucky admin team. Ask an existing admin to add
+          you from the Team section of the back-office.
         </p>
       </main>
     );
@@ -38,6 +38,7 @@ export default async function AdminPage({
     { data: reports },
     { data: venues },
     { data: leads },
+    { data: admins },
   ] =
     await Promise.all([
       service.from('venues').select('*', { count: 'exact', head: true }),
@@ -59,6 +60,7 @@ export default async function AdminPage({
         .eq('status', 'new')
         .order('created_at', { ascending: false })
         .limit(20),
+      service.from('platform_admins').select('id, email, added_at').order('added_at', { ascending: true }),
     ]);
 
   return (
@@ -191,6 +193,47 @@ export default async function AdminPage({
             <p className="px-5 py-6 text-center text-sm text-bone-faint">No pending reports.</p>
           )}
         </div>
+
+        <h2 className="mt-12 font-display text-xl italic text-bone">Team</h2>
+        <p className="mt-2 text-xs text-bone-faint">
+          Anyone listed here can access this back-office once they sign in with that
+          email (magic-link code, or password if they set one via /admin-login).
+        </p>
+        <div className="mt-4 divide-y hairline rounded-2xl border hairline">
+          {(admins ?? []).map((a: any) => (
+            <div key={a.id} className="flex items-center justify-between px-5 py-4">
+              <div>
+                <p className="text-sm text-bone">{a.email}</p>
+                <p className="mt-0.5 font-mono text-[11px] text-bone-faint">
+                  Added {new Date(a.added_at).toLocaleDateString()}
+                </p>
+              </div>
+              {a.email.toLowerCase() !== user.email?.toLowerCase() && (
+                <form action={removeAdmin}>
+                  <input type="hidden" name="adminId" value={a.id} />
+                  <button type="submit" className="text-xs text-red-400 hover:text-red-300">
+                    Remove
+                  </button>
+                </form>
+              )}
+            </div>
+          ))}
+        </div>
+        <form action={addAdmin} className="mt-4 flex gap-2">
+          <input
+            type="email"
+            name="email"
+            required
+            placeholder="colleague@lucky-app.io"
+            className="flex-1 rounded-full border hairline bg-transparent px-5 py-3 text-sm text-bone placeholder:text-bone-faint focus:border-brass"
+          />
+          <button
+            type="submit"
+            className="rounded-full bg-bone px-5 py-3 text-sm font-medium text-ink hover:bg-brass-bright"
+          >
+            Add
+          </button>
+        </form>
       </div>
     </main>
   );
@@ -221,6 +264,36 @@ async function dismissReport(formData: FormData) {
   revalidatePath('/admin');
 }
 
+async function addAdmin(formData: FormData) {
+  'use server';
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user || !(await isPlatformAdminEmail(user.email))) return;
+
+  const email = (formData.get('email') as string)?.trim().toLowerCase();
+  if (!email) return;
+
+  const service = createServiceClient();
+  await service.from('platform_admins').insert({ email }).select().maybeSingle();
+  revalidatePath('/admin');
+}
+
+async function removeAdmin(formData: FormData) {
+  'use server';
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user || !(await isPlatformAdminEmail(user.email))) return;
+
+  const adminId = formData.get('adminId') as string;
+  const service = createServiceClient();
+  await service.from('platform_admins').delete().eq('id', adminId);
+  revalidatePath('/admin');
+}
+
 async function markLeadHandled(formData: FormData) {
   'use server';
   const id = formData.get('leadId') as string;
@@ -235,7 +308,7 @@ async function setTempPassword(formData: FormData) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user || !isPlatformAdminEmail(user.email)) return;
+  if (!user || !(await isPlatformAdminEmail(user.email))) return;
 
   const leadId = formData.get('leadId') as string;
   const service = createServiceClient();
@@ -287,7 +360,7 @@ async function allowLeadAccess(formData: FormData) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user || !isPlatformAdminEmail(user.email)) return;
+  if (!user || !(await isPlatformAdminEmail(user.email))) return;
 
   const leadId = formData.get('leadId') as string;
   const service = createServiceClient();

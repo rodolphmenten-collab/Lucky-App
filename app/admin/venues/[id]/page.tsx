@@ -8,7 +8,7 @@ async function updateVenue(formData: FormData) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user || !isPlatformAdminEmail(user.email)) return;
+  if (!user || !(await isPlatformAdminEmail(user.email))) return;
 
   const service = createServiceClient();
   const id = formData.get('id') as string;
@@ -35,7 +35,7 @@ async function deleteVenue(formData: FormData) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user || !isPlatformAdminEmail(user.email)) return;
+  if (!user || !(await isPlatformAdminEmail(user.email))) return;
 
   const service = createServiceClient();
   await service.from('venues').delete().eq('id', formData.get('id') as string);
@@ -49,7 +49,7 @@ export default async function EditVenuePage({ params }: { params: { id: string }
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect('/login?next=/admin');
-  if (!isPlatformAdminEmail(user.email)) redirect('/admin');
+  if (!(await isPlatformAdminEmail(user.email))) redirect('/admin');
 
   const service = createServiceClient();
   const { data: venue } = await service.from('venues').select('*').eq('id', params.id).maybeSingle();

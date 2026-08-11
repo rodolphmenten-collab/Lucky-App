@@ -12,7 +12,7 @@ async function createVenue(formData: FormData) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user || !isPlatformAdminEmail(user.email)) return;
+  if (!user || !(await isPlatformAdminEmail(user.email))) return;
 
   const service = createServiceClient();
   const type = formData.get('type') as VenueType;

@@ -1,14 +1,18 @@
+import { createServiceClient } from '@/lib/supabase/server';
+
 /**
- * Pragmatic MVP gate for the internal /admin back-office. Anyone signed in with an
- * email in ADMIN_EMAILS (comma-separated) can access it. This is intentionally simple
- * for a first deploy — swap for a real `platform_admins` table + role check before
- * onboarding a real ops team.
+ * Platform admin gate for the internal /admin back-office. Backed by the
+ * platform_admins table (managed from /admin's Team section), not a static env var —
+ * this lets the team add/remove colleagues without a redeploy.
  */
-export function isPlatformAdminEmail(email: string | null | undefined): boolean {
+export async function isPlatformAdminEmail(email: string | null | undefined): Promise<boolean> {
   if (!email) return false;
-  const allowlist = (process.env.ADMIN_EMAILS ?? '')
-    .split(',')
-    .map((e) => e.trim().toLowerCase())
-    .filter(Boolean);
-  return allowlist.includes(email.toLowerCase());
+  const service = createServiceClient();
+  const { data } = await service
+    .from('platform_admins')
+    .select('id')
+    .ilike('email', email)
+    .maybeSingle();
+  return Boolean(data);
 }
+
