@@ -246,7 +246,7 @@ export default function LandingPage() {
       </section>
 
       <footer className="border-t hairline px-6 py-10">
-        <p className="font-mono text-xs text-bone-faint">Here — {new Date().getFullYear()}</p>
+        <p className="font-mono text-xs text-bone-faint">Lucky — {new Date().getFullYear()}</p>
       </footer>
     </main>
   );

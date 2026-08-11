@@ -24,13 +24,13 @@ const plexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Here — Meet the people already around you',
+  title: 'Lucky — Meet the people already around you',
   description: 'Dating. Business. Social. Right here, right now.',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'Here',
+    title: 'Lucky',
   },
 };
 

@@ -5,7 +5,11 @@ import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { isPlatformAdminEmail } from '@/lib/admin';
 import { createVenueRecord } from '@/lib/venues';
 
-export default async function AdminPage() {
+export default async function AdminPage({
+  searchParams,
+}: {
+  searchParams: { tempEmail?: string; tempPassword?: string };
+}) {
   const supabase = createClient();
   const {
     data: { user },
@@ -63,6 +67,20 @@ export default async function AdminPage() {
         <p className="font-mono text-xs uppercase tracking-[0.3em] text-brass">Admin</p>
         <h1 className="mt-2 font-display text-3xl italic text-bone">Back-office</h1>
 
+        {searchParams.tempPassword && (
+          <div className="mt-6 rounded-2xl border border-brass/50 bg-brass/5 p-5">
+            <p className="text-sm text-bone">
+              Account ready for <span className="text-brass">{searchParams.tempEmail}</span> — no email was sent.
+            </p>
+            <p className="mt-1 font-mono text-sm text-brass">Password: {searchParams.tempPassword}</p>
+            <p className="mt-2 text-xs text-bone-faint">
+              Share this manually (phone, Slack, in person). They can sign in at /venue-login
+              and change it later from their dashboard. This is shown once and won&rsquo;t be
+              stored anywhere retrievable.
+            </p>
+          </div>
+        )}
+
         <div className="mt-8 grid grid-cols-3 gap-4">
           <StatCard label="Venues" value={venueCount ?? 0} />
           <StatCard label="Users" value={userCount ?? 0} />
@@ -101,8 +119,7 @@ export default async function AdminPage() {
         <h2 className="mt-12 font-display text-xl italic text-bone">New venue requests</h2>
         <div className="mt-4 divide-y hairline rounded-2xl border hairline">
           {(leads ?? []).map((l: any) => (
-            <form key={l.id} action={allowLeadAccess} className="flex items-center justify-between gap-4 px-5 py-4">
-              <input type="hidden" name="leadId" value={l.id} />
+            <div key={l.id} className="flex items-center justify-between gap-4 px-5 py-4">
               <div>
                 <p className="text-sm text-bone">
                   {l.venue_name} {l.venue_city ? `— ${l.venue_city}` : ''}
@@ -115,13 +132,27 @@ export default async function AdminPage() {
                   {new Date(l.created_at).toLocaleString()}
                 </p>
               </div>
-              <button
-                type="submit"
-                className="shrink-0 rounded-full bg-bone px-4 py-2 text-[11px] font-medium text-ink hover:bg-brass-bright"
-              >
-                Allow access
-              </button>
-            </form>
+              <div className="flex shrink-0 gap-2">
+                <form action={setTempPassword}>
+                  <input type="hidden" name="leadId" value={l.id} />
+                  <button
+                    type="submit"
+                    className="rounded-full border hairline px-3 py-2 text-[11px] text-bone-dim hover:border-brass hover:text-brass"
+                  >
+                    No email — give me a password
+                  </button>
+                </form>
+                <form action={allowLeadAccess}>
+                  <input type="hidden" name="leadId" value={l.id} />
+                  <button
+                    type="submit"
+                    className="rounded-full bg-bone px-4 py-2 text-[11px] font-medium text-ink hover:bg-brass-bright"
+                  >
+                    Allow access
+                  </button>
+                </form>
+              </div>
+            </div>
           ))}
           {(!leads || leads.length === 0) && (
             <p className="px-5 py-6 text-center text-sm text-bone-faint">No pending requests.</p>
@@ -196,6 +227,58 @@ async function markLeadHandled(formData: FormData) {
   const service = createServiceClient();
   await service.from('venue_leads').update({ status: 'handled' }).eq('id', id);
   revalidatePath('/admin');
+}
+
+async function setTempPassword(formData: FormData) {
+  'use server';
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user || !isPlatformAdminEmail(user.email)) return;
+
+  const leadId = formData.get('leadId') as string;
+  const service = createServiceClient();
+
+  const { data: lead } = await service.from('venue_leads').select('*').eq('id', leadId).maybeSingle();
+  if (!lead) return;
+
+  const { data: venue, error: venueError } = await createVenueRecord(service, {
+    name: lead.venue_name,
+    city: lead.venue_city,
+    type: lead.venue_type,
+    plan: lead.plan_interest,
+  });
+  if (venueError || !venue) return;
+
+  const tempPassword = `Here-${Math.random().toString(36).slice(2, 10)}!`;
+
+  const { data: userList } = await service.auth.admin.listUsers();
+  let userId = userList?.users?.find((u: any) => u.email?.toLowerCase() === lead.contact_email.toLowerCase())?.id;
+
+  if (userId) {
+    await service.auth.admin.updateUserById(userId, { password: tempPassword });
+  } else {
+    const { data: created, error: createError } = await service.auth.admin.createUser({
+      email: lead.contact_email,
+      password: tempPassword,
+      email_confirm: true,
+    });
+    if (createError) return;
+    userId = created?.user?.id;
+  }
+
+  if (userId) {
+    await service.from('venue_admins').insert({ venue_id: venue.id, user_id: userId, role: 'owner' });
+  }
+
+  await service
+    .from('venue_leads')
+    .update({ status: 'handled' })
+    .eq('id', leadId);
+
+  revalidatePath('/admin');
+  redirect(`/admin?tempEmail=${encodeURIComponent(lead.contact_email)}&tempPassword=${encodeURIComponent(tempPassword)}`);
 }
 
 async function allowLeadAccess(formData: FormData) {
