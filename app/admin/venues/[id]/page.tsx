@@ -18,6 +18,8 @@ async function updateVenue(formData: FormData) {
     .update({
       name: formData.get('name') as string,
       city: formData.get('city') as string,
+      latitude: Number(formData.get('latitude')),
+      longitude: Number(formData.get('longitude')),
       verification_radius_m: Number(formData.get('radius')),
       checkin_duration_minutes: Number(formData.get('duration')),
       plan: formData.get('plan') as string,
@@ -76,6 +78,28 @@ export default async function EditVenuePage({ params }: { params: { id: string }
             defaultValue={venue.city}
             className="w-full rounded-full border hairline bg-transparent px-5 py-3 text-sm text-bone"
           />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="mb-1 block text-xs text-bone-faint">Latitude</label>
+            <input
+              name="latitude"
+              type="number"
+              step="any"
+              defaultValue={venue.latitude}
+              className="w-full rounded-full border hairline bg-transparent px-5 py-3 text-sm text-bone"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs text-bone-faint">Longitude</label>
+            <input
+              name="longitude"
+              type="number"
+              step="any"
+              defaultValue={venue.longitude}
+              className="w-full rounded-full border hairline bg-transparent px-5 py-3 text-sm text-bone"
+            />
+          </div>
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
