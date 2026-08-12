@@ -1,11 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 
 export function ImpersonationBar() {
-  const router = useRouter();
   const [venueName, setVenueName] = useState<string | null>(null);
   const [restoring, setRestoring] = useState(false);
 
@@ -29,13 +27,14 @@ export function ImpersonationBar() {
     window.localStorage.removeItem('lucky_impersonating_venue');
 
     if (error) {
-      router.push('/admin-login');
-      router.refresh();
+      window.location.href = '/admin-login';
       return;
     }
 
-    router.push('/admin');
-    router.refresh();
+    // Hard navigation (not router.push) — guarantees the just-restored session
+    // cookie is actually attached to the next request, rather than racing a
+    // client-side transition against the cookie write.
+    window.location.href = '/admin';
   }
 
   if (!venueName) return null;
