@@ -1,4 +1,3 @@
-import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { OnboardingForm } from './OnboardingForm';
 
@@ -8,9 +7,12 @@ export default async function OnboardingPage({ searchParams }: { searchParams: {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) redirect(`/login${searchParams.next ? `?next=${encodeURIComponent(`/onboarding?next=${searchParams.next}`)}` : ''}`);
-
-  const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle();
+  // No auth redirect here on purpose: an unauthenticated visitor fills the profile
+  // form first, then verifies their email at the end (see OnboardingForm) — this is
+  // the intentional "profile first, email last" order for a smoother first-touch flow.
+  const { data: profile } = user
+    ? await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle()
+    : { data: null };
   const isEdit = Boolean(profile);
 
   return (
@@ -26,7 +28,7 @@ export default async function OnboardingPage({ searchParams }: { searchParams: {
           Under 30 seconds. Nothing here is public until you join a room.
         </p>
       )}
-      <OnboardingForm userId={user.id} existingProfile={profile ?? undefined} next={searchParams.next} />
+      <OnboardingForm userId={user?.id ?? null} existingProfile={profile ?? undefined} next={searchParams.next} />
     </main>
   );
 }

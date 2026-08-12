@@ -21,7 +21,7 @@ export function JoinRoom({
 
   async function handleJoin() {
     if (needsAuth) {
-      router.push(`/login?next=/venue/${venueSlug}`);
+      router.push(`/onboarding?next=/venue/${venueSlug}`);
       return;
     }
 

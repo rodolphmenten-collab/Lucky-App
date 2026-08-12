@@ -3,7 +3,6 @@ import { revalidatePath } from 'next/cache';
 import Link from 'next/link';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { isPlatformAdminEmail } from '@/lib/admin';
-import { createVenueRecord } from '@/lib/venues';
 import { sendEmail, emailShell } from '@/lib/email';
 import { ImpersonateButton } from '@/components/ImpersonateButton';
 
@@ -35,7 +34,6 @@ export default async function AdminPage() {
     { count: activeCheckIns },
     { data: reports },
     { data: venues },
-    { data: leads },
     { data: admins },
   ] = await Promise.all([
     service.from('venues').select('*', { count: 'exact', head: true }),
@@ -54,12 +52,6 @@ export default async function AdminPage() {
       .from('venues')
       .select('id, slug, name, city, type, plan, contact_name, contact_email, invited_at, created_at')
       .order('created_at', { ascending: false }),
-    service
-      .from('venue_leads')
-      .select('id, contact_name, contact_email, venue_name, venue_city, venue_type, plan_interest, message, status, created_at')
-      .eq('status', 'new')
-      .order('created_at', { ascending: false })
-      .limit(20),
     service.from('platform_admins').select('id, email, added_at').order('added_at', { ascending: true }),
   ]);
 
@@ -126,49 +118,6 @@ export default async function AdminPage() {
           ))}
           {(!venues || venues.length === 0) && (
             <p className="px-5 py-6 text-center text-sm text-bone-faint">Aucun établissement pour l&rsquo;instant.</p>
-          )}
-        </div>
-
-        <h2 className="mt-12 font-display text-xl italic text-bone">Nouvelles demandes</h2>
-        <div className="mt-4 divide-y hairline rounded-2xl border hairline">
-          {(leads ?? []).map((l: any) => (
-            <div key={l.id} className="flex items-center justify-between gap-4 px-5 py-4">
-              <div>
-                <p className="text-sm text-bone">
-                  {l.venue_name} {l.venue_city ? `— ${l.venue_city}` : ''}
-                </p>
-                <p className="mt-1 text-xs text-bone-dim">
-                  {l.contact_name} · {l.contact_email} · {l.venue_type ?? 'n/a'} · plan : {l.plan_interest ?? 'n/a'}
-                </p>
-                {l.message && <p className="mt-1 text-xs text-bone-faint">{l.message}</p>}
-                <p className="mt-1 font-mono text-[11px] text-bone-faint">
-                  {new Date(l.created_at).toLocaleString('fr-FR')}
-                </p>
-              </div>
-              <div className="flex shrink-0 gap-2">
-                <form action={denyLead}>
-                  <input type="hidden" name="leadId" value={l.id} />
-                  <button
-                    type="submit"
-                    className="rounded-full border border-red-400/40 px-4 py-2 text-[11px] text-red-400 hover:bg-red-400/10"
-                  >
-                    Refuser
-                  </button>
-                </form>
-                <form action={allowLeadAccess}>
-                  <input type="hidden" name="leadId" value={l.id} />
-                  <button
-                    type="submit"
-                    className="rounded-full bg-bone px-4 py-2 text-[11px] font-medium text-ink hover:bg-brass-bright"
-                  >
-                    Autoriser l&rsquo;accès
-                  </button>
-                </form>
-              </div>
-            </div>
-          ))}
-          {(!leads || leads.length === 0) && (
-            <p className="px-5 py-6 text-center text-sm text-bone-faint">Aucune demande en attente.</p>
           )}
         </div>
 
@@ -362,77 +311,6 @@ async function removeAdmin(formData: FormData) {
   const adminId = formData.get('adminId') as string;
   const service = createServiceClient();
   await service.from('platform_admins').delete().eq('id', adminId);
-  revalidatePath('/admin');
-}
-
-async function denyLead(formData: FormData) {
-  'use server';
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user || !(await isPlatformAdminEmail(user.email))) return;
-
-  const id = formData.get('leadId') as string;
-  const service = createServiceClient();
-  await service.from('venue_leads').update({ status: 'denied' }).eq('id', id);
-  revalidatePath('/admin');
-}
-
-async function allowLeadAccess(formData: FormData) {
-  'use server';
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user || !(await isPlatformAdminEmail(user.email))) return;
-
-  const leadId = formData.get('leadId') as string;
-  const service = createServiceClient();
-
-  const { data: lead } = await service.from('venue_leads').select('*').eq('id', leadId).maybeSingle();
-  if (!lead) return;
-
-  const { data: venue, error: venueError } = await createVenueRecord(service, {
-    name: lead.venue_name,
-    city: lead.venue_city,
-    type: lead.venue_type,
-    plan: lead.plan_interest,
-    contactName: lead.contact_name,
-    contactEmail: lead.contact_email,
-  });
-
-  if (venueError || !venue) return;
-
-  const redirectTo = `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback?next=${encodeURIComponent('/venue-set-password')}`;
-
-  const { data: userList } = await service.auth.admin.listUsers();
-  const existingUser = userList?.users?.find(
-    (u: any) => u.email?.toLowerCase() === lead.contact_email.toLowerCase()
-  );
-
-  const { data: linkData, error: linkError } = await service.auth.admin.generateLink(
-    existingUser
-      ? { type: 'recovery', email: lead.contact_email, options: { redirectTo } }
-      : { type: 'invite', email: lead.contact_email, options: { redirectTo } }
-  );
-
-  const userId = existingUser?.id ?? linkData?.user?.id;
-  if (userId) {
-    await service.from('venue_admins').insert({ venue_id: venue.id, user_id: userId, role: 'owner' });
-  }
-
-  if (!linkError && linkData?.properties?.action_link) {
-    const firstName = (lead.contact_name || '').split(' ')[0] || 'là-bas';
-    await sendEmail({
-      to: lead.contact_email,
-      subject: `Bienvenue chez Lucky, ${firstName} !`,
-      html: inviteEmailHtml(firstName, venue.name ?? lead.venue_name, linkData.properties.action_link),
-    });
-  }
-
-  await service.from('venues').update({ invited_at: new Date().toISOString() }).eq('id', venue.id);
-  await service.from('venue_leads').update({ status: 'handled' }).eq('id', leadId);
   revalidatePath('/admin');
 }
 
