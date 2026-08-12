@@ -1,11 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 
 export function ImpersonateButton({ venueId }: { venueId: string }) {
-  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -13,17 +11,6 @@ export function ImpersonateButton({ venueId }: { venueId: string }) {
     setLoading(true);
     setError('');
     const supabase = createClient();
-
-    // Back up the admin's own session so "Stop impersonating" can restore it exactly.
-    const {
-      data: { session: adminSession },
-    } = await supabase.auth.getSession();
-
-    if (!adminSession) {
-      setError('Aucune session admin active trouvée.');
-      setLoading(false);
-      return;
-    }
 
     const res = await fetch('/api/admin/impersonate', {
       method: 'POST',
@@ -49,14 +36,11 @@ export function ImpersonateButton({ venueId }: { venueId: string }) {
       return;
     }
 
-    window.localStorage.setItem(
-      'lucky_admin_backup_session',
-      JSON.stringify({ access_token: adminSession.access_token, refresh_token: adminSession.refresh_token })
-    );
     window.localStorage.setItem('lucky_impersonating_venue', data.venueName);
 
-    router.push('/dashboard');
-    router.refresh();
+    // Hard navigation — guarantees the freshly switched session cookie is sent
+    // with the very next request, rather than racing a client-side transition.
+    window.location.href = '/dashboard';
   }
 
   return (

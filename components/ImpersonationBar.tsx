@@ -13,28 +13,16 @@ export function ImpersonationBar() {
 
   async function stopImpersonating() {
     setRestoring(true);
-    const backup = window.localStorage.getItem('lucky_admin_backup_session');
-    if (!backup) {
-      setRestoring(false);
-      return;
-    }
-
-    const { access_token, refresh_token } = JSON.parse(backup);
-    const supabase = createClient();
-    const { error } = await supabase.auth.setSession({ access_token, refresh_token });
-
     window.localStorage.removeItem('lucky_admin_backup_session');
     window.localStorage.removeItem('lucky_impersonating_venue');
 
-    if (error) {
-      window.location.href = '/admin-login';
-      return;
-    }
-
-    // Hard navigation (not router.push) — guarantees the just-restored session
-    // cookie is actually attached to the next request, rather than racing a
-    // client-side transition against the cookie write.
-    window.location.href = '/admin';
+    // Signing out and sending them back to /admin-login is simpler and far more
+    // reliable than trying to restore the exact prior session token-for-token —
+    // that approach kept hitting timing/cookie edge cases. One extra login beats
+    // an unreliable "restore".
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    window.location.href = '/admin-login';
   }
 
   if (!venueName) return null;
@@ -47,7 +35,7 @@ export function ImpersonationBar() {
         disabled={restoring}
         className="rounded-full bg-ink px-3 py-1 text-[11px] text-bone hover:bg-ink-800"
       >
-        {restoring ? '…' : 'Arrêter et revenir en admin'}
+        {restoring ? '…' : 'Arrêter et me reconnecter en admin'}
       </button>
     </div>
   );
