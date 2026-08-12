@@ -22,7 +22,7 @@ export function ImpersonationBar() {
     // an unreliable "restore".
     const supabase = createClient();
     await supabase.auth.signOut();
-    window.location.href = '/admin-login';
+    window.location.href = '/login?next=/admin';
   }
 
   if (!venueName) return null;
@@ -35,7 +35,7 @@ export function ImpersonationBar() {
         disabled={restoring}
         className="rounded-full bg-ink px-3 py-1 text-[11px] text-bone hover:bg-ink-800"
       >
-        {restoring ? '…' : 'Arrêter et me reconnecter en admin'}
+        {restoring ? '…' : 'Arrêter et me reconnecter'}
       </button>
     </div>
   );
