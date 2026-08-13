@@ -89,7 +89,7 @@ export function PersonCard({
             {person.intentions.map((i) => (
               <span
                 key={i}
-                className="rounded-full border hairline px-2 py-0.5 text-[10px] tracking-wide text-bone-dim"
+                className={`rounded-full border px-2 py-0.5 text-[10px] font-medium tracking-wide ${INTENTION_META[i].classes}`}
               >
                 {INTENTION_META[i].symbol} {INTENTION_META[i].label}
               </span>

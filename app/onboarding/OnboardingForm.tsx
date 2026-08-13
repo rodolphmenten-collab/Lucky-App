@@ -322,9 +322,9 @@ export function OnboardingForm({
               type="button"
               key={i}
               onClick={() => toggleIntention(i)}
-              className={`rounded-full border px-4 py-2 text-xs tracking-wide transition-colors ${
+              className={`rounded-full border px-4 py-2 text-xs font-medium tracking-wide transition-colors ${
                 intentions.includes(i)
-                  ? 'border-brass bg-brass/10 text-brass'
+                  ? INTENTION_META[i].classes
                   : 'hairline text-bone-dim hover:border-white/30'
               }`}
             >
