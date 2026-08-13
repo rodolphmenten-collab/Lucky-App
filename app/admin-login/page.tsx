@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/Button';
+import { Logo } from '@/components/Logo';
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -32,6 +33,7 @@ export default function AdminLoginPage() {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center px-6">
+      <Logo size={36} />
       <p className="font-mono text-xs uppercase tracking-[0.3em] text-brass">Admin</p>
       <h1 className="mt-4 font-display text-3xl italic text-bone">Accès au back-office.</h1>
       <p className="mt-3 text-sm text-bone-dim">

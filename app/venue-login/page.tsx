@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/Button';
+import { Logo } from '@/components/Logo';
 
 export default function VenueLoginPage() {
   const router = useRouter();
@@ -33,6 +34,7 @@ export default function VenueLoginPage() {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center px-6">
+      <Logo size={36} />
       <p className="font-mono text-xs uppercase tracking-[0.3em] text-brass">Espace établissement</p>
       <h1 className="mt-4 font-display text-3xl italic text-bone">Bon retour.</h1>
       <p className="mt-3 text-sm text-bone-dim">

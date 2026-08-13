@@ -1,14 +1,13 @@
 import type { Metadata, Viewport } from 'next';
-import { Fraunces, Inter, IBM_Plex_Mono } from 'next/font/google';
+import { Bricolage_Grotesque, Inter, IBM_Plex_Mono } from 'next/font/google';
 import { AuthRecoveryListener } from '@/components/AuthRecoveryListener';
 import { ImpersonationBar } from '@/components/ImpersonationBar';
 import './globals.css';
 
-const fraunces = Fraunces({
+const display = Bricolage_Grotesque({
   subsets: ['latin'],
-  variable: '--font-fraunces',
-  weight: ['400', '500', '600'],
-  style: ['normal', 'italic'],
+  variable: '--font-display',
+  weight: ['400', '500', '600', '700'],
   display: 'swap',
 });
 
@@ -45,7 +44,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${fraunces.variable} ${inter.variable} ${plexMono.variable}`}>
+    <html lang="en" className={`${display.variable} ${inter.variable} ${plexMono.variable}`}>
       <body>
         <AuthRecoveryListener />
         <ImpersonationBar />

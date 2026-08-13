@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { LanguageToggle } from '@/components/LanguageToggle';
+import { Logo } from '@/components/Logo';
 import { landingCopy, type Lang } from '@/lib/i18n/landing';
 
 const VENUE_TYPES = [
@@ -27,14 +28,17 @@ export default function LandingPage() {
   return (
     <main className="relative min-h-screen overflow-hidden">
       {/* Top nav */}
-      <div className="relative z-10 mx-auto flex max-w-5xl items-center justify-end gap-3 px-6 pt-8">
-        <LanguageToggle lang={lang} onChange={changeLang} />
-        <Link
-          href="/venue-login"
-          className="rounded-full border hairline px-4 py-2 text-xs tracking-wide text-bone-dim transition-colors hover:border-brass hover:text-brass"
-        >
-          {t.logIn}
-        </Link>
+      <div className="relative z-10 mx-auto flex max-w-5xl items-center justify-between gap-3 px-6 pt-8">
+        <Logo size={32} showWordmark />
+        <div className="flex items-center gap-3">
+          <LanguageToggle lang={lang} onChange={changeLang} />
+          <Link
+            href="/venue-login"
+            className="rounded-full border hairline px-4 py-2 text-xs tracking-wide text-bone-dim transition-colors hover:border-brass hover:text-brass"
+          >
+            {t.logIn}
+          </Link>
+        </div>
       </div>
 
       {/* Hero */}

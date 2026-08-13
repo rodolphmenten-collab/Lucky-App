@@ -29,7 +29,7 @@ const config: Config = {
         },
       },
       fontFamily: {
-        display: ['var(--font-fraunces)', 'serif'],
+        display: ['var(--font-display)', 'sans-serif'],
         body: ['var(--font-inter)', 'sans-serif'],
         mono: ['var(--font-mono)', 'monospace'],
       },
