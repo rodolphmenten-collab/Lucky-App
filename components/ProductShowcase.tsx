@@ -1,8 +1,23 @@
 function RoomMockup() {
   const people = [
-    { name: 'Elena', tag: 'Business', classes: 'border-blue-600/50 bg-blue-700/20 text-blue-300' },
-    { name: 'Marco', tag: 'Social', classes: 'border-emerald-500/50 bg-emerald-500/15 text-emerald-300' },
-    { name: 'Sofia', tag: 'Dating', classes: 'border-fuchsia-500/50 bg-fuchsia-500/15 text-fuchsia-300' },
+    {
+      name: 'Marco',
+      tag: 'Business',
+      classes: 'border-blue-600/50 bg-blue-700/20 text-blue-300',
+      photo: 'https://images.unsplash.com/photo-1648474484044-bb82df2f5a1f?w=300&h=375&fit=crop&q=80',
+    },
+    {
+      name: 'Elena',
+      tag: 'Social',
+      classes: 'border-emerald-500/50 bg-emerald-500/15 text-emerald-300',
+      photo: 'https://images.unsplash.com/photo-1581387490232-2181c3736353?w=300&h=375&fit=crop&q=80',
+    },
+    {
+      name: 'Sofia',
+      tag: 'Dating',
+      classes: 'border-fuchsia-500/50 bg-fuchsia-500/15 text-fuchsia-300',
+      photo: 'https://images.unsplash.com/photo-1489278353717-f64c6ee8a4d2?w=300&h=375&fit=crop&q=80',
+    },
   ];
   return (
     <div className="rounded-2xl border hairline bg-ink-800 p-4">
@@ -10,7 +25,10 @@ function RoomMockup() {
       <div className="mt-3 grid grid-cols-3 gap-2">
         {people.map((p) => (
           <div key={p.name} className="overflow-hidden rounded-xl border hairline bg-ink-700">
-            <div className="aspect-[4/5] bg-gradient-to-br from-ink-700 to-ink-900" />
+            <div
+              className="aspect-[4/5] bg-cover bg-center"
+              style={{ backgroundImage: `url(${p.photo})` }}
+            />
             <div className="p-2">
               <p className="text-xs text-bone">{p.name}</p>
               <span className={`mt-1 inline-block rounded-full border px-1.5 py-0.5 text-[8px] ${p.classes}`}>
