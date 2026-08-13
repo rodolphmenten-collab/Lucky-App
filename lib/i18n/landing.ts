@@ -7,7 +7,7 @@ export const landingCopy = {
     eyebrow: 'For hotels, restaurants, bars & beach clubs',
     heroTitle: "Don't try to change the world. Connect it.",
     heroSubtitle:
-      'Every night, your venue brings together dozens of strangers who leave without exchanging a word. Lucky changes that, quietly, while they\u2019re still with you \u2014 and turns your venue into the one people talk about the next day.',
+      'Your guests cross paths, sit at neighbouring tables, leave without a word. Lucky changes that, quietly, while they\u2019re still with you \u2014 and turns your venue into the one people remember.',
     ctaPrimary: 'Get your venue set up',
     ctaSecondary: 'See pricing',
     heroQuote:
@@ -31,9 +31,26 @@ export const landingCopy = {
       },
     ],
     previewEyebrow: 'What guests see',
-    previewTitle: 'Not a profile forgotten six hours ago.',
+    previewTitle: 'Presence, not memory.',
     previewBody:
       'Every profile is confirmed present through location and activity signals, re-verified as the evening goes on. When someone leaves your venue, they disappear from the room \u2014 your guests never have to guess who\u2019s still around.',
+    showcaseRows: [
+      {
+        eyebrow: 'The room',
+        title: 'Everyone present, at a glance.',
+        body: 'Your guests see who\u2019s sharing their evening \u2014 by affinity, not by chance. Business, Dating or Social: each person chooses what they\u2019re there for, and only sees profiles who are actually on-site.',
+      },
+      {
+        eyebrow: 'The conversation',
+        title: 'From a wave to a conversation, without leaving your venue.',
+        body: 'One tap is enough to signal interest. If it\u2019s mutual, the conversation opens right away \u2014 while they\u2019re still sitting at your tables.',
+      },
+      {
+        eyebrow: 'Your dashboard',
+        title: 'Footfall and engagement, in real time.',
+        body: 'How many guests are present, how many connections have formed, what hours your venue comes alive. Enough to fine-tune your evenings \u2014 and prove the impact to your team.',
+      },
+    ],
     pricingEyebrow: 'Pricing',
     pricingTitle: 'A plan sized to your venue.',
     choosePlan: 'Choose',
@@ -95,7 +112,7 @@ export const landingCopy = {
     eyebrow: 'Pour hôtels, restaurants, bars & beach clubs',
     heroTitle: "N'essayez pas de changer le monde, connectez-le.",
     heroSubtitle:
-      'Chaque soir, votre établissement rassemble des dizaines d\u2019inconnus qui repartent sans s\u2019être parlé. Lucky change cette réalité, discrètement, pendant qu\u2019ils sont encore chez vous \u2014 et fait de votre lieu celui dont on parle le lendemain.',
+      'Vos clients se croisent, s\u2019installent aux tables voisines, repartent sans un mot. Lucky change cette réalité, discrètement, pendant qu\u2019ils sont encore chez vous \u2014 et fait de votre établissement celui dont on se souvient.',
     ctaPrimary: 'Configurer mon établissement',
     ctaSecondary: 'Voir les tarifs',
     heroQuote:
@@ -119,9 +136,26 @@ export const landingCopy = {
       },
     ],
     previewEyebrow: 'Ce que voient vos clients',
-    previewTitle: 'Pas un profil oublié depuis six heures.',
+    previewTitle: 'La présence, pas le souvenir.',
     previewBody:
       'Chaque profil est confirmé présent grâce à des signaux de localisation et d\u2019activité, revérifiés au fil de la soirée. Quand quelqu\u2019un quitte votre établissement, il disparaît de la salle \u2014 vos clients n\u2019ont jamais à deviner qui est encore là.',
+    showcaseRows: [
+      {
+        eyebrow: 'La salle',
+        title: 'Chaque personne présente, en un coup d\u2019œil.',
+        body: 'Vos clients voient qui partage leur soirée \u2014 par affinité, pas au hasard. Business, Dating ou Social : chacun choisit ce qu\u2019il cherche, et ne voit que des profils réellement sur place.',
+      },
+      {
+        eyebrow: 'La conversation',
+        title: 'D\u2019un signe à l\u2019échange, sans quitter votre établissement.',
+        body: 'Un geste suffit pour se signaler à quelqu\u2019un. Si l\u2019intérêt est partagé, la conversation s\u2019ouvre aussitôt \u2014 pendant qu\u2019ils sont encore assis à vos tables.',
+      },
+      {
+        eyebrow: 'Votre tableau de bord',
+        title: 'L\u2019affluence et l\u2019engagement, en temps réel.',
+        body: 'Combien de personnes sont présentes, combien de connexions se sont créées, à quelles heures votre établissement vit le plus. De quoi affiner vos soirées \u2014 et le prouver à vos équipes.',
+      },
+    ],
     pricingEyebrow: 'Tarifs',
     pricingTitle: 'Une formule adaptée à la taille de votre établissement.',
     choosePlan: 'Choisir',

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import { Logo } from '@/components/Logo';
+import { ProductShowcase } from '@/components/ProductShowcase';
 import { landingCopy, type Lang } from '@/lib/i18n/landing';
 
 const VENUE_TYPES = [
@@ -95,40 +96,14 @@ export default function LandingPage() {
 
       {/* Product preview */}
       <section className="mx-auto max-w-5xl border-t hairline px-6 py-28">
-        <div className="grid gap-12 sm:grid-cols-2 sm:items-center">
-          <div>
-            <p className="font-mono text-xs uppercase tracking-[0.3em] text-brass">{t.previewEyebrow}</p>
-            <h2 className="mt-4 font-display text-4xl italic leading-tight text-bone text-balance">
-              {t.previewTitle}
-            </h2>
-            <p className="mt-5 max-w-md text-sm leading-relaxed text-bone-dim">{t.previewBody}</p>
-          </div>
-          <div className="rounded-3xl border hairline bg-ink-800 p-8">
-            <div className="flex items-center justify-between">
-              <span className="font-display text-lg italic text-bone">Hotel de Russie</span>
-              <span className="font-mono text-xs text-bone-faint">Rome</span>
-            </div>
-            <p className="mt-1 font-mono text-xs text-bone-faint">43 people here · 17 open to meeting</p>
-            <div className="mt-6 space-y-3">
-              {[
-                { name: 'G.', role: 'Fashion · Milan', live: true },
-                { name: 'M.', role: 'Founder · New York', live: true },
-                { name: 'A.', role: 'Architect · Paris', live: false },
-              ].map((p) => (
-                <div key={p.name} className="flex items-center justify-between border-t hairline pt-3 first:border-t-0 first:pt-0">
-                  <div>
-                    <p className="text-sm text-bone">{p.name}</p>
-                    <p className="font-mono text-[11px] text-bone-faint">{p.role}</p>
-                  </div>
-                  <span className="flex items-center gap-1.5 font-mono text-[11px] text-bone-dim">
-                    <span className={`h-1.5 w-1.5 rounded-full ${p.live ? 'bg-signal-live' : 'bg-signal-fading'}`} />
-                    {p.live ? 'Here now' : 'Recently here'}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
+        <div className="mx-auto max-w-2xl text-center">
+          <p className="font-mono text-xs uppercase tracking-[0.3em] text-brass">{t.previewEyebrow}</p>
+          <h2 className="mt-4 font-display text-4xl italic leading-tight text-bone text-balance">
+            {t.previewTitle}
+          </h2>
+          <p className="mt-5 text-sm leading-relaxed text-bone-dim">{t.previewBody}</p>
         </div>
+        <ProductShowcase rows={t.showcaseRows as any} />
       </section>
 
       {/* Pricing */}
