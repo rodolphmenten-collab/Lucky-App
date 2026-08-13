@@ -65,7 +65,8 @@ export function ChatThread({
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'messages', filter: `match_id=eq.${matchId}` },
         (payload) => {
-          setMessages((prev) => [...prev, payload.new as Message]);
+          const incoming = payload.new as Message;
+          setMessages((prev) => (prev.some((m) => m.id === incoming.id) ? prev : [...prev, incoming]));
         }
       )
       .subscribe();
@@ -84,7 +85,24 @@ export function ChatThread({
     if (!draft.trim()) return;
     const content = draft.trim();
     setDraft('');
-    await supabase.from('messages').insert({ match_id: matchId, sender_id: currentUserId, content });
+
+    // Add it ourselves right away rather than waiting on the realtime channel —
+    // that keeps sending instant even if Realtime replication is briefly slow or
+    // not yet enabled for this table, and the dedup check above prevents a
+    // duplicate if the realtime event also arrives.
+    const { data, error } = await supabase
+      .from('messages')
+      .insert({ match_id: matchId, sender_id: currentUserId, content })
+      .select()
+      .single();
+
+    if (error) {
+      setDraft(content); // put it back so nothing is silently lost
+      return;
+    }
+    if (data) {
+      setMessages((prev) => (prev.some((m) => m.id === data.id) ? prev : [...prev, data as Message]));
+    }
   }
 
   return (
