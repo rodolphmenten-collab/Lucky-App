@@ -18,6 +18,7 @@ export interface PersonCardData {
   presence_status: PresenceStatus;
   last_verified_at: string;
   waved_at_me: boolean;
+  waved_by_me: boolean;
 }
 
 export function PersonCard({
@@ -27,7 +28,7 @@ export function PersonCard({
   person: PersonCardData;
   onWave: (userId: string) => Promise<void>;
 }) {
-  const [state, setState] = useState<'idle' | 'sending' | 'sent'>('idle');
+  const [state, setState] = useState<'idle' | 'sending' | 'sent'>(person.waved_by_me ? 'sent' : 'idle');
 
   async function handleWave() {
     if (state !== 'idle') return;
