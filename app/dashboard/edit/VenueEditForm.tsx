@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
+import { ensureUploadableImage } from '@/lib/imageUpload';
 import { Button } from '@/components/ui/Button';
 import type { Venue } from '@/lib/types';
 
@@ -16,6 +17,7 @@ export function VenueEditForm({ venue }: { venue: Venue }) {
   const [radius, setRadius] = useState(String(venue.verification_radius_m));
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [coverPreview, setCoverPreview] = useState<string | null>(venue.cover_photo_url);
+  const [convertingPhoto, setConvertingPhoto] = useState(false);
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(
     venue.latitude && venue.longitude && (venue.latitude !== 0 || venue.longitude !== 0)
       ? { lat: venue.latitude, lng: venue.longitude }
@@ -27,11 +29,14 @@ export function VenueEditForm({ venue }: { venue: Venue }) {
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  function onCoverChange(e: React.ChangeEvent<HTMLInputElement>) {
+  async function onCoverChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    setCoverFile(file);
-    setCoverPreview(URL.createObjectURL(file));
+    setConvertingPhoto(true);
+    const uploadable = await ensureUploadableImage(file);
+    setConvertingPhoto(false);
+    setCoverFile(uploadable);
+    setCoverPreview(URL.createObjectURL(uploadable));
   }
 
   function captureLocation() {
@@ -120,7 +125,9 @@ export function VenueEditForm({ venue }: { venue: Venue }) {
         <div>
           <label className="mb-2 block text-xs text-bone-faint">Photo de couverture</label>
           <label className="relative flex h-40 w-full cursor-pointer items-center justify-center overflow-hidden rounded-2xl border hairline bg-ink-800 text-xs text-bone-faint">
-            {coverPreview ? (
+            {convertingPhoto ? (
+              '…'
+            ) : coverPreview ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={coverPreview} alt="" className="h-full w-full object-cover" />
             ) : (

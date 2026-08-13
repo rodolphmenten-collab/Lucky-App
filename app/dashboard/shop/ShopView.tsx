@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { ensureUploadableImage } from '@/lib/imageUpload';
 import { Button } from '@/components/ui/Button';
 import { SHOP_PRODUCTS, type ShopProduct } from '@/lib/products';
 
@@ -109,14 +110,18 @@ function OrderModal({
   const [customText, setCustomText] = useState('');
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(venue.cover_photo_url);
+  const [convertingLogo, setConvertingLogo] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
-  function onLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
+  async function onLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    setLogoFile(file);
-    setLogoPreview(URL.createObjectURL(file));
+    setConvertingLogo(true);
+    const uploadable = await ensureUploadableImage(file);
+    setConvertingLogo(false);
+    setLogoFile(uploadable);
+    setLogoPreview(URL.createObjectURL(uploadable));
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -199,7 +204,9 @@ function OrderModal({
           <div>
             <label className="mb-2 block text-xs text-bone-faint">Logo</label>
             <label className="relative flex h-24 w-24 cursor-pointer items-center justify-center overflow-hidden rounded-2xl border hairline bg-ink-800 text-[11px] text-bone-faint">
-              {logoPreview ? (
+              {convertingLogo ? (
+                '…'
+              ) : logoPreview ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={logoPreview} alt="" className="h-full w-full object-cover" />
               ) : (

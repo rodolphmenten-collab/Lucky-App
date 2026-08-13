@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { ensureUploadableImage } from '@/lib/imageUpload';
 import { Button } from '@/components/ui/Button';
 import { INTENTION_META } from '@/lib/intentions';
 import type { Intention, Profile } from '@/lib/types';
@@ -49,11 +50,16 @@ export function OnboardingForm({
     setIntentions((prev) => (prev.includes(i) ? prev.filter((x) => x !== i) : [...prev, i]));
   }
 
-  function onPhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
+  const [convertingPhoto, setConvertingPhoto] = useState(false);
+
+  async function onPhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    setPhotoFile(file);
-    setPhotoPreview(URL.createObjectURL(file));
+    setConvertingPhoto(true);
+    const uploadable = await ensureUploadableImage(file);
+    setConvertingPhoto(false);
+    setPhotoFile(uploadable);
+    setPhotoPreview(URL.createObjectURL(uploadable));
   }
 
   async function saveProfile(uid: string, skipIfExists: boolean) {
@@ -245,7 +251,9 @@ export function OnboardingForm({
     <form onSubmit={handleProfileSubmit} className="mt-10 space-y-6">
       <div className="flex items-center gap-4">
         <label className="relative flex h-20 w-20 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-full border hairline bg-ink-800 text-xs text-bone-faint">
-          {photoPreview ? (
+          {convertingPhoto ? (
+            '…'
+          ) : photoPreview ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={photoPreview} alt="" className="h-full w-full object-cover" />
           ) : (
