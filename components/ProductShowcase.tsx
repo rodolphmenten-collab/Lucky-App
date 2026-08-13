@@ -1,7 +1,7 @@
 function RoomMockup() {
   const people = [
     {
-      name: 'Marco',
+      name: 'Vincent',
       tag: 'Business',
       classes: 'border-blue-600/50 bg-blue-700/20 text-blue-300',
       photo: 'https://images.unsplash.com/photo-1648474484044-bb82df2f5a1f?w=300&h=375&fit=crop&q=80',
@@ -10,13 +10,13 @@ function RoomMockup() {
       name: 'Elena',
       tag: 'Social',
       classes: 'border-emerald-500/50 bg-emerald-500/15 text-emerald-300',
-      photo: 'https://images.unsplash.com/photo-1581387490232-2181c3736353?w=300&h=375&fit=crop&q=80',
+      photo: 'https://images.unsplash.com/photo-1758874384556-cc2b9dcbb6e0?w=300&h=375&fit=crop&q=80',
     },
     {
       name: 'Sofia',
       tag: 'Dating',
       classes: 'border-fuchsia-500/50 bg-fuchsia-500/15 text-fuchsia-300',
-      photo: 'https://images.unsplash.com/photo-1489278353717-f64c6ee8a4d2?w=300&h=375&fit=crop&q=80',
+      photo: 'https://images.unsplash.com/photo-1726758254279-6a39c11bdcd5?w=300&h=375&fit=crop&q=80',
     },
   ];
   return (
