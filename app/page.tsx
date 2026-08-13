@@ -29,7 +29,7 @@ export default function LandingPage() {
     <main className="relative min-h-screen overflow-hidden">
       {/* Top nav */}
       <div className="relative z-10 mx-auto flex max-w-5xl items-center justify-between gap-3 px-6 pt-8">
-        <Logo size={32} showWordmark />
+        <Logo size={48} showWordmark />
         <div className="flex items-center gap-3">
           <LanguageToggle lang={lang} onChange={changeLang} />
           <Link
