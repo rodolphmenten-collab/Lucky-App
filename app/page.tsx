@@ -9,53 +9,8 @@ const VENUE_TYPES = [
   'Hotels', 'Restaurants', 'Bars', 'Rooftops', 'Beach Clubs', 'Coworkings', 'Events',
 ];
 
-const PLANS = [
-  {
-    id: 'basique',
-    name: 'Basique',
-    price: '99€',
-    tagline: 'Get discovered on-site',
-    features: [
-      '1 venue QR code',
-      'Logo + cover photo',
-      'Core presence stats',
-      'Up to 50 concurrent guests',
-      'Email support',
-    ],
-  },
-  {
-    id: 'essentiel',
-    name: 'Essentiel',
-    price: '149€',
-    tagline: 'For venues that want the full picture',
-    highlighted: true,
-    features: [
-      'Everything in Basique',
-      'Full photo gallery',
-      'Advanced stats — peak hours, connection rate',
-      'Custom presence duration',
-      'Up to 200 concurrent guests',
-      'Email + chat support',
-    ],
-  },
-  {
-    id: 'premium',
-    name: 'Premium',
-    price: '299€',
-    tagline: 'Multi-zone, fully branded',
-    features: [
-      'Everything in Essentiel',
-      'QR code per zone (bar, lobby, terrace…)',
-      'Fully custom page design',
-      'Unlimited concurrent guests',
-      'Monthly reports & data export',
-      'Dedicated onboarding support',
-    ],
-  },
-];
-
 export default function LandingPage() {
-  const [lang, setLang] = useState<Lang>('en');
+  const [lang, setLang] = useState<Lang>('fr');
 
   useEffect(() => {
     const saved = window.localStorage.getItem('here-lang') as Lang | null;
@@ -179,18 +134,18 @@ export default function LandingPage() {
           {t.pricingTitle}
         </h2>
         <div className="mt-12 grid gap-6 sm:grid-cols-3">
-          {PLANS.map((plan) => (
+          {t.plans.map((plan) => (
             <div
               key={plan.id}
               className={`flex flex-col rounded-3xl border p-6 ${
-                plan.highlighted ? 'border-brass bg-brass/5' : 'hairline'
+                'highlighted' in plan && plan.highlighted ? 'border-brass bg-brass/5' : 'hairline'
               }`}
             >
               <p className="font-display text-2xl italic text-bone">{plan.name}</p>
-              <p className="mt-1 text-xs text-bone-faint">{plan.tagline}</p>
+              <p className="mt-1 text-xs text-bone-faint">{plan.idealFor}</p>
               <p className="mt-4 font-display text-3xl text-bone">
                 {plan.price}
-                <span className="text-sm text-bone-faint">/mo</span>
+                <span className="text-sm text-bone-faint">{lang === 'fr' ? '/mois' : '/mo'}</span>
               </p>
               <ul className="mt-6 flex-1 space-y-2.5">
                 {plan.features.map((f) => (
@@ -203,7 +158,7 @@ export default function LandingPage() {
               <a
                 href="mailto:hello@lucky-app.io"
                 className={`mt-6 inline-flex items-center justify-center rounded-full px-5 py-2.5 text-xs font-medium tracking-wide transition-colors ${
-                  plan.highlighted
+                  'highlighted' in plan && plan.highlighted
                     ? 'bg-bone text-ink hover:bg-brass-bright'
                     : 'border hairline text-bone-dim hover:border-white/30'
                 }`}
