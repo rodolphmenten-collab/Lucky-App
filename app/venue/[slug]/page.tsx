@@ -65,7 +65,12 @@ export default async function VenuePage({ params }: { params: { slug: string } }
         ) : !hasActiveCheckIn ? (
           <JoinRoom venueId={venue.id} venueSlug={venue.slug} venueName={venue.name} needsAuth={false} />
         ) : (
-          <PeopleHere venueSlug={venue.slug} venueId={venue.id} durationMinutes={venue.checkin_duration_minutes} />
+          <PeopleHere
+            venueSlug={venue.slug}
+            venueId={venue.id}
+            venueName={venue.name}
+            durationMinutes={venue.checkin_duration_minutes}
+          />
         )}
       </div>
     </main>

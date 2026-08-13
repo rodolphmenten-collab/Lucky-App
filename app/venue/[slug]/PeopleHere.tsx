@@ -1,8 +1,7 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { RoomNav } from '@/components/RoomNav';
 import { createClient } from '@/lib/supabase/client';
 import { PersonCard, type PersonCardData } from '@/components/PersonCard';
@@ -17,12 +16,19 @@ const FILTERS: { label: string; value: Intention | 'all' }[] = [
   { label: 'Social', value: 'social' },
 ];
 
+// How often we quietly re-check GPS in the background to catch someone who has
+// physically left without telling the app. Not so frequent that it drains battery
+// or spams location prompts, frequent enough to feel "automatic".
+const AUTO_LOCATION_CHECK_SECONDS = 180;
+
 export function PeopleHere({
   venueSlug,
   venueId,
+  venueName,
 }: {
   venueSlug: string;
   venueId: string;
+  venueName: string;
   durationMinutes: number;
 }) {
   const supabase = createClient();
@@ -32,6 +38,9 @@ export function PeopleHere({
   const [checkInId, setCheckInId] = useState<string | null>(null);
   const [lastVerifiedAt, setLastVerifiedAt] = useState<string | null>(null);
   const [showReverify, setShowReverify] = useState(false);
+  const [leftMessage, setLeftMessage] = useState<string | null>(null);
+  const [waveToast, setWaveToast] = useState<string | null>(null);
+  const currentUserId = useRef<string | null>(null);
 
   const loadPeople = useCallback(async () => {
     const { data } = await supabase.rpc('get_people_here', { p_venue_slug: venueSlug });
@@ -50,6 +59,7 @@ export function PeopleHere({
         data: { user },
       } = await supabase.auth.getUser();
       if (!user) return;
+      currentUserId.current = user.id;
       const { data } = await supabase
         .from('check_ins')
         .select('id, last_verified_at')
@@ -81,7 +91,54 @@ export function PeopleHere({
     return () => clearInterval(interval);
   }, [checkInId]);
 
-  // "Still here?" re-verification prompt.
+  // Quiet, automatic GPS re-check: if it turns out the person has physically left
+  // the venue's radius, check them out for real — no "Still here?" click needed.
+  // Runs only while the tab is visible, and never interrupts the person; failures
+  // (permission denied, no signal) are silently skipped, leaving the existing
+  // time-based expiry and manual "Still here?" prompt as the fallback.
+  useEffect(() => {
+    if (!checkInId || !('geolocation' in navigator)) return;
+
+    const runAutoCheck = () => {
+      if (document.visibilityState !== 'visible') return;
+
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          try {
+            const res = await fetch('/api/reverify', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                checkInId,
+                lat: position.coords.latitude,
+                lng: position.coords.longitude,
+              }),
+            });
+            const data = await res.json();
+            if (data.status === 'expired') {
+              setLeftMessage(`You\u2019ve left ${venueName}. Come back anytime to rejoin.`);
+              setCheckInId(null);
+            } else if (data.status === 'verified_now') {
+              setLastVerifiedAt(new Date().toISOString());
+              setShowReverify(false);
+            }
+          } catch {
+            // Silent — the time-based fallback still applies.
+          }
+        },
+        () => {
+          // Permission denied or unavailable — silently skip, fallback still applies.
+        },
+        { enableHighAccuracy: false, timeout: 8000, maximumAge: 60_000 }
+      );
+    };
+
+    const interval = setInterval(runAutoCheck, AUTO_LOCATION_CHECK_SECONDS * 1000);
+    return () => clearInterval(interval);
+  }, [checkInId, venueName]);
+
+  // "Still here?" re-verification prompt — the fallback for when background GPS
+  // checks aren't available (permission denied, etc.).
   useEffect(() => {
     if (!lastVerifiedAt) return;
     const check = () => setShowReverify(shouldPromptReverification(lastVerifiedAt));
@@ -89,6 +146,32 @@ export function PeopleHere({
     const interval = setInterval(check, 60_000);
     return () => clearInterval(interval);
   }, [lastVerifiedAt]);
+
+  // Live notification the moment someone waves at you, while you're in the room.
+  useEffect(() => {
+    const channel = supabase
+      .channel(`waves:${venueId}`)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'waves', filter: `venue_id=eq.${venueId}` },
+        async (payload) => {
+          const wave = payload.new as { to_user: string; from_user: string };
+          if (wave.to_user !== currentUserId.current) return;
+          const { data: sender } = await supabase
+            .from('profiles')
+            .select('first_name')
+            .eq('id', wave.from_user)
+            .maybeSingle();
+          setWaveToast(`${sender?.first_name ?? 'Someone'} waved at you \u{1F44B}`);
+          setTimeout(() => setWaveToast(null), 5000);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [supabase, venueId]);
 
   async function confirmStillHere() {
     if (!checkInId) return;
@@ -126,8 +209,25 @@ export function PeopleHere({
 
   const filtered = filter === 'all' ? people : people.filter((p) => p.intentions.includes(filter));
 
+  if (leftMessage) {
+    return (
+      <div className="mx-auto max-w-sm py-24 text-center">
+        <p className="font-display text-2xl italic text-bone">{leftMessage}</p>
+        <Button href={`/venue/${venueSlug}`} className="mt-8">
+          Rejoin {venueName}
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <div>
+      {waveToast && (
+        <div className="fixed left-1/2 top-4 z-50 -translate-x-1/2 rounded-full bg-brass px-5 py-2.5 text-sm font-medium text-ink shadow-lg">
+          {waveToast}
+        </div>
+      )}
+
       {showReverify && (
         <div className="mb-6 flex items-center justify-between rounded-2xl border border-brass/40 bg-brass/5 px-5 py-4">
           <p className="text-sm text-bone">Still here?</p>
@@ -139,8 +239,8 @@ export function PeopleHere({
 
       <RoomNav />
 
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap gap-2">
           {FILTERS.map((f) => (
             <button
               key={f.value}
@@ -153,8 +253,11 @@ export function PeopleHere({
             </button>
           ))}
         </div>
-        <button onClick={leaveVenue} className="text-xs text-bone-faint hover:text-bone-dim">
-          Leave venue
+        <button
+          onClick={leaveVenue}
+          className="rounded-full border border-white/20 bg-ink-800 px-4 py-2 text-xs tracking-wide text-bone-dim transition-colors hover:border-red-400/40 hover:text-red-400"
+        >
+          Leave the room
         </button>
       </div>
 

@@ -62,31 +62,40 @@ export function OnboardingForm({
       if (existing) return { error: null };
     }
 
-    let photoUrl: string | null = existingProfile?.photo_url ?? null;
-    if (photoFile) {
-      const path = `${uid}/${Date.now()}-${photoFile.name}`;
-      const { error: uploadErr } = await supabase.storage.from('avatars').upload(path, photoFile, {
-        upsert: true,
-      });
-      if (uploadErr) return { error: `Photo upload failed: ${uploadErr.message}` };
-      photoUrl = supabase.storage.from('avatars').getPublicUrl(path).data.publicUrl;
+    try {
+      let photoUrl: string | null = existingProfile?.photo_url ?? null;
+      if (photoFile) {
+        const path = `${uid}/${Date.now()}-${photoFile.name}`;
+        const { error: uploadErr } = await supabase.storage.from('avatars').upload(path, photoFile, {
+          upsert: true,
+        });
+        if (uploadErr) {
+          console.error('Avatar upload error:', uploadErr);
+          return { error: `Photo upload failed: ${uploadErr.message}` };
+        }
+        photoUrl = supabase.storage.from('avatars').getPublicUrl(path).data.publicUrl;
+      }
+
+      const payload = {
+        id: uid,
+        first_name: firstName,
+        age: age ? Number(age) : null,
+        city: city || null,
+        job: job || null,
+        bio: bio || null,
+        photo_url: photoUrl,
+        linkedin_url: linkedinUrl || null,
+        intentions,
+        visible: existingProfile?.visible ?? true,
+      };
+
+      const { error: upsertErr } = await supabase.from('profiles').upsert(payload);
+      if (upsertErr) console.error('Profile save error:', upsertErr);
+      return { error: upsertErr?.message ?? null };
+    } catch (err) {
+      console.error('Unexpected error saving profile:', err);
+      return { error: err instanceof Error ? err.message : 'Something unexpected went wrong.' };
     }
-
-    const payload = {
-      id: uid,
-      first_name: firstName,
-      age: age ? Number(age) : null,
-      city: city || null,
-      job: job || null,
-      bio: bio || null,
-      photo_url: photoUrl,
-      linkedin_url: linkedinUrl || null,
-      intentions,
-      visible: existingProfile?.visible ?? true,
-    };
-
-    const { error: upsertErr } = await supabase.from('profiles').upsert(payload);
-    return { error: upsertErr?.message ?? null };
   }
 
   async function handleProfileSubmit(e: React.FormEvent) {

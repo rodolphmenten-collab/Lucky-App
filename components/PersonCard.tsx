@@ -17,6 +17,7 @@ export interface PersonCardData {
   intentions: Intention[];
   presence_status: PresenceStatus;
   last_verified_at: string;
+  waved_at_me: boolean;
 }
 
 export function PersonCard({
@@ -40,7 +41,11 @@ export function PersonCard({
   }
 
   return (
-    <div className="group relative overflow-hidden rounded-2xl border hairline bg-ink-800 animate-fade_up">
+    <div
+      className={`group relative overflow-hidden rounded-2xl border bg-ink-800 animate-fade_up ${
+        person.waved_at_me ? 'border-brass' : 'hairline'
+      }`}
+    >
       <div className="relative aspect-[4/5] w-full overflow-hidden bg-ink-700">
         {person.photo_url && (
           <Image
@@ -55,7 +60,12 @@ export function PersonCard({
         <div className="absolute left-3 top-3">
           <PresenceBadge status={person.presence_status} lastVerifiedAt={person.last_verified_at} />
         </div>
-        {person.linkedin_url && (
+        {person.waved_at_me && (
+          <div className="absolute right-3 top-3 rounded-full bg-brass px-2 py-0.5 text-[10px] font-semibold text-ink">
+            Waved at you
+          </div>
+        )}
+        {!person.waved_at_me && person.linkedin_url && (
           <a
             href={person.linkedin_url}
             target="_blank"
@@ -92,7 +102,7 @@ export function PersonCard({
         disabled={state !== 'idle'}
         className="w-full border-t hairline py-3 text-xs font-medium tracking-[0.15em] text-bone-dim transition-colors hover:text-brass disabled:hover:text-bone-dim"
       >
-        {state === 'sent' ? 'WAVED' : state === 'sending' ? '···' : 'WAVE'}
+        {state === 'sent' ? 'WAVED' : state === 'sending' ? '···' : person.waved_at_me ? 'WAVE BACK' : 'WAVE'}
       </button>
     </div>
   );
