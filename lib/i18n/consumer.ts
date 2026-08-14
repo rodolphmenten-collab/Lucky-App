@@ -61,6 +61,17 @@ export const consumerCopy: Record<ConsumerLang, any> = {
       rejoin: 'Rejoin',
     },
     nav: { waves: 'Waves', messages: 'Messages', profile: 'Profile' },
+    join: {
+      title: 'Join the room',
+      subtitle: (venue: string) =>
+        `We'll confirm you're at ${venue} using your location — just once, just to verify. We never share your exact position with anyone.`,
+      confirming: 'Confirming…',
+      outOfRange: (venue: string) => `You don't look close enough to ${venue} yet. Move inside the venue and try again.`,
+      noGeoSupport: 'Your browser doesn\u2019t support location — try a different device.',
+      needsLocation: 'We need your location to confirm you\u2019re actually here.',
+      genericError: 'Something went wrong. Try again.',
+      peopleHere: (count: number, open: number) => `${count} people here · ${open} open to meeting`,
+    },
     chat: {
       placeholder: 'Type a message…',
       send: 'Send',
@@ -127,6 +138,17 @@ export const consumerCopy: Record<ConsumerLang, any> = {
       rejoin: 'Rejoindre',
     },
     nav: { waves: 'Waves', messages: 'Messages', profile: 'Profil' },
+    join: {
+      title: 'Rejoindre la salle',
+      subtitle: (venue: string) =>
+        `Nous confirmons que vous êtes bien à ${venue} grâce à votre position — juste une fois, juste pour vérifier. Nous ne partageons jamais votre position exacte avec qui que ce soit.`,
+      confirming: 'Confirmation…',
+      outOfRange: (venue: string) => `Vous ne semblez pas assez proche de ${venue} pour l'instant. Rapprochez-vous et réessayez.`,
+      noGeoSupport: 'Votre navigateur ne supporte pas la localisation — essayez un autre appareil.',
+      needsLocation: 'Nous avons besoin de votre position pour confirmer votre présence.',
+      genericError: 'Une erreur est survenue. Réessayez.',
+      peopleHere: (count: number, open: number) => `${count} personnes présentes · ${open} ouvertes à la rencontre`,
+    },
     chat: {
       placeholder: 'Écrire un message…',
       send: 'Envoyer',
@@ -193,6 +215,17 @@ export const consumerCopy: Record<ConsumerLang, any> = {
       rejoin: 'Volver a entrar',
     },
     nav: { waves: 'Saludos', messages: 'Mensajes', profile: 'Perfil' },
+    join: {
+      title: 'Únete a la sala',
+      subtitle: (venue: string) =>
+        `Confirmaremos que estás en ${venue} usando tu ubicación — solo una vez, solo para verificar. Nunca compartimos tu posición exacta con nadie.`,
+      confirming: 'Confirmando…',
+      outOfRange: (venue: string) => `Parece que no estás lo bastante cerca de ${venue} todavía. Acércate y vuelve a intentarlo.`,
+      noGeoSupport: 'Tu navegador no soporta la localización — prueba con otro dispositivo.',
+      needsLocation: 'Necesitamos tu ubicación para confirmar que estás realmente aquí.',
+      genericError: 'Algo salió mal. Inténtalo de nuevo.',
+      peopleHere: (count: number, open: number) => `${count} personas aquí · ${open} abiertas a conocer gente`,
+    },
     chat: {
       placeholder: 'Escribe un mensaje…',
       send: 'Enviar',

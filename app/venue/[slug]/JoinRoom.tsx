@@ -3,6 +3,8 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Button } from '@/components/ui/Button';
+import { useLanguage } from '@/components/LanguageProvider';
+import { ConsumerLanguageSwitcher } from '@/components/ConsumerLanguageSwitcher';
 
 export function JoinRoom({
   venueId,
@@ -16,6 +18,7 @@ export function JoinRoom({
   needsAuth: boolean;
 }) {
   const router = useRouter();
+  const { t } = useLanguage();
   const [state, setState] = useState<'idle' | 'locating' | 'error' | 'out_of_range'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -27,7 +30,7 @@ export function JoinRoom({
 
     if (!('geolocation' in navigator)) {
       setState('error');
-      setErrorMsg('Your browser doesn’t support location — try a different device.');
+      setErrorMsg(t.join.noGeoSupport);
       return;
     }
 
@@ -49,7 +52,7 @@ export function JoinRoom({
 
           if (!res.ok) {
             setState('error');
-            setErrorMsg(data.error ?? 'Something went wrong.');
+            setErrorMsg(data.error ?? t.join.genericError);
             return;
           }
 
@@ -61,12 +64,12 @@ export function JoinRoom({
           router.refresh();
         } catch {
           setState('error');
-          setErrorMsg('Something went wrong. Try again.');
+          setErrorMsg(t.join.genericError);
         }
       },
       () => {
         setState('error');
-        setErrorMsg('We need your location to confirm you’re actually here.');
+        setErrorMsg(t.join.needsLocation);
       },
       { enableHighAccuracy: true, timeout: 10000 }
     );
@@ -74,21 +77,17 @@ export function JoinRoom({
 
   return (
     <div className="mx-auto max-w-sm text-center">
-      <p className="font-display text-2xl italic text-bone">Join the room</p>
-      <p className="mt-3 text-sm text-bone-dim">
-        We’ll confirm you’re at {venueName} using your location — just once, just to verify.
-        We never share your exact position with anyone.
-      </p>
+      <div className="mb-6 flex justify-center">
+        <ConsumerLanguageSwitcher />
+      </div>
+      <p className="font-display text-2xl italic text-bone">{t.join.title}</p>
+      <p className="mt-3 text-sm text-bone-dim">{t.join.subtitle(venueName)}</p>
 
       <Button onClick={handleJoin} disabled={state === 'locating'} className="mt-8 w-full">
-        {state === 'locating' ? 'Confirming…' : 'Join the room'}
+        {state === 'locating' ? t.join.confirming : t.join.title}
       </Button>
 
-      {state === 'out_of_range' && (
-        <p className="mt-4 text-xs text-brass">
-          You don’t look close enough to {venueName} yet. Move inside the venue and try again.
-        </p>
-      )}
+      {state === 'out_of_range' && <p className="mt-4 text-xs text-brass">{t.join.outOfRange(venueName)}</p>}
       {state === 'error' && <p className="mt-4 text-xs text-red-400">{errorMsg}</p>}
     </div>
   );

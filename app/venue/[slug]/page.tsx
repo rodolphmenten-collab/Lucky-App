@@ -2,6 +2,7 @@ import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { JoinRoom } from './JoinRoom';
 import { PeopleHere } from './PeopleHere';
+import { PeopleCountLine } from './PeopleCountLine';
 
 export default async function VenuePage({ params }: { params: { slug: string } }) {
   const supabase = createClient();
@@ -53,9 +54,7 @@ export default async function VenuePage({ params }: { params: { slug: string } }
         <div className="relative w-full px-6 pb-6">
           <p className="font-mono text-xs uppercase tracking-[0.3em] text-brass">{venue.city}</p>
           <h1 className="mt-2 font-display text-4xl italic text-bone">{venue.name}</h1>
-          <p className="mt-2 font-mono text-xs text-bone-dim">
-            {counts?.people_here ?? 0} people here · {counts?.open_to_meeting ?? 0} open to meeting
-          </p>
+          <PeopleCountLine peopleHere={counts?.people_here ?? 0} openToMeeting={counts?.open_to_meeting ?? 0} />
         </div>
       </header>
 
