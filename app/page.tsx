@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import { Logo } from '@/components/Logo';
 import { ProductShowcase } from '@/components/ProductShowcase';
+import { Reveal } from '@/components/Reveal';
 import { landingCopy, type Lang } from '@/lib/i18n/landing';
 
 const VENUE_TYPES = [
@@ -84,12 +85,12 @@ export default function LandingPage() {
       <section className="mx-auto max-w-5xl border-t hairline px-6 py-28">
         <p className="font-mono text-xs uppercase tracking-[0.3em] text-brass">{t.howItWorksEyebrow}</p>
         <div className="mt-12 grid gap-12 sm:grid-cols-3 sm:gap-8">
-          {t.steps.map((step) => (
-            <div key={step.mark}>
+          {t.steps.map((step, i) => (
+            <Reveal key={step.mark} delay={i * 120}>
               <p className="font-display text-2xl italic text-brass">{step.mark}</p>
               <h3 className="mt-3 font-display text-2xl text-bone">{step.title}</h3>
               <p className="mt-3 text-sm leading-relaxed text-bone-dim">{step.body}</p>
-            </div>
+            </Reveal>
           ))}
         </div>
       </section>
@@ -113,38 +114,39 @@ export default function LandingPage() {
           {t.pricingTitle}
         </h2>
         <div className="mt-12 grid gap-6 sm:grid-cols-3">
-          {t.plans.map((plan) => (
-            <div
-              key={plan.id}
-              className={`flex flex-col rounded-3xl border p-6 ${
-                'highlighted' in plan && plan.highlighted ? 'border-brass bg-brass/5' : 'hairline'
-              }`}
-            >
-              <p className="font-display text-2xl italic text-bone">{plan.name}</p>
-              <p className="mt-1 text-xs text-bone-faint">{plan.idealFor}</p>
-              <p className="mt-4 font-display text-3xl text-bone">
-                {plan.price}
-                <span className="text-sm text-bone-faint">{lang === 'fr' ? '/mois' : '/mo'}</span>
-              </p>
-              <ul className="mt-6 flex-1 space-y-2.5">
-                {plan.features.map((f) => (
-                  <li key={f} className="flex gap-2 text-xs text-bone-dim">
-                    <span className="text-brass">·</span>
-                    {f}
-                  </li>
-                ))}
-              </ul>
-              <a
-                href="mailto:hello@lucky-app.io"
-                className={`mt-6 inline-flex items-center justify-center rounded-full px-5 py-2.5 text-xs font-medium tracking-wide transition-colors ${
-                  'highlighted' in plan && plan.highlighted
-                    ? 'bg-bone text-ink hover:bg-brass-bright'
-                    : 'border hairline text-bone-dim hover:border-white/30'
+          {t.plans.map((plan, i) => (
+            <Reveal key={plan.id} delay={i * 120}>
+              <div
+                className={`flex h-full flex-col rounded-3xl border p-6 ${
+                  'highlighted' in plan && plan.highlighted ? 'border-brass bg-brass/5' : 'hairline'
                 }`}
               >
-                {t.choosePlan} {plan.name}
-              </a>
-            </div>
+                <p className="font-display text-2xl italic text-bone">{plan.name}</p>
+                <p className="mt-1 text-xs text-bone-faint">{plan.idealFor}</p>
+                <p className="mt-4 font-display text-3xl text-bone">
+                  {plan.price}
+                  <span className="text-sm text-bone-faint">{lang === 'fr' ? '/mois' : '/mo'}</span>
+                </p>
+                <ul className="mt-6 flex-1 space-y-2.5">
+                  {plan.features.map((f) => (
+                    <li key={f} className="flex gap-2 text-xs text-bone-dim">
+                      <span className="text-brass">·</span>
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+                <a
+                  href="mailto:hello@lucky-app.io"
+                  className={`mt-6 inline-flex items-center justify-center rounded-full px-5 py-2.5 text-xs font-medium tracking-wide transition-colors ${
+                    'highlighted' in plan && plan.highlighted
+                      ? 'bg-bone text-ink hover:bg-brass-bright'
+                      : 'border hairline text-bone-dim hover:border-white/30'
+                  }`}
+                >
+                  {t.choosePlan} {plan.name}
+                </a>
+              </div>
+            </Reveal>
           ))}
         </div>
       </section>
@@ -162,19 +164,21 @@ export default function LandingPage() {
 
       {/* Get in touch */}
       <section className="mx-auto max-w-2xl border-t hairline px-6 py-28 text-center">
-        <p className="font-mono text-xs uppercase tracking-[0.3em] text-brass">{t.requestEyebrow}</p>
-        <h2 className="mt-4 font-display text-4xl italic leading-tight text-bone text-balance">
-          {t.requestTitle}
-        </h2>
-        <p className="mt-4 text-sm leading-relaxed text-bone-dim">{t.requestBody}</p>
-        <div className="mt-8">
-          <a
-            href="mailto:hello@lucky-app.io"
-            className="inline-flex items-center justify-center gap-2 rounded-full bg-bone px-6 py-3 text-sm font-medium tracking-wide text-ink transition-colors duration-200 hover:bg-brass-bright"
-          >
-            hello@lucky-app.io
-          </a>
-        </div>
+        <Reveal>
+          <p className="font-mono text-xs uppercase tracking-[0.3em] text-brass">{t.requestEyebrow}</p>
+          <h2 className="mt-4 font-display text-4xl italic leading-tight text-bone text-balance">
+            {t.requestTitle}
+          </h2>
+          <p className="mt-4 text-sm leading-relaxed text-bone-dim">{t.requestBody}</p>
+          <div className="mt-8">
+            <a
+              href="mailto:hello@lucky-app.io"
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-bone px-6 py-3 text-sm font-medium tracking-wide text-ink transition-colors duration-200 hover:bg-brass-bright"
+            >
+              hello@lucky-app.io
+            </a>
+          </div>
+        </Reveal>
       </section>
 
       <footer className="border-t hairline px-6 py-10">

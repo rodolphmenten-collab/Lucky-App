@@ -1,3 +1,5 @@
+import { Reveal } from './Reveal';
+
 function RoomMockup() {
   const people = [
     {
@@ -101,14 +103,14 @@ export function ProductShowcase({
           key={row.eyebrow}
           className={`flex flex-col items-center gap-10 md:flex-row ${i % 2 === 1 ? 'md:flex-row-reverse' : ''}`}
         >
-          <div className="md:w-1/2">
+          <Reveal delay={0} className="md:w-1/2">
             <p className="font-mono text-xs uppercase tracking-[0.3em] text-brass">{row.eyebrow}</p>
             <h3 className="mt-3 font-display text-2xl font-semibold text-bone">{row.title}</h3>
             <p className="mt-3 text-sm leading-relaxed text-bone-dim">{row.body}</p>
-          </div>
-          <div className="md:w-1/2">
+          </Reveal>
+          <Reveal delay={150} className="md:w-1/2">
             <div className="rounded-3xl border hairline bg-ink-900/60 p-3 shadow-2xl">{mockups[i]}</div>
-          </div>
+          </Reveal>
         </div>
       ))}
     </div>
