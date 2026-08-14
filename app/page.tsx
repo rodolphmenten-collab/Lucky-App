@@ -104,7 +104,7 @@ export default function LandingPage() {
           </h2>
           <p className="mt-5 text-sm leading-relaxed text-bone-dim">{t.previewBody}</p>
         </div>
-        <ProductShowcase rows={t.showcaseRows as any} />
+        <ProductShowcase rows={t.showcaseRows as any} lang={lang} />
       </section>
 
       {/* Pricing */}
