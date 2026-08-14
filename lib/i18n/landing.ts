@@ -58,6 +58,34 @@ export const landingCopy = {
     requestTitle: 'Want this atmosphere at your venue?',
     requestBody:
       'We work directly with a curated set of hotels, restaurants, bars and beach clubs that want to give their guests an experience they won\u2019t find anywhere else. Reach out \u2014 we\u2019ll set up everything for you: account, QR code, and page included.',
+    faqEyebrow: 'FAQ',
+    faqTitle: 'Everything you\u2019re wondering.',
+    faqItems: [
+      {
+        q: 'Do my guests need to download an app?',
+        a: 'No. Lucky works right in the browser after a QR code scan \u2014 no install, no friction.',
+      },
+      {
+        q: 'How does presence verification work?',
+        a: 'Location and activity are checked when someone joins the room, then re-checked regularly. If someone leaves your venue, they\u2019re automatically removed from the room.',
+      },
+      {
+        q: 'How long does it take to set up my venue?',
+        a: 'Once your account is created, your QR code is ready immediately. Most venues are up and running within a day.',
+      },
+      {
+        q: 'Can I change plans later?',
+        a: 'Yes, anytime. Reach out and we\u2019ll adjust your plan as your venue grows.',
+      },
+      {
+        q: 'Is my guests\u2019 data secure?',
+        a: 'Yes. Exact coordinates, message content, and blocking data are never visible from your dashboard \u2014 you only ever see aggregated statistics.',
+      },
+      {
+        q: 'Can I order physical materials (table QR codes, etc.)?',
+        a: 'Yes, directly from your dashboard once your account is active \u2014 table stands, stickers, posters, and hotel room card inserts.',
+      },
+    ],
     plans: [
       {
         id: 'basique',
@@ -163,6 +191,34 @@ export const landingCopy = {
     requestTitle: 'Envie de cette ambiance chez vous ?',
     requestBody:
       'Nous travaillons directement avec une sélection d\u2019hôtels, restaurants, bars et beach clubs qui veulent offrir à leurs clients une expérience qu\u2019ils ne trouveront nulle part ailleurs. Contactez-nous : nous nous occupons de tout \u2014 compte, QR code et page inclus.',
+    faqEyebrow: 'Questions fréquentes',
+    faqTitle: 'Tout ce que vous vous demandez.',
+    faqItems: [
+      {
+        q: 'Mes clients doivent-ils télécharger une application ?',
+        a: 'Non. Lucky fonctionne directement dans le navigateur après un scan de QR code \u2014 aucune installation, aucune friction.',
+      },
+      {
+        q: 'Comment fonctionne la vérification de présence ?',
+        a: 'La position et l\u2019activité sont vérifiées au moment de l\u2019entrée dans la salle, puis revérifiées régulièrement. Si quelqu\u2019un quitte votre établissement, il disparaît automatiquement de la salle.',
+      },
+      {
+        q: 'Combien de temps pour mettre en place mon établissement ?',
+        a: 'Une fois votre compte créé, votre QR code est disponible immédiatement. La plupart des établissements sont opérationnels en moins d\u2019une journée.',
+      },
+      {
+        q: 'Puis-je changer de formule plus tard ?',
+        a: 'Oui, à tout moment. Contactez-nous et nous ajustons votre formule selon l\u2019évolution de votre établissement.',
+      },
+      {
+        q: 'Les données de mes clients sont-elles sécurisées ?',
+        a: 'Oui. Les coordonnées exactes, le contenu des messages et les données de blocage ne sont jamais visibles depuis votre tableau de bord \u2014 vous n\u2019avez accès qu\u2019à des statistiques agrégées.',
+      },
+      {
+        q: 'Est-ce que je peux commander des supports physiques (QR à poser sur les tables) ?',
+        a: 'Oui, directement depuis votre tableau de bord une fois votre compte actif \u2014 chevalets, stickers, affiches, et inserts pour chambres d\u2019hôtel.',
+      },
+    ],
     plans: [
       {
         id: 'basique',

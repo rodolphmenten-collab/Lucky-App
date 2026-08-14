@@ -3,6 +3,7 @@ import { Bricolage_Grotesque, Inter, IBM_Plex_Mono } from 'next/font/google';
 import { AuthRecoveryListener } from '@/components/AuthRecoveryListener';
 import { ImpersonationBar } from '@/components/ImpersonationBar';
 import { LanguageProvider } from '@/components/LanguageProvider';
+import { CookieConsent } from '@/components/CookieConsent';
 import './globals.css';
 
 const display = Bricolage_Grotesque({
@@ -50,6 +51,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <AuthRecoveryListener />
         <ImpersonationBar />
         <LanguageProvider>{children}</LanguageProvider>
+        <CookieConsent />
       </body>
     </html>
   );

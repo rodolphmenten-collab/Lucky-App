@@ -6,6 +6,7 @@ import { LanguageToggle } from '@/components/LanguageToggle';
 import { Logo } from '@/components/Logo';
 import { ProductShowcase } from '@/components/ProductShowcase';
 import { Reveal } from '@/components/Reveal';
+import { FAQ } from '@/components/FAQ';
 import { landingCopy, type Lang } from '@/lib/i18n/landing';
 
 const VENUE_TYPES = [
@@ -161,6 +162,8 @@ export default function LandingPage() {
           ))}
         </div>
       </section>
+
+      <FAQ eyebrow={t.faqEyebrow} title={t.faqTitle} items={t.faqItems as any} />
 
       {/* Get in touch */}
       <section className="mx-auto max-w-2xl border-t hairline px-6 py-28 text-center">
