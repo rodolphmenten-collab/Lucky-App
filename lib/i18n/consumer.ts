@@ -71,6 +71,9 @@ export const consumerCopy: Record<ConsumerLang, any> = {
       needsLocation: 'We need your location to confirm you\u2019re actually here.',
       genericError: 'Something went wrong. Try again.',
       peopleHere: (count: number, open: number) => `${count} people here · ${open} open to meeting`,
+      termsPrefix: 'I agree to the',
+      termsLink: 'Terms of Use',
+      termsRequired: 'Please accept the Terms of Use to continue.',
     },
     chat: {
       placeholder: 'Type a message…',
@@ -148,6 +151,9 @@ export const consumerCopy: Record<ConsumerLang, any> = {
       needsLocation: 'Nous avons besoin de votre position pour confirmer votre présence.',
       genericError: 'Une erreur est survenue. Réessayez.',
       peopleHere: (count: number, open: number) => `${count} personnes présentes · ${open} ouvertes à la rencontre`,
+      termsPrefix: "J'accepte les",
+      termsLink: "Conditions d'Utilisation",
+      termsRequired: "Merci d'accepter les Conditions d'Utilisation pour continuer.",
     },
     chat: {
       placeholder: 'Écrire un message…',
@@ -225,6 +231,9 @@ export const consumerCopy: Record<ConsumerLang, any> = {
       needsLocation: 'Necesitamos tu ubicación para confirmar que estás realmente aquí.',
       genericError: 'Algo salió mal. Inténtalo de nuevo.',
       peopleHere: (count: number, open: number) => `${count} personas aquí · ${open} abiertas a conocer gente`,
+      termsPrefix: 'Acepto los',
+      termsLink: 'Términos de Uso',
+      termsRequired: 'Acepta los Términos de Uso para continuar.',
     },
     chat: {
       placeholder: 'Escribe un mensaje…',

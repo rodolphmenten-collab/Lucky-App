@@ -184,8 +184,16 @@ export default function LandingPage() {
         </Reveal>
       </section>
 
-      <footer className="border-t hairline px-6 py-10">
+      <footer className="flex flex-wrap items-center justify-between gap-4 border-t hairline px-6 py-10">
         <p className="font-mono text-xs text-bone-faint">Lucky — {new Date().getFullYear()}</p>
+        <div className="flex gap-4">
+          <Link href="/legal/etablissements" className="text-xs text-bone-faint hover:text-bone-dim">
+            {lang === 'fr' ? 'CGV Établissements' : 'Venue Terms'}
+          </Link>
+          <Link href="/legal/utilisateurs" className="text-xs text-bone-faint hover:text-bone-dim">
+            {lang === 'fr' ? "CGU Utilisateurs" : 'User Terms'}
+          </Link>
+        </div>
       </footer>
     </main>
   );

@@ -26,9 +26,15 @@ export default async function VenuePage({ params }: { params: { slug: string } }
   // A profile is required before anyone can join a room — without this check, a
   // brand-new user could check in and appear to others with no name, no photo,
   // nothing to go on.
+  let termsAcceptedAt: string | null = null;
   if (user) {
-    const { data: profile } = await supabase.from('profiles').select('id').eq('id', user.id).maybeSingle();
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('id, terms_accepted_at')
+      .eq('id', user.id)
+      .maybeSingle();
     if (!profile) redirect(`/onboarding?next=${encodeURIComponent(`/venue/${params.slug}`)}`);
+    termsAcceptedAt = profile.terms_accepted_at;
   }
 
   let hasActiveCheckIn = false;
@@ -60,9 +66,15 @@ export default async function VenuePage({ params }: { params: { slug: string } }
 
       <div className="px-6 py-10">
         {!user ? (
-          <JoinRoom venueId={venue.id} venueSlug={venue.slug} venueName={venue.name} needsAuth />
+          <JoinRoom venueId={venue.id} venueSlug={venue.slug} venueName={venue.name} needsAuth termsAcceptedAt={null} />
         ) : !hasActiveCheckIn ? (
-          <JoinRoom venueId={venue.id} venueSlug={venue.slug} venueName={venue.name} needsAuth={false} />
+          <JoinRoom
+            venueId={venue.id}
+            venueSlug={venue.slug}
+            venueName={venue.name}
+            needsAuth={false}
+            termsAcceptedAt={termsAcceptedAt}
+          />
         ) : (
           <PeopleHere
             venueSlug={venue.slug}
