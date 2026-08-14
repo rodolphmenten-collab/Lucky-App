@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { OnboardingForm } from './OnboardingForm';
+import { OnboardingHeader } from './OnboardingHeader';
 
 export default async function OnboardingPage({ searchParams }: { searchParams: { next?: string } }) {
   const supabase = createClient();
@@ -17,17 +18,7 @@ export default async function OnboardingPage({ searchParams }: { searchParams: {
 
   return (
     <main className="mx-auto min-h-screen max-w-md px-6 py-16">
-      <p className="font-mono text-xs uppercase tracking-[0.3em] text-brass">
-        {isEdit ? 'Edit profile' : 'Welcome'}
-      </p>
-      <h1 className="mt-4 font-display text-3xl italic text-bone">
-        {isEdit ? 'Update your details.' : 'A few things about you.'}
-      </h1>
-      {!isEdit && (
-        <p className="mt-2 text-sm text-bone-dim">
-          Under 30 seconds. Nothing here is public until you join a room.
-        </p>
-      )}
+      <OnboardingHeader isEdit={isEdit} />
       <OnboardingForm userId={user?.id ?? null} existingProfile={profile ?? undefined} next={searchParams.next} />
     </main>
   );

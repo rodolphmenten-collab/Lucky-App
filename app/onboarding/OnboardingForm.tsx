@@ -4,6 +4,8 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { ensureUploadableImage } from '@/lib/imageUpload';
+import { useLanguage } from '@/components/LanguageProvider';
+import { ConsumerLanguageSwitcher } from '@/components/ConsumerLanguageSwitcher';
 import { Button } from '@/components/ui/Button';
 import { INTENTION_META } from '@/lib/intentions';
 import type { Intention, Profile } from '@/lib/types';
@@ -22,6 +24,7 @@ export function OnboardingForm({
   const router = useRouter();
   const supabase = createClient();
   const isEdit = Boolean(existingProfile);
+  const { t } = useLanguage();
 
   // 'profile' collects the details; 'verify' only appears for someone who wasn't
   // already signed in, right at the end, so they've invested effort before being
@@ -107,7 +110,7 @@ export function OnboardingForm({
   async function handleProfileSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!firstName || intentions.length === 0) {
-      setError('Add your name and at least one reason you\u2019re here.');
+      setError(t.onboarding.required);
       return;
     }
     setError(null);
@@ -182,27 +185,25 @@ export function OnboardingForm({
   if (step === 'verify') {
     return (
       <div className="mt-10">
-        <p className="text-sm text-bone-dim">
-          Almost there — we just need to confirm it&rsquo;s really you.
-        </p>
+        <p className="text-sm text-bone-dim">{t.onboarding.almostThere}</p>
 
         {codeSent ? (
           <form onSubmit={handleVerifyCode} className="mt-6 space-y-4">
             <p className="rounded-2xl border hairline bg-ink-800 p-5 text-sm text-bone-dim">
-              Check <span className="text-bone">{email}</span> and enter the code below.
+              {t.login.codeSentTo} <span className="text-bone">{email}</span>
             </p>
             <input
               type="text"
               inputMode="numeric"
               required
-              placeholder="Code"
+              placeholder={t.login.codePlaceholder}
               maxLength={10}
               value={code}
               onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
               className="w-full rounded-full border hairline bg-transparent px-5 py-3 text-center text-lg tracking-[0.3em] text-bone placeholder:text-bone-faint focus:border-brass"
             />
             <Button type="submit" disabled={verifyStatus === 'verifying' || code.length < 6} className="w-full">
-              {verifyStatus === 'verifying' ? 'Verifying\u2026' : 'Continue'}
+              {verifyStatus === 'verifying' ? t.login.verifying : t.login.continue}
             </Button>
             {verifyStatus === 'error' && <p className="text-xs text-red-400">{verifyError}</p>}
             <button
@@ -215,7 +216,7 @@ export function OnboardingForm({
               }}
               className="w-full text-center text-xs text-bone-faint underline"
             >
-              Use a different email
+              {t.login.useOtherEmail}
             </button>
           </form>
         ) : (
@@ -223,13 +224,13 @@ export function OnboardingForm({
             <input
               type="email"
               required
-              placeholder="you@example.com"
+              placeholder={t.login.emailPlaceholder}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full rounded-full border hairline bg-transparent px-5 py-3 text-sm text-bone placeholder:text-bone-faint focus:border-brass"
             />
             <Button type="submit" disabled={verifyStatus === 'sending'} className="w-full">
-              {verifyStatus === 'sending' ? 'Sending\u2026' : 'Send code'}
+              {verifyStatus === 'sending' ? t.login.sending : t.login.sendCode}
             </Button>
             {verifyStatus === 'error' && (
               <p className="text-xs text-red-400">{verifyError || 'Something went wrong.'}</p>
@@ -239,7 +240,7 @@ export function OnboardingForm({
               onClick={() => setStep('profile')}
               className="w-full text-center text-xs text-bone-faint underline"
             >
-              &larr; Back
+              {t.login.back}
             </button>
           </form>
         )}
@@ -249,23 +250,25 @@ export function OnboardingForm({
 
   return (
     <form onSubmit={handleProfileSubmit} className="mt-10 space-y-6">
-      <div className="flex items-center gap-4">
-        <label className="relative flex h-20 w-20 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-full border hairline bg-ink-800 text-xs text-bone-faint">
-          {convertingPhoto ? (
-            '…'
-          ) : photoPreview ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={photoPreview} alt="" className="h-full w-full object-cover" />
-          ) : (
-            'Photo'
-          )}
-          <input type="file" accept="image/*" onChange={onPhotoChange} className="hidden" />
-        </label>
-        <p className="text-xs text-bone-faint">A real, recent photo of your face.</p>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <label className="relative flex h-20 w-20 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-full border hairline bg-ink-800 text-xs text-bone-faint">
+            {convertingPhoto ? (
+              '…'
+            ) : photoPreview ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={photoPreview} alt="" className="h-full w-full object-cover" />
+            ) : (
+              'Photo'
+            )}
+            <input type="file" accept="image/*" onChange={onPhotoChange} className="hidden" />
+          </label>
+          <p className="text-xs text-bone-faint">{t.onboarding.photoHint}</p>
+        </div>
       </div>
 
       <input
-        placeholder="First name"
+        placeholder={t.onboarding.firstName}
         value={firstName}
         onChange={(e) => setFirstName(e.target.value)}
         className="w-full rounded-full border hairline bg-transparent px-5 py-3 text-sm text-bone placeholder:text-bone-faint focus:border-brass"
@@ -274,7 +277,7 @@ export function OnboardingForm({
 
       <div className="grid grid-cols-2 gap-4">
         <input
-          placeholder="Age"
+          placeholder={t.onboarding.age}
           type="number"
           min={18}
           max={100}
@@ -283,7 +286,7 @@ export function OnboardingForm({
           className="w-full rounded-full border hairline bg-transparent px-5 py-3 text-sm text-bone placeholder:text-bone-faint focus:border-brass"
         />
         <input
-          placeholder="City"
+          placeholder={t.onboarding.city}
           value={city}
           onChange={(e) => setCity(e.target.value)}
           className="w-full rounded-full border hairline bg-transparent px-5 py-3 text-sm text-bone placeholder:text-bone-faint focus:border-brass"
@@ -291,14 +294,14 @@ export function OnboardingForm({
       </div>
 
       <input
-        placeholder="Job / company"
+        placeholder={t.onboarding.job}
         value={job}
         onChange={(e) => setJob(e.target.value)}
         className="w-full rounded-full border hairline bg-transparent px-5 py-3 text-sm text-bone placeholder:text-bone-faint focus:border-brass"
       />
 
       <textarea
-        placeholder="Short bio (optional)"
+        placeholder={t.onboarding.bio}
         value={bio}
         maxLength={280}
         onChange={(e) => setBio(e.target.value)}
@@ -308,14 +311,14 @@ export function OnboardingForm({
 
       <input
         type="url"
-        placeholder="LinkedIn profile (optional)"
+        placeholder={t.onboarding.linkedin}
         value={linkedinUrl}
         onChange={(e) => setLinkedinUrl(e.target.value)}
         className="w-full rounded-full border hairline bg-transparent px-5 py-3 text-sm text-bone placeholder:text-bone-faint focus:border-brass"
       />
 
       <div>
-        <p className="mb-3 text-sm text-bone">What are you here for?</p>
+        <p className="mb-3 text-sm text-bone">{t.onboarding.whatFor}</p>
         <div className="flex flex-wrap gap-2">
           {ALL_INTENTIONS.map((i) => (
             <button
@@ -328,7 +331,7 @@ export function OnboardingForm({
                   : 'hairline text-bone-dim hover:border-white/30'
               }`}
             >
-              {INTENTION_META[i].symbol} {INTENTION_META[i].label}
+              {INTENTION_META[i].symbol} {t.intentions[i]}
             </button>
           ))}
         </div>
@@ -337,7 +340,7 @@ export function OnboardingForm({
       {error && <p className="text-xs text-red-400">{error}</p>}
 
       <Button type="submit" disabled={submitting} className="w-full">
-        {submitting ? 'Saving\u2026' : isEdit ? 'Save changes' : 'Continue'}
+        {submitting ? t.onboarding.saving : isEdit ? t.onboarding.saveBtn : t.onboarding.continueBtn}
       </Button>
     </form>
   );

@@ -7,14 +7,11 @@ import { createClient } from '@/lib/supabase/client';
 import { PersonCard, type PersonCardData } from '@/components/PersonCard';
 import { Button } from '@/components/ui/Button';
 import { HEARTBEAT_INTERVAL_SECONDS, shouldPromptReverification } from '@/lib/presence';
+import { useLanguage } from '@/components/LanguageProvider';
+import { ConsumerLanguageSwitcher } from '@/components/ConsumerLanguageSwitcher';
 import type { Intention } from '@/lib/types';
 
-const FILTERS: { label: string; value: Intention | 'all' }[] = [
-  { label: 'Everyone', value: 'all' },
-  { label: 'Dating', value: 'dating' },
-  { label: 'Business', value: 'business' },
-  { label: 'Social', value: 'social' },
-];
+const FILTER_VALUES: (Intention | 'all')[] = ['all', 'dating', 'business', 'social'];
 
 // How often we quietly re-check GPS in the background to catch someone who has
 // physically left without telling the app. Not so frequent that it drains battery
@@ -33,6 +30,7 @@ export function PeopleHere({
 }) {
   const supabase = createClient();
   const router = useRouter();
+  const { t } = useLanguage();
   const [people, setPeople] = useState<PersonCardData[]>([]);
   const [filter, setFilter] = useState<Intention | 'all'>('all');
   const [checkInId, setCheckInId] = useState<string | null>(null);
@@ -116,7 +114,7 @@ export function PeopleHere({
             });
             const data = await res.json();
             if (data.status === 'expired') {
-              setLeftMessage(`You\u2019ve left ${venueName}. Come back anytime to rejoin.`);
+              setLeftMessage(venueName);
               setCheckInId(null);
             } else if (data.status === 'verified_now') {
               setLastVerifiedAt(new Date().toISOString());
@@ -212,9 +210,11 @@ export function PeopleHere({
   if (leftMessage) {
     return (
       <div className="mx-auto max-w-sm py-24 text-center">
-        <p className="font-display text-2xl italic text-bone">{leftMessage}</p>
+        <p className="font-display text-2xl italic text-bone">
+          {t.room.leftMessage} {venueName}.
+        </p>
         <Button href={`/venue/${venueSlug}`} className="mt-8">
-          Rejoin {venueName}
+          {t.room.rejoin} {venueName}
         </Button>
       </div>
     );
@@ -230,26 +230,30 @@ export function PeopleHere({
 
       {showReverify && (
         <div className="mb-6 flex items-center justify-between rounded-2xl border border-brass/40 bg-brass/5 px-5 py-4">
-          <p className="text-sm text-bone">Still here?</p>
+          <p className="text-sm text-bone">{t.room.stillHere}</p>
           <Button onClick={confirmStillHere} variant="outline" className="!px-4 !py-2 text-xs">
-            Yes, I&rsquo;m still here
+            {t.room.yesStillHere}
           </Button>
         </div>
       )}
+
+      <div className="mb-4 flex justify-end">
+        <ConsumerLanguageSwitcher />
+      </div>
 
       <RoomNav />
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap gap-2">
-          {FILTERS.map((f) => (
+          {FILTER_VALUES.map((v) => (
             <button
-              key={f.value}
-              onClick={() => setFilter(f.value)}
+              key={v}
+              onClick={() => setFilter(v)}
               className={`rounded-full border px-4 py-2 text-xs tracking-wide transition-colors ${
-                filter === f.value ? 'border-brass text-brass' : 'hairline text-bone-dim'
+                filter === v ? 'border-brass text-brass' : 'hairline text-bone-dim'
               }`}
             >
-              {f.label}
+              {v === 'all' ? t.filters.everyone : t.intentions[v]}
             </button>
           ))}
         </div>
@@ -257,14 +261,12 @@ export function PeopleHere({
           onClick={leaveVenue}
           className="rounded-full border border-white/20 bg-ink-800 px-4 py-2 text-xs tracking-wide text-bone-dim transition-colors hover:border-red-400/40 hover:text-red-400"
         >
-          Leave the room
+          {t.room.leave}
         </button>
       </div>
 
       {filtered.length === 0 ? (
-        <p className="mt-16 text-center text-sm text-bone-faint">
-          No one matching this filter is here right now. Check back soon.
-        </p>
+        <p className="mt-16 text-center text-sm text-bone-faint">{t.room.noOneHere}</p>
       ) : (
         <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {filtered.map((p) => (

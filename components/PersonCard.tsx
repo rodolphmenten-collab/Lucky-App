@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { useState } from 'react';
 import { PresenceBadge } from '@/components/PresenceBadge';
 import { INTENTION_META } from '@/lib/intentions';
+import { useLanguage } from '@/components/LanguageProvider';
 import type { Intention, PresenceStatus } from '@/lib/types';
 
 export interface PersonCardData {
@@ -29,6 +30,7 @@ export function PersonCard({
   onWave: (userId: string) => Promise<void>;
 }) {
   const [state, setState] = useState<'idle' | 'sending' | 'sent'>(person.waved_by_me ? 'sent' : 'idle');
+  const { t } = useLanguage();
 
   async function handleWave() {
     if (state !== 'idle') return;
@@ -63,7 +65,7 @@ export function PersonCard({
         </div>
         {person.waved_at_me && (
           <div className="absolute right-3 top-3 rounded-full bg-brass px-2 py-0.5 text-[10px] font-semibold text-ink">
-            Waved at you
+            {t.room.wavedAtYou}
           </div>
         )}
         {!person.waved_at_me && person.linkedin_url && (
@@ -92,7 +94,7 @@ export function PersonCard({
                 key={i}
                 className={`rounded-full border px-2 py-0.5 text-[10px] font-medium tracking-wide ${INTENTION_META[i].classes}`}
               >
-                {INTENTION_META[i].symbol} {INTENTION_META[i].label}
+                {INTENTION_META[i].symbol} {t.intentions[i]}
               </span>
             ))}
           </div>
@@ -103,7 +105,7 @@ export function PersonCard({
         disabled={state !== 'idle'}
         className="w-full border-t hairline py-3 text-xs font-medium tracking-[0.15em] text-bone-dim transition-colors hover:text-brass disabled:hover:text-bone-dim"
       >
-        {state === 'sent' ? 'WAVED' : state === 'sending' ? '···' : person.waved_at_me ? 'WAVE BACK' : 'WAVE'}
+        {state === 'sent' ? t.room.waved : state === 'sending' ? '···' : person.waved_at_me ? t.room.waveBack : t.room.wave}
       </button>
     </div>
   );

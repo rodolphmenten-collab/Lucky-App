@@ -5,6 +5,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/Button';
 import { Logo } from '@/components/Logo';
+import { ConsumerLanguageSwitcher } from '@/components/ConsumerLanguageSwitcher';
+import { useLanguage } from '@/components/LanguageProvider';
 
 export default function LoginPage() {
   return (
@@ -18,6 +20,7 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const next = searchParams.get('next') || '/onboarding';
+  const { t } = useLanguage();
 
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
@@ -55,35 +58,37 @@ function LoginForm() {
       setErrorMsg(error.message);
       return;
     }
-    // Verified in-browser — no link click needed, so no cross-browser-context issue.
     router.push(next);
     router.refresh();
   }
 
   return (
     <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center px-6">
-      <Logo size={36} />
-      <p className="font-mono text-xs uppercase tracking-[0.3em] text-brass">Sign in</p>
-      <h1 className="mt-4 font-display text-3xl italic text-bone">Enter the room.</h1>
-      <p className="mt-3 text-sm text-bone-dim">We&rsquo;ll email you a sign-in code.</p>
+      <div className="flex items-center justify-between">
+        <Logo size={36} />
+        <ConsumerLanguageSwitcher />
+      </div>
+      <p className="mt-6 font-mono text-xs uppercase tracking-[0.3em] text-brass">{t.login.eyebrow}</p>
+      <h1 className="mt-4 font-display text-3xl italic text-bone">{t.login.title}</h1>
+      <p className="mt-3 text-sm text-bone-dim">{t.login.subtitle}</p>
 
       {codeSent ? (
         <form onSubmit={handleVerifyCode} className="mt-8 space-y-4">
           <p className="rounded-2xl border hairline bg-ink-800 p-5 text-sm text-bone-dim">
-            Check <span className="text-bone">{email}</span> and enter the code below.
+            {t.login.codeSentTo} <span className="text-bone">{email}</span>
           </p>
           <input
             type="text"
             inputMode="numeric"
             required
-            placeholder="Code"
+            placeholder={t.login.codePlaceholder}
             maxLength={10}
             value={code}
             onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
             className="w-full rounded-full border hairline bg-transparent px-5 py-3 text-center text-lg tracking-[0.3em] text-bone placeholder:text-bone-faint focus:border-brass"
           />
           <Button type="submit" disabled={status === 'verifying' || code.length < 6} className="w-full">
-            {status === 'verifying' ? 'Verifying…' : 'Continue'}
+            {status === 'verifying' ? t.login.verifying : t.login.continue}
           </Button>
           {status === 'error' && <p className="text-xs text-red-400">{errorMsg || 'Invalid code — try again.'}</p>}
           <button
@@ -96,7 +101,7 @@ function LoginForm() {
             }}
             className="w-full text-center text-xs text-bone-faint underline"
           >
-            Use a different email
+            {t.login.useOtherEmail}
           </button>
         </form>
       ) : (
@@ -104,13 +109,13 @@ function LoginForm() {
           <input
             type="email"
             required
-            placeholder="you@example.com"
+            placeholder={t.login.emailPlaceholder}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="w-full rounded-full border hairline bg-transparent px-5 py-3 text-sm text-bone placeholder:text-bone-faint focus:border-brass"
           />
           <Button type="submit" disabled={status === 'sending'} className="w-full">
-            {status === 'sending' ? 'Sending…' : 'Send code'}
+            {status === 'sending' ? t.login.sending : t.login.sendCode}
           </Button>
           {status === 'error' && (
             <p className="text-xs text-red-400">{errorMsg || 'Something went wrong — try again.'}</p>

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
+import { useLanguage } from '@/components/LanguageProvider';
 import type { Message } from '@/lib/types';
 
 interface OtherProfile {
@@ -29,6 +30,7 @@ export function ChatThread({
   justMatched: boolean;
 }) {
   const supabase = createClient();
+  const { t } = useLanguage();
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [draft, setDraft] = useState('');
   const [showMatchBanner, setShowMatchBanner] = useState(justMatched);
@@ -128,10 +130,10 @@ export function ChatThread({
           {showMenu && (
             <div className="absolute right-0 top-8 z-10 w-36 rounded-xl border hairline bg-ink-800 py-1 text-xs">
               <button onClick={reportUser} className="block w-full px-4 py-2 text-left text-bone-dim hover:text-bone">
-                Report
+                {t.chat.report}
               </button>
               <button onClick={blockUser} className="block w-full px-4 py-2 text-left text-red-400 hover:text-red-300">
-                Block
+                {t.chat.block}
               </button>
             </div>
           )}
@@ -155,7 +157,7 @@ export function ChatThread({
 
       {showMatchBanner && (
         <div className="mt-6 rounded-2xl border border-brass/40 bg-brass/5 p-5 text-center animate-fade_up">
-          <p className="font-display text-xl italic text-brass">You should meet.</p>
+          <p className="font-display text-xl italic text-brass">{t.chat.justMatched}</p>
           <p className="mt-1 text-xs text-bone-dim">
             You&rsquo;re both at {venueName ?? 'the same venue'}. Say hello.
           </p>
@@ -185,14 +187,14 @@ export function ChatThread({
         <input
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
-          placeholder="Say hello…"
+          placeholder={t.chat.placeholder}
           className="flex-1 rounded-full border hairline bg-transparent px-5 py-3 text-sm text-bone placeholder:text-bone-faint focus:border-brass"
         />
         <button
           type="submit"
           className="rounded-full bg-bone px-5 py-3 text-sm font-medium text-ink hover:bg-brass-bright"
         >
-          Send
+          {t.chat.send}
         </button>
       </form>
     </main>

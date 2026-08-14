@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
+import { useLanguage } from '@/components/LanguageProvider';
 
 function CountBadge({ count }: { count: number }) {
   if (count <= 0) return null;
@@ -14,6 +15,7 @@ function CountBadge({ count }: { count: number }) {
 }
 
 export function RoomNav() {
+  const { t } = useLanguage();
   const [unreadCount, setUnreadCount] = useState(0);
   const [waveCount, setWaveCount] = useState(0);
 
@@ -81,21 +83,21 @@ export function RoomNav() {
         href="/matches"
         className="relative flex flex-1 items-center justify-center gap-2 rounded-full border border-white/20 bg-ink-800 py-3 text-sm font-medium tracking-wide text-bone shadow-sm transition-colors hover:border-brass hover:text-brass"
       >
-        Waves
+        {t.nav.waves}
         <CountBadge count={waveCount} />
       </Link>
       <Link
         href="/matches"
         className="relative flex flex-1 items-center justify-center gap-2 rounded-full border border-white/20 bg-ink-800 py-3 text-sm font-medium tracking-wide text-bone shadow-sm transition-colors hover:border-brass hover:text-brass"
       >
-        Messages
+        {t.nav.messages}
         <CountBadge count={unreadCount} />
       </Link>
       <Link
         href="/profile"
         className="flex flex-1 items-center justify-center rounded-full border border-white/20 bg-ink-800 py-3 text-sm font-medium tracking-wide text-bone shadow-sm transition-colors hover:border-brass hover:text-brass"
       >
-        Profile
+        {t.nav.profile}
       </Link>
     </div>
   );
