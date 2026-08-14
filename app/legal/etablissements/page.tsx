@@ -19,11 +19,11 @@ export default function CGUEtablissements() {
           <h2 className="text-base font-semibold text-bone">Éditeur du service</h2>
           <p className="mt-2">
             Le service Lucky (ci-après « Lucky » ou « le Service ») est édité par OLIGART, société par actions
-            simplifiée unipersonnelle (SASU) au capital de 1 000 euros, immatriculée au Registre du
-            Commerce et des Sociétés de Paris sous le numéro 939 531 125 00010, dont le siège social est situé
+            simplifiée unipersonnelle (SASU) au capital de [À COMPLÉTER] euros, immatriculée au Registre du
+            Commerce et des Sociétés de Paris sous le numéro [SIRET À COMPLÉTER], dont le siège social est situé
             9 bis rue Pérignon, 75015 Paris, France (ci-après « OLIGART », « Lucky », « nous »).
           </p>
-          <p className="mt-2">Directeur de la publication : Rodolph Menten.</p>
+          <p className="mt-2">Directeur de la publication : [NOM À COMPLÉTER].</p>
           <p className="mt-2">Contact : hello@lucky-app.io</p>
         </section>
 

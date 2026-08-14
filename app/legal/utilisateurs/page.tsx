@@ -16,8 +16,8 @@ export default function CGUUtilisateurs() {
         <section>
           <h2 className="text-base font-semibold text-bone">Éditeur</h2>
           <p className="mt-2">
-            Lucky est édité par OLIGART, SASU au capital de 1 000 euros, immatriculée au RCS de Paris
-            sous le numéro 939 531 125 00010, dont le siège social est situé 9 bis rue Pérignon, 75015 Paris,
+            Lucky est édité par OLIGART, SASU au capital de [À COMPLÉTER] euros, immatriculée au RCS de Paris
+            sous le numéro [SIRET À COMPLÉTER], dont le siège social est situé 9 bis rue Pérignon, 75015 Paris,
             France. Contact : hello@lucky-app.io.
           </p>
         </section>

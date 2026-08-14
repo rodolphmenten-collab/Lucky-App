@@ -19,16 +19,28 @@ const COPY: Record<string, { text: string; accept: string }> = {
 
 export function CookieConsent() {
   const [visible, setVisible] = useState(false);
-  const [lang, setLang] = useState<'fr' | 'en' | 'es'>('en');
+  const [lang, setLang] = useState<'fr' | 'en' | 'es'>('fr');
 
   useEffect(() => {
     const dismissed = window.localStorage.getItem('lucky_cookie_consent');
     if (!dismissed) setVisible(true);
 
-    const raw = navigator.language?.toLowerCase() ?? 'en';
-    if (raw.startsWith('fr')) setLang('fr');
-    else if (raw.startsWith('es')) setLang('es');
-    else setLang('en');
+    // Match whichever language the person is actually seeing: the marketing
+    // page's own saved choice takes priority (it defaults to French regardless
+    // of browser language), then the consumer app's saved choice, then finally
+    // the browser's language as a last resort.
+    const landingLang = window.localStorage.getItem('here-lang');
+    const consumerLang = window.localStorage.getItem('lucky_consumer_lang');
+    const stored = landingLang || consumerLang;
+
+    if (stored === 'en' || stored === 'fr' || stored === 'es') {
+      setLang(stored);
+    } else {
+      const raw = navigator.language?.toLowerCase() ?? 'fr';
+      if (raw.startsWith('en')) setLang('en');
+      else if (raw.startsWith('es')) setLang('es');
+      else setLang('fr');
+    }
   }, []);
 
   function accept() {
