@@ -130,18 +130,20 @@ export function ChatThread({
     const content = draft.trim();
     setDraft('');
 
-    const { data, error } = await supabase
-      .from('messages')
-      .insert({ match_id: matchId, sender_id: currentUserId, content })
-      .select()
-      .single();
+    const res = await fetch('/api/send-message', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ matchId, content }),
+    });
 
-    if (error) {
-      setDraft(content);
+    if (!res.ok) {
+      setDraft(content); // put it back so nothing is silently lost
       return;
     }
-    if (data) {
-      setMessages((prev) => (prev.some((m) => m.id === data.id) ? prev : [...prev, data as Message]));
+
+    const { message } = await res.json();
+    if (message) {
+      setMessages((prev) => (prev.some((m) => m.id === message.id) ? prev : [...prev, message as Message]));
     }
   }
 

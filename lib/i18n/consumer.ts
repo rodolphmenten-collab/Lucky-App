@@ -74,6 +74,8 @@ export const consumerCopy: Record<ConsumerLang, any> = {
       termsPrefix: 'I agree to the',
       termsLink: 'Terms of Use',
       termsRequired: 'Please accept the Terms of Use to continue.',
+      enableNotifications: 'Get notified about waves & messages',
+      notificationsEnabled: 'Notifications on',
     },
     chat: {
       placeholder: 'Type a message…',
@@ -164,6 +166,8 @@ export const consumerCopy: Record<ConsumerLang, any> = {
       termsPrefix: "J'accepte les",
       termsLink: "Conditions d'Utilisation",
       termsRequired: "Merci d'accepter les Conditions d'Utilisation pour continuer.",
+      enableNotifications: 'Être notifié des waves et messages',
+      notificationsEnabled: 'Notifications activées',
     },
     chat: {
       placeholder: 'Écrire un message…',
@@ -254,6 +258,8 @@ export const consumerCopy: Record<ConsumerLang, any> = {
       termsPrefix: 'Acepto los',
       termsLink: 'Términos de Uso',
       termsRequired: 'Acepta los Términos de Uso para continuar.',
+      enableNotifications: 'Recibir avisos de saludos y mensajes',
+      notificationsEnabled: 'Notificaciones activadas',
     },
     chat: {
       placeholder: 'Escribe un mensaje…',
