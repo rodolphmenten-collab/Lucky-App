@@ -17,7 +17,7 @@ export default async function ChatPage({
 
   const { data: match } = await supabase
     .from('matches')
-    .select('id, user_a, user_b, venues(name, slug)')
+    .select('id, user_a, user_b, created_at, venues(name, slug)')
     .eq('id', params.matchId)
     .maybeSingle();
 
@@ -36,6 +36,13 @@ export default async function ChatPage({
     .eq('match_id', match.id)
     .order('created_at', { ascending: true });
 
+  const { data: existingFeedback } = await supabase
+    .from('match_feedback')
+    .select('id')
+    .eq('match_id', match.id)
+    .eq('user_id', user.id)
+    .maybeSingle();
+
   return (
     <ChatThread
       matchId={match.id}
@@ -45,6 +52,8 @@ export default async function ChatPage({
       venueSlug={(match as any).venues?.slug}
       initialMessages={messages ?? []}
       justMatched={searchParams.justMatched === '1'}
+      matchCreatedAt={match.created_at}
+      feedbackGiven={Boolean(existingFeedback)}
     />
   );
 }

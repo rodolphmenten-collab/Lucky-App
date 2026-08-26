@@ -12,6 +12,8 @@ interface OtherProfile {
   photo_url: string | null;
 }
 
+const FEEDBACK_DELAY_HOURS = 3;
+
 export function ChatThread({
   matchId,
   currentUserId,
@@ -20,6 +22,8 @@ export function ChatThread({
   venueSlug,
   initialMessages,
   justMatched,
+  matchCreatedAt,
+  feedbackGiven,
 }: {
   matchId: string;
   currentUserId: string;
@@ -28,15 +32,26 @@ export function ChatThread({
   venueSlug?: string;
   initialMessages: Message[];
   justMatched: boolean;
+  matchCreatedAt: string;
+  feedbackGiven: boolean;
 }) {
   const supabase = createClient();
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [draft, setDraft] = useState('');
   const [showMatchBanner, setShowMatchBanner] = useState(justMatched);
   const [showMenu, setShowMenu] = useState(false);
   const [actionDone, setActionDone] = useState<string | null>(null);
+  const [suggesting, setSuggesting] = useState(false);
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [feedbackDone, setFeedbackDone] = useState(feedbackGiven);
   const bottomRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (feedbackGiven) return;
+    const hoursSince = (Date.now() - new Date(matchCreatedAt).getTime()) / (1000 * 60 * 60);
+    setShowFeedback(hoursSince >= FEEDBACK_DELAY_HOURS);
+  }, [matchCreatedAt, feedbackGiven]);
 
   async function blockUser() {
     if (!other) return;
@@ -58,6 +73,33 @@ export function ChatThread({
     });
     setActionDone('reported');
     setShowMenu(false);
+  }
+
+  async function sendFeedback(met: boolean) {
+    setShowFeedback(false);
+    setFeedbackDone(true);
+    await fetch('/api/match-feedback', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ matchId, met }),
+    });
+  }
+
+  async function suggestOpener() {
+    setSuggesting(true);
+    try {
+      const res = await fetch('/api/icebreaker', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ matchId, lang }),
+      });
+      const data = await res.json();
+      if (res.ok && data.suggestion) {
+        setDraft(data.suggestion);
+      }
+    } finally {
+      setSuggesting(false);
+    }
   }
 
   useEffect(() => {
@@ -88,10 +130,6 @@ export function ChatThread({
     const content = draft.trim();
     setDraft('');
 
-    // Add it ourselves right away rather than waiting on the realtime channel —
-    // that keeps sending instant even if Realtime replication is briefly slow or
-    // not yet enabled for this table, and the dedup check above prevents a
-    // duplicate if the realtime event also arrives.
     const { data, error } = await supabase
       .from('messages')
       .insert({ match_id: matchId, sender_id: currentUserId, content })
@@ -99,7 +137,7 @@ export function ChatThread({
       .single();
 
     if (error) {
-      setDraft(content); // put it back so nothing is silently lost
+      setDraft(content);
       return;
     }
     if (data) {
@@ -145,26 +183,47 @@ export function ChatThread({
           href={`/venue/${venueSlug}`}
           className="mt-4 flex items-center justify-center gap-2 rounded-full border hairline bg-ink-800 py-2.5 text-xs tracking-wide text-bone-dim transition-colors hover:border-brass hover:text-brass"
         >
-          &larr; Back to {venueName ?? 'the room'}
+          &larr; {venueName ?? 'the room'}
         </Link>
       )}
 
       {actionDone && (
         <p className="mt-3 text-center text-xs text-bone-faint">
-          {actionDone === 'blocked' ? 'User blocked.' : 'Thanks — we’ll review this.'}
+          {actionDone === 'blocked' ? t.chat.blocked : t.chat.reported}
         </p>
       )}
 
       {showMatchBanner && (
         <div className="mt-6 rounded-2xl border border-brass/40 bg-brass/5 p-5 text-center animate-fade_up">
           <p className="font-display text-xl italic text-brass">{t.chat.justMatched}</p>
-          <p className="mt-1 text-xs text-bone-dim">
-            You&rsquo;re both at {venueName ?? 'the same venue'}. Say hello.
-          </p>
+          <p className="mt-1 text-xs text-bone-dim">{t.chat.justMatchedBody(venueName ?? '')}</p>
           <button onClick={() => setShowMatchBanner(false)} className="mt-3 text-[11px] text-bone-faint underline">
-            Dismiss
+            {t.chat.dismiss}
           </button>
         </div>
+      )}
+
+      {showFeedback && !feedbackDone && (
+        <div className="mt-4 flex items-center justify-between gap-3 rounded-2xl border hairline bg-ink-800 px-5 py-4">
+          <p className="text-sm text-bone">{t.chat.didYouMeet(other?.first_name ?? '')}</p>
+          <div className="flex shrink-0 gap-2">
+            <button
+              onClick={() => sendFeedback(true)}
+              className="rounded-full bg-bone px-3 py-1.5 text-xs font-medium text-ink hover:bg-brass-bright"
+            >
+              {t.chat.yes}
+            </button>
+            <button
+              onClick={() => sendFeedback(false)}
+              className="rounded-full border hairline px-3 py-1.5 text-xs text-bone-dim"
+            >
+              {t.chat.no}
+            </button>
+          </div>
+        </div>
+      )}
+      {feedbackDone && !feedbackGiven && (
+        <p className="mt-3 text-center text-xs text-bone-faint">{t.chat.thanksFeedback}</p>
       )}
 
       <div className="flex-1 space-y-3 overflow-y-auto py-6">
@@ -182,6 +241,16 @@ export function ChatThread({
         ))}
         <div ref={bottomRef} />
       </div>
+
+      {messages.length === 0 && (
+        <button
+          onClick={suggestOpener}
+          disabled={suggesting}
+          className="mb-3 self-start rounded-full border border-brass/40 px-4 py-2 text-xs text-brass hover:bg-brass/10"
+        >
+          {suggesting ? t.chat.suggesting : t.chat.suggestOpener}
+        </button>
+      )}
 
       <form onSubmit={sendMessage} className="flex gap-2 border-t hairline pt-4">
         <input
