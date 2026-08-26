@@ -76,6 +76,9 @@ export const consumerCopy: Record<ConsumerLang, any> = {
       termsRequired: 'Please accept the Terms of Use to continue.',
       enableNotifications: 'Get notified about waves & messages',
       notificationsEnabled: 'Notifications on',
+      iosInstallTitle: "Don't miss a wave or message",
+      iosInstallBody: 'Add Lucky to your Home Screen to get notified — tap the Share button below, then "Add to Home Screen".',
+      iosInstallDismiss: 'Maybe later',
     },
     chat: {
       placeholder: 'Type a message…',
@@ -168,6 +171,9 @@ export const consumerCopy: Record<ConsumerLang, any> = {
       termsRequired: "Merci d'accepter les Conditions d'Utilisation pour continuer.",
       enableNotifications: 'Être notifié des waves et messages',
       notificationsEnabled: 'Notifications activées',
+      iosInstallTitle: 'Ne ratez aucun wave ou message',
+      iosInstallBody: 'Ajoutez Lucky à votre écran d\u2019accueil pour être notifié — appuyez sur le bouton Partager ci-dessous, puis "Sur l\u2019écran d\u2019accueil".',
+      iosInstallDismiss: 'Plus tard',
     },
     chat: {
       placeholder: 'Écrire un message…',
@@ -260,6 +266,9 @@ export const consumerCopy: Record<ConsumerLang, any> = {
       termsRequired: 'Acepta los Términos de Uso para continuar.',
       enableNotifications: 'Recibir avisos de saludos y mensajes',
       notificationsEnabled: 'Notificaciones activadas',
+      iosInstallTitle: 'No te pierdas ningún saludo o mensaje',
+      iosInstallBody: 'Añade Lucky a tu pantalla de inicio para recibir avisos — toca el botón Compartir de abajo y luego "Añadir a pantalla de inicio".',
+      iosInstallDismiss: 'Más tarde',
     },
     chat: {
       placeholder: 'Escribe un mensaje…',

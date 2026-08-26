@@ -10,6 +10,7 @@ import { HEARTBEAT_INTERVAL_SECONDS, shouldPromptReverification } from '@/lib/pr
 import { useLanguage } from '@/components/LanguageProvider';
 import { ConsumerLanguageSwitcher } from '@/components/ConsumerLanguageSwitcher';
 import { EnableNotificationsButton } from '@/components/EnableNotificationsButton';
+import { IOSInstallPrompt } from '@/components/IOSInstallPrompt';
 import type { Intention } from '@/lib/types';
 
 const FILTER_VALUES: (Intention | 'all')[] = ['all', 'dating', 'business', 'social'];
@@ -237,6 +238,8 @@ export function PeopleHere({
           </Button>
         </div>
       )}
+
+      <IOSInstallPrompt />
 
       <div className="mb-4 flex items-center justify-between gap-3">
         <EnableNotificationsButton />

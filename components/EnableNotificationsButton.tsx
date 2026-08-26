@@ -16,6 +16,19 @@ export function EnableNotificationsButton() {
   const [status, setStatus] = useState<'idle' | 'enabling' | 'enabled' | 'unsupported' | 'denied'>('idle');
 
   useEffect(() => {
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+    const isStandalone =
+      (window.navigator as any).standalone === true ||
+      window.matchMedia('(display-mode: standalone)').matches;
+
+    if (isIOS && !isStandalone) {
+      // Push subscriptions created outside of standalone mode on iOS don't
+      // reliably deliver — the IOSInstallPrompt component guides these users
+      // to install first instead.
+      setStatus('unsupported');
+      return;
+    }
+
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
       setStatus('unsupported');
       return;
