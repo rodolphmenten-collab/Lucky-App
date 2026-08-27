@@ -297,6 +297,31 @@ async function addAdmin(formData: FormData) {
 
   const service = createServiceClient();
   await service.from('platform_admins').insert({ email }).select().maybeSingle();
+
+  const loginUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/admin-login`;
+  await sendEmail({
+    to: email,
+    subject: 'Vous avez maintenant accès au back-office Lucky',
+    html: emailShell(`
+      <h1 style="font-size:22px; margin: 0 0 16px;">Bienvenue dans l'équipe Lucky</h1>
+      <p style="font-size:14px; line-height:1.6; color:#333;">
+        Vous avez été ajouté(e) comme administrateur(trice) du back-office Lucky par ${user.email}.
+      </p>
+      <p style="font-size:14px; line-height:1.6; color:#333;">
+        Pour y accéder, connectez-vous avec l'adresse <strong>${email}</strong> :
+      </p>
+      <p style="margin: 24px 0;">
+        <a href="${loginUrl}" style="display:inline-block; background:#0B0A08; color:#F4EFE6; padding:12px 24px; border-radius:999px; text-decoration:none; font-size:14px; font-weight:600;">
+          Accéder au back-office
+        </a>
+      </p>
+      <p style="font-size:13px; color:#666;">
+        Si vous n'avez pas encore de mot de passe, utilisez plutôt la connexion par code sur
+        ${process.env.NEXT_PUBLIC_SITE_URL}/login puis rendez-vous sur /admin.
+      </p>
+    `),
+  });
+
   revalidatePath('/admin');
 }
 
