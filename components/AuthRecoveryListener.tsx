@@ -39,7 +39,8 @@ export function AuthRecoveryListener() {
       window.history.replaceState(null, '', window.location.pathname + window.location.search);
 
       if (type === 'recovery' || type === 'invite') {
-        router.push('/venue-set-password');
+        const next = new URLSearchParams(window.location.search).get('next') || '/venue-set-password';
+        router.push(next);
         router.refresh();
       }
     });
