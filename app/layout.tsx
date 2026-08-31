@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { Bricolage_Grotesque, Inter, IBM_Plex_Mono } from 'next/font/google';
 import { AuthRecoveryListener } from '@/components/AuthRecoveryListener';
-import { ImpersonationBar } from '@/components/ImpersonationBar';
 import { LanguageProvider } from '@/components/LanguageProvider';
 import { CookieConsent } from '@/components/CookieConsent';
 import './globals.css';
@@ -49,7 +48,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={`${display.variable} ${inter.variable} ${plexMono.variable}`}>
       <body>
         <AuthRecoveryListener />
-        <ImpersonationBar />
         <LanguageProvider>{children}</LanguageProvider>
         <CookieConsent />
       </body>

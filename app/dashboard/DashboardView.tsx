@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { QRCodeSVG } from 'qrcode.react';
 import { createClient } from '@/lib/supabase/client';
+import { AdminViewingBar } from '@/components/AdminViewingBar';
 
 interface Stats {
   people_here_now: number;
@@ -27,10 +28,12 @@ export function DashboardView({
   venue,
   stats,
   venues,
+  isAdminViewing = false,
 }: {
   venue: VenueLite;
   stats: Stats | null;
   venues: VenueLite[];
+  isAdminViewing?: boolean;
 }) {
   const qrRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
@@ -71,6 +74,7 @@ export function DashboardView({
 
   return (
     <main className="min-h-screen px-6 py-12">
+      {isAdminViewing && <AdminViewingBar venueName={venue.name} />}
       <div className="mx-auto max-w-5xl">
         <div className="flex items-center justify-between">
           <div>
@@ -92,23 +96,27 @@ export function DashboardView({
               >
                 Boutique
               </Link>
-              <Link
-                href="/dashboard/account"
-                className="rounded-full border hairline px-4 py-2 text-xs tracking-wide text-bone-dim hover:border-brass hover:text-brass"
-              >
-                Compte
-              </Link>
+              {!isAdminViewing && (
+                <Link
+                  href="/dashboard/account"
+                  className="rounded-full border hairline px-4 py-2 text-xs tracking-wide text-bone-dim hover:border-brass hover:text-brass"
+                >
+                  Compte
+                </Link>
+              )}
             </div>
           </div>
           {venues.length > 1 && (
             <p className="text-xs text-bone-faint">{venues.length} établissements liés à ce compte</p>
           )}
-          <button
-            onClick={handleSignOut}
-            className="ml-4 shrink-0 rounded-full border border-red-400/40 px-4 py-2 text-xs tracking-wide text-red-400 hover:bg-red-400/10"
-          >
-            Se déconnecter
-          </button>
+          {!isAdminViewing && (
+            <button
+              onClick={handleSignOut}
+              className="ml-4 shrink-0 rounded-full border border-red-400/40 px-4 py-2 text-xs tracking-wide text-red-400 hover:bg-red-400/10"
+            >
+              Se déconnecter
+            </button>
+          )}
         </div>
 
         <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3">

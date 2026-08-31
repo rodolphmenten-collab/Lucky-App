@@ -1,5 +1,7 @@
 import { redirect } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createServiceClient } from '@/lib/supabase/server';
+import { isPlatformAdminEmail } from '@/lib/admin';
+import { getAdminViewingVenueId } from '@/lib/adminViewing';
 import { ShopView } from './ShopView';
 
 export default async function ShopPage({ searchParams }: { searchParams: { venue?: string } }) {
@@ -9,18 +11,29 @@ export default async function ShopPage({ searchParams }: { searchParams: { venue
   } = await supabase.auth.getUser();
   if (!user) redirect('/venue-login?next=/dashboard/shop');
 
-  const { data: adminRows } = await supabase
-    .from('venue_admins')
-    .select('venue_id, venues(id, name, cover_photo_url)')
-    .eq('user_id', user.id);
+  const viewingVenueId = getAdminViewingVenueId();
+  const isAdmin = await isPlatformAdminEmail(user.email);
 
-  if (!adminRows || adminRows.length === 0) redirect('/dashboard');
+  let venue: any;
+  const service = createServiceClient();
 
-  const venue = searchParams.venue
-    ? (adminRows.find((r: any) => r.venues.id === searchParams.venue) as any)?.venues
-    : (adminRows[0] as any).venues;
+  if (viewingVenueId && isAdmin) {
+    const { data } = await service.from('venues').select('id, name, cover_photo_url').eq('id', viewingVenueId).maybeSingle();
+    venue = data;
+  } else {
+    const { data: adminRows } = await supabase
+      .from('venue_admins')
+      .select('venue_id, venues(id, name, cover_photo_url)')
+      .eq('user_id', user.id);
 
-  const { data: orders } = await supabase
+    if (!adminRows || adminRows.length === 0) redirect('/dashboard');
+
+    venue = searchParams.venue
+      ? (adminRows.find((r: any) => r.venues.id === searchParams.venue) as any)?.venues
+      : (adminRows[0] as any).venues;
+  }
+
+  const { data: orders } = await service
     .from('venue_orders')
     .select('*')
     .eq('venue_id', venue.id)

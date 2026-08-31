@@ -1,5 +1,7 @@
 import { redirect } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createServiceClient } from '@/lib/supabase/server';
+import { isPlatformAdminEmail } from '@/lib/admin';
+import { getAdminViewingVenueId } from '@/lib/adminViewing';
 import { DashboardView } from './DashboardView';
 
 export default async function DashboardPage() {
@@ -8,6 +10,30 @@ export default async function DashboardPage() {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect('/login?next=/dashboard');
+
+  const viewingVenueId = getAdminViewingVenueId();
+  const isAdmin = await isPlatformAdminEmail(user.email);
+
+  if (viewingVenueId && isAdmin) {
+    const service = createServiceClient();
+    const { data: venue } = await service
+      .from('venues')
+      .select('id, slug, name, city, plan')
+      .eq('id', viewingVenueId)
+      .maybeSingle();
+
+    if (!venue) {
+      return (
+        <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 text-center">
+          <p className="font-display text-2xl italic text-bone">Établissement introuvable.</p>
+        </main>
+      );
+    }
+
+    const { data: stats } = await service.rpc('venue_dashboard_stats', { p_venue_id: venue.id }).maybeSingle();
+
+    return <DashboardView venue={venue} stats={stats as any} venues={[venue]} isAdminViewing />;
+  }
 
   const { data: adminRows } = await supabase
     .from('venue_admins')

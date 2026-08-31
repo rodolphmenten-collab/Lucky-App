@@ -1,5 +1,7 @@
 import { redirect, notFound } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createServiceClient } from '@/lib/supabase/server';
+import { isPlatformAdminEmail } from '@/lib/admin';
+import { getAdminViewingVenueId } from '@/lib/adminViewing';
 import { VenueEditForm } from './VenueEditForm';
 
 export default async function DashboardEditPage({
@@ -12,6 +14,16 @@ export default async function DashboardEditPage({
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect('/login?next=/dashboard/edit');
+
+  const viewingVenueId = getAdminViewingVenueId();
+  const isAdmin = await isPlatformAdminEmail(user.email);
+
+  if (viewingVenueId && isAdmin) {
+    const service = createServiceClient();
+    const { data: venue } = await service.from('venues').select('*').eq('id', viewingVenueId).maybeSingle();
+    if (!venue) notFound();
+    return <VenueEditForm venue={venue} />;
+  }
 
   const { data: adminRows } = await supabase
     .from('venue_admins')
