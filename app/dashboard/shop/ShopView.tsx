@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
 import { ensureUploadableImage } from '@/lib/imageUpload';
 import { Button } from '@/components/ui/Button';
 import { SHOP_PRODUCTS, type ShopProduct } from '@/lib/products';
@@ -105,7 +104,6 @@ function OrderModal({
   onClose: () => void;
   onSubmitted: () => void;
 }) {
-  const supabase = createClient();
   const [quantity, setQuantity] = useState('25');
   const [customText, setCustomText] = useState('');
   const [logoFile, setLogoFile] = useState<File | null>(null);
@@ -129,28 +127,17 @@ function OrderModal({
     setSubmitting(true);
     setError('');
 
-    let logoUrl = venue.cover_photo_url;
-    if (logoFile) {
-      const path = `${venue.id}/orders/${Date.now()}-${logoFile.name}`;
-      const { error: uploadErr } = await supabase.storage.from('venue-photos').upload(path, logoFile, {
-        upsert: true,
-      });
-      if (!uploadErr) {
-        logoUrl = supabase.storage.from('venue-photos').getPublicUrl(path).data.publicUrl;
-      }
-    }
+    const formData = new FormData();
+    formData.set('venueId', venue.id);
+    formData.set('productId', product.id);
+    formData.set('productName', product.name);
+    formData.set('quantity', String(Number(quantity) || 1));
+    if (product.allowsCustomText && customText) formData.set('customText', customText);
+    if (logoFile) formData.set('logoFile', logoFile);
 
     const res = await fetch('/api/venue-order', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        venueId: venue.id,
-        productId: product.id,
-        productName: product.name,
-        quantity: Number(quantity) || 1,
-        customText: product.allowsCustomText ? customText || null : null,
-        logoUrl,
-      }),
+      body: formData,
     });
 
     setSubmitting(false);

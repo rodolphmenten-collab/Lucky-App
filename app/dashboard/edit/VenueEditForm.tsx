@@ -3,13 +3,11 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { createClient } from '@/lib/supabase/client';
 import { ensureUploadableImage } from '@/lib/imageUpload';
 import { Button } from '@/components/ui/Button';
 import type { Venue } from '@/lib/types';
 
 export function VenueEditForm({ venue }: { venue: Venue }) {
-  const supabase = createClient();
   const router = useRouter();
 
   const [name, setName] = useState(venue.name);
@@ -64,35 +62,26 @@ export function VenueEditForm({ venue }: { venue: Venue }) {
     setSaving(true);
     setError(null);
 
-    let coverUrl = venue.cover_photo_url;
+    const formData = new FormData();
+    formData.set('venueId', venue.id);
+    formData.set('name', name);
+    formData.set('city', city);
+    formData.set('radius', radius || String(venue.verification_radius_m));
+    if (coords) {
+      formData.set('lat', String(coords.lat));
+      formData.set('lng', String(coords.lng));
+    }
     if (coverFile) {
-      const path = `${venue.id}/${Date.now()}-${coverFile.name}`;
-      const { error: uploadErr } = await supabase.storage.from('venue-photos').upload(path, coverFile, {
-        upsert: true,
-      });
-      if (uploadErr) {
-        setSaving(false);
-        setError(`Échec de l'envoi de la photo : ${uploadErr.message}`);
-        return;
-      }
-      coverUrl = supabase.storage.from('venue-photos').getPublicUrl(path).data.publicUrl;
+      formData.set('coverFile', coverFile);
     }
 
-    const { error: updateErr } = await supabase
-      .from('venues')
-      .update({
-        name,
-        city,
-        cover_photo_url: coverUrl,
-        verification_radius_m: Number(radius) || venue.verification_radius_m,
-        ...(coords ? { latitude: coords.lat, longitude: coords.lng } : {}),
-      })
-      .eq('id', venue.id);
+    const res = await fetch('/api/dashboard/save-venue', { method: 'POST', body: formData });
+    const data = await res.json();
 
     setSaving(false);
 
-    if (updateErr) {
-      setError(updateErr.message);
+    if (!res.ok) {
+      setError(data.error ?? 'Une erreur est survenue.');
       return;
     }
 
