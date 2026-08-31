@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/Button';
+import { useLanguage } from '@/components/LanguageProvider';
+import { ConsumerLanguageSwitcher } from '@/components/ConsumerLanguageSwitcher';
 import type { Profile } from '@/lib/types';
 
 export function ProfileEditor({
@@ -20,6 +22,7 @@ export function ProfileEditor({
 }) {
   const supabase = createClient();
   const router = useRouter();
+  const { t } = useLanguage();
   const [visible, setVisible] = useState(profile.visible);
   const [saving, setSaving] = useState(false);
 
@@ -48,6 +51,9 @@ export function ProfileEditor({
 
   return (
     <div>
+      <div className="mb-4 flex justify-end">
+        <ConsumerLanguageSwitcher />
+      </div>
       <div className="flex items-center gap-4">
         <div className="h-20 w-20 overflow-hidden rounded-full bg-ink-700">
           {profile.photo_url && (
@@ -74,7 +80,7 @@ export function ProfileEditor({
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 text-xs text-brass underline"
             >
-              LinkedIn profile ↗
+              {t.profile.linkedinLink}
             </a>
           )}
         </div>
@@ -83,19 +89,19 @@ export function ProfileEditor({
       <div className="mt-8 grid grid-cols-2 gap-3">
         <Link href="/matches" className="rounded-2xl border hairline p-4">
           <p className="font-display text-xl text-bone">{connectionCount}</p>
-          <p className="mt-1 text-xs text-bone-faint">Connections</p>
+          <p className="mt-1 text-xs text-bone-faint">{t.profile.connections}</p>
         </Link>
         <div className="rounded-2xl border hairline p-4">
-          <p className="font-display text-sm text-bone">{currentVenue?.name ?? 'Not checked in'}</p>
-          <p className="mt-1 text-xs text-bone-faint">Current venue</p>
+          <p className="font-display text-sm text-bone">{currentVenue?.name ?? t.profile.notCheckedIn}</p>
+          <p className="mt-1 text-xs text-bone-faint">{t.profile.currentVenue}</p>
         </div>
       </div>
 
       <div className="mt-6 flex items-center justify-between rounded-2xl border hairline p-4">
         <div>
-          <p className="text-sm text-bone">Visible here</p>
+          <p className="text-sm text-bone">{t.profile.visibleHere}</p>
           <p className="mt-0.5 text-xs text-bone-faint">
-            {visible ? 'Others at your venue can see you.' : 'You’re invisible in People Here.'}
+            {visible ? t.profile.visibleOn : t.profile.visibleOff}
           </p>
         </div>
         <button
@@ -117,23 +123,23 @@ export function ProfileEditor({
             href={`/venue/${currentVenue.slug}`}
             className="flex-1 rounded-full border border-white/20 bg-ink-800 py-3 text-center text-xs tracking-wide text-bone-dim hover:border-brass hover:text-brass"
           >
-            &larr; Back to {currentVenue.name}
+            {t.matches.backTo} {currentVenue.name}
           </Link>
           <button
             onClick={leaveVenue}
             className="flex-1 rounded-full border hairline py-3 text-xs tracking-wide text-bone-dim hover:border-white/30"
           >
-            Leave venue
+            {t.profile.leaveVenue}
           </button>
         </div>
       )}
 
       <div className="mt-10 flex justify-between text-xs text-bone-faint">
         <Link href="/onboarding" className="underline">
-          Edit details
+          {t.profile.editDetails}
         </Link>
         <button onClick={signOut} className="underline">
-          Sign out
+          {t.profile.signOut}
         </button>
       </div>
     </div>
