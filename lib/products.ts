@@ -5,6 +5,7 @@ export interface ShopProduct {
   price: string;
   unit: string;
   allowsCustomText: boolean;
+  image: string;
 }
 
 export const SHOP_PRODUCTS: ShopProduct[] = [
@@ -15,6 +16,7 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
     price: '4€',
     unit: 'par unité',
     allowsCustomText: true,
+    image: '/shop/table-stand.png',
   },
   {
     id: 'window-sticker',
@@ -23,6 +25,7 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
     price: '12€',
     unit: 'par unité',
     allowsCustomText: false,
+    image: '/shop/sticker.png',
   },
   {
     id: 'poster-a4',
@@ -31,6 +34,7 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
     price: '9€',
     unit: 'par unité',
     allowsCustomText: true,
+    image: '/shop/poster.png',
   },
   {
     id: 'room-card',
@@ -39,5 +43,6 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
     price: '3€',
     unit: 'par unité',
     allowsCustomText: true,
+    image: '/shop/room-card.png',
   },
 ];

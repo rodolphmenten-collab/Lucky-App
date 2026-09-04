@@ -45,13 +45,19 @@ export function ShopView({ venue, orders }: { venue: VenueLite; orders: OrderRow
             <button
               key={p.id}
               onClick={() => setSelected(p)}
-              className="rounded-2xl border hairline p-5 text-left transition-colors hover:border-brass"
+              className="overflow-hidden rounded-2xl border hairline text-left transition-colors hover:border-brass"
             >
-              <p className="font-display text-lg italic text-bone">{p.name}</p>
-              <p className="mt-1 text-xs text-bone-dim">{p.description}</p>
-              <p className="mt-3 font-mono text-xs text-brass">
-                {p.price} <span className="text-bone-faint">{p.unit}</span>
-              </p>
+              <div className="aspect-square w-full overflow-hidden bg-ink-900">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={p.image} alt={p.name} className="h-full w-full object-cover" />
+              </div>
+              <div className="p-5">
+                <p className="font-display text-lg italic text-bone">{p.name}</p>
+                <p className="mt-1 text-xs text-bone-dim">{p.description}</p>
+                <p className="mt-3 font-mono text-xs text-brass">
+                  {p.price} <span className="text-bone-faint">{p.unit}</span>
+                </p>
+              </div>
             </button>
           ))}
         </div>
@@ -153,17 +159,23 @@ function OrderModal({
 
   return (
     <div className="fixed inset-0 z-20 flex items-end justify-center bg-black/60 p-0 sm:items-center sm:p-6">
-      <div className="w-full max-w-md rounded-t-3xl border hairline bg-ink-900 p-6 sm:rounded-3xl">
-        <div className="flex items-center justify-between">
-          <p className="font-display text-xl italic text-bone">{product.name}</p>
-          <button onClick={onClose} className="text-bone-faint hover:text-bone-dim">
+      <div className="w-full max-w-md overflow-hidden rounded-t-3xl border hairline bg-ink-900 sm:rounded-3xl">
+        <div className="relative aspect-[3/1] w-full overflow-hidden bg-ink-800">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={product.image} alt={product.name} className="h-full w-full object-cover" />
+          <button
+            onClick={onClose}
+            className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-ink-900/80 text-bone backdrop-blur"
+          >
             ✕
           </button>
         </div>
-        <p className="mt-1 text-xs text-bone-dim">{product.description}</p>
+        <div className="p-6">
+          <p className="font-display text-xl italic text-bone">{product.name}</p>
+          <p className="mt-1 text-xs text-bone-dim">{product.description}</p>
 
-        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-          <div>
+          <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+            <div>
             <label className="mb-1 block text-xs text-bone-faint">Quantité</label>
             <input
               type="number"
@@ -213,6 +225,7 @@ function OrderModal({
             {submitting ? 'Envoi…' : 'Passer la commande'}
           </Button>
         </form>
+        </div>
       </div>
     </div>
   );
