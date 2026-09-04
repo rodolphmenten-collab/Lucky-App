@@ -92,24 +92,23 @@ export default async function AdminPage() {
                 )}
               </div>
               <div className="flex shrink-0 items-center gap-3">
-                {v.invited_at ? (
-                  <>
-                    <span className="text-[11px] text-signal-live">
-                      Invité le {new Date(v.invited_at).toLocaleDateString('fr-FR')}
-                    </span>
-                    <ImpersonateButton venueId={v.id} />
-                  </>
-                ) : v.contact_email ? (
+                {v.invited_at && (
+                  <span className="text-[11px] text-signal-live">
+                    Invité le {new Date(v.invited_at).toLocaleDateString('fr-FR')}
+                  </span>
+                )}
+                <ImpersonateButton venueId={v.id} />
+                {!v.invited_at && v.contact_email && (
                   <form action={sendVenueInvite}>
                     <input type="hidden" name="venueId" value={v.id} />
                     <button
                       type="submit"
-                      className="rounded-full bg-bone px-3 py-1.5 text-[11px] font-medium text-ink hover:bg-brass-bright"
+                      className="rounded-full border hairline px-3 py-1.5 text-[11px] text-bone-dim hover:border-brass hover:text-brass"
                     >
                       Envoyer l&rsquo;invitation
                     </button>
                   </form>
-                ) : null}
+                )}
                 <Link href={`/admin/venues/${v.id}`} className="text-xs text-brass underline">
                   Modifier
                 </Link>
