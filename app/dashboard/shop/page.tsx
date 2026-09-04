@@ -33,5 +33,11 @@ export default async function ShopPage({ searchParams }: { searchParams: { venue
       : (adminRows[0] as any).venues;
   }
 
-  return <ShopView venue={venue} />;
+  const { data: orders } = await service
+    .from('venue_orders')
+    .select('*')
+    .eq('venue_id', venue.id)
+    .order('created_at', { ascending: false });
+
+  return <ShopView venue={venue} orders={orders ?? []} />;
 }

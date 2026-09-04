@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { ensureUploadableImage } from '@/lib/imageUpload';
+import { Button } from '@/components/ui/Button';
 import { SHOP_PRODUCTS, SHOP_CATEGORIES, type ShopProduct } from '@/lib/products';
 
 interface VenueLite {
@@ -10,8 +12,18 @@ interface VenueLite {
   cover_photo_url: string | null;
 }
 
-export function ShopView({ venue }: { venue: VenueLite }) {
+interface Order {
+  id: string;
+  product_name: string;
+  quantity: number;
+  created_at: string;
+  status: string;
+}
+
+export function ShopView({ venue, orders }: { venue: VenueLite; orders: Order[] }) {
+  const [selected, setSelected] = useState<ShopProduct | null>(null);
   const [category, setCategory] = useState<ShopProduct['category'] | 'all'>('all');
+  const [orderList, setOrderList] = useState(orders);
   const filteredProducts = category === 'all' ? SHOP_PRODUCTS : SHOP_PRODUCTS.filter((p) => p.category === category);
 
   return (
@@ -23,9 +35,8 @@ export function ShopView({ venue }: { venue: VenueLite }) {
         <p className="mt-4 font-mono text-xs uppercase tracking-[0.3em] text-brass">Boutique</p>
         <h1 className="mt-2 font-display text-3xl italic text-bone">Supports physiques pour {venue.name}</h1>
         <p className="mt-2 text-sm text-bone-dim">
-          Une sélection de supports QR code fabriqués en France par nos partenaires. Chaque
-          produit s&rsquo;achète directement chez le fournisseur — vraies photos, vrais prix,
-          livraison sous quelques jours.
+          Des supports QR code prêts à poser sur vos tables ou vos murs. Commandez directement
+          depuis votre tableau de bord.
         </p>
 
         <div className="mt-8 flex flex-wrap gap-2">
@@ -42,40 +53,208 @@ export function ShopView({ venue }: { venue: VenueLite }) {
           ))}
         </div>
 
-        <div className="mt-6 grid gap-4 sm:grid-cols-2">
+        <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {filteredProducts.map((p) => (
-            <a
+            <div
               key={p.id}
-              href={p.supplierUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group flex flex-col justify-between rounded-2xl border hairline p-5 transition-colors hover:border-brass"
+              className="group overflow-hidden rounded-2xl border hairline transition-colors hover:border-brass"
             >
-              <div>
-                <div className="flex items-start justify-between gap-3">
-                  <p className="font-display text-lg italic text-bone">{p.name}</p>
-                  <span className="shrink-0 rounded-full bg-bone px-3 py-1 font-mono text-xs font-semibold text-ink">
-                    {p.price}
-                  </span>
-                </div>
-                <p className="mt-2 text-xs leading-relaxed text-bone-dim">{p.description}</p>
-              </div>
-              <div className="mt-5 flex items-center justify-between border-t hairline pt-4">
-                <span className="text-[11px] text-bone-faint">Fabriqué par {p.supplierName}</span>
-                <span className="text-xs text-brass transition-transform group-hover:translate-x-0.5">
-                  Voir le produit ↗
+              <div className="relative aspect-square w-full overflow-hidden bg-ink-900">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={p.image}
+                  alt={p.name}
+                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+                <span className="absolute right-3 top-3 rounded-full bg-bone px-3 py-1 font-mono text-xs font-semibold text-ink">
+                  {p.price}
                 </span>
               </div>
-            </a>
+              <div className="p-5">
+                <p className="font-display text-lg italic text-bone">{p.name}</p>
+                <p className="mt-1 text-xs leading-relaxed text-bone-dim">{p.description}</p>
+                <button
+                  onClick={() => setSelected(p)}
+                  className="mt-4 w-full rounded-full bg-bone py-2.5 text-xs font-medium tracking-wide text-ink transition-colors hover:bg-brass-bright"
+                >
+                  Commander
+                </button>
+              </div>
+            </div>
           ))}
         </div>
 
-        <p className="mt-8 text-[11px] text-bone-faint">
-          Lucky ne fabrique pas ces supports lui-même — ils sont vendus et livrés directement
-          par {SHOP_PRODUCTS[0]?.supplierName ?? 'nos partenaires'}. Pour le QR code de votre
-          établissement, téléchargez-le depuis votre tableau de bord principal.
-        </p>
+        {orderList.length > 0 && (
+          <div className="mt-10">
+            <p className="font-display text-lg italic text-bone">Vos commandes</p>
+            <div className="mt-3 divide-y hairline">
+              {orderList.map((o) => (
+                <div key={o.id} className="flex items-center justify-between py-3 text-sm">
+                  <span className="text-bone-dim">
+                    {o.quantity}× {o.product_name}
+                  </span>
+                  <span className="text-xs text-bone-faint">
+                    {new Date(o.created_at).toLocaleDateString('fr-FR')} · {o.status}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
+
+      {selected && (
+        <OrderModal
+          product={selected}
+          venue={venue}
+          onClose={() => setSelected(null)}
+          onSubmitted={(order) => {
+            setOrderList((prev) => [order, ...prev]);
+            setSelected(null);
+          }}
+        />
+      )}
     </main>
+  );
+}
+
+function OrderModal({
+  product,
+  venue,
+  onClose,
+  onSubmitted,
+}: {
+  product: ShopProduct;
+  venue: VenueLite;
+  onClose: () => void;
+  onSubmitted: (order: Order) => void;
+}) {
+  const [quantity, setQuantity] = useState('25');
+  const [customText, setCustomText] = useState('');
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(venue.cover_photo_url);
+  const [convertingLogo, setConvertingLogo] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
+
+  async function onLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setConvertingLogo(true);
+    try {
+      const uploadable = await ensureUploadableImage(file);
+      setLogoFile(uploadable);
+      setLogoPreview(URL.createObjectURL(uploadable));
+    } finally {
+      setConvertingLogo(false);
+    }
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setSubmitting(true);
+    setError('');
+
+    const formData = new FormData();
+    formData.set('venueId', venue.id);
+    formData.set('productId', product.id);
+    formData.set('productName', product.name);
+    formData.set('quantity', String(Number(quantity) || 1));
+    if (product.allowsCustomText && customText) formData.set('customText', customText);
+    if (logoFile) formData.set('logoFile', logoFile);
+
+    const res = await fetch('/api/venue-order', {
+      method: 'POST',
+      body: formData,
+    });
+
+    setSubmitting(false);
+
+    if (!res.ok) {
+      const data = await res.json();
+      setError(data.error ?? 'Une erreur est survenue.');
+      return;
+    }
+
+    onSubmitted({
+      id: crypto.randomUUID(),
+      product_name: product.name,
+      quantity: Number(quantity) || 1,
+      created_at: new Date().toISOString(),
+      status: 'en attente',
+    });
+  }
+
+  return (
+    <div className="fixed inset-0 z-20 flex items-end justify-center bg-black/60 p-0 sm:items-center sm:p-6">
+      <div className="w-full max-w-md overflow-hidden rounded-t-3xl border hairline bg-ink-900 sm:rounded-3xl">
+        <div className="relative aspect-[3/1] w-full overflow-hidden bg-ink-800">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={product.image} alt={product.name} className="h-full w-full object-cover" />
+          <button
+            onClick={onClose}
+            className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-ink-900/80 text-bone backdrop-blur"
+          >
+            ✕
+          </button>
+        </div>
+        <div className="p-6">
+          <p className="font-display text-xl italic text-bone">{product.name}</p>
+          <p className="mt-1 text-xs text-bone-dim">{product.description}</p>
+
+          <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+            <div>
+              <label className="text-xs text-bone-faint">Quantité</label>
+              <input
+                type="number"
+                min={1}
+                required
+                value={quantity}
+                onChange={(e) => setQuantity(e.target.value)}
+                className="mt-1.5 w-full rounded-full border hairline bg-transparent px-5 py-3 text-sm text-bone focus:border-brass"
+              />
+            </div>
+
+            {product.allowsCustomText && (
+              <div>
+                <label className="text-xs text-bone-faint">Texte personnalisé (optionnel)</label>
+                <input
+                  type="text"
+                  value={customText}
+                  onChange={(e) => setCustomText(e.target.value)}
+                  placeholder="ex. Scannez-moi"
+                  className="mt-1.5 w-full rounded-full border hairline bg-transparent px-5 py-3 text-sm text-bone placeholder:text-bone-faint focus:border-brass"
+                />
+              </div>
+            )}
+
+            <div>
+              <label className="text-xs text-bone-faint">Logo (optionnel)</label>
+              <label className="mt-1.5 flex h-24 w-24 cursor-pointer items-center justify-center overflow-hidden rounded-2xl border hairline bg-ink-800 text-xs text-bone-faint">
+                {convertingLogo ? (
+                  '…'
+                ) : logoPreview ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={logoPreview} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  'Logo'
+                )}
+                <input type="file" accept="image/*" onChange={onLogoChange} className="hidden" />
+              </label>
+              <p className="mt-2 text-[11px] text-bone-faint">
+                Utilise par défaut la photo de couverture de votre établissement si vous n&rsquo;en
+                téléversez pas.
+              </p>
+            </div>
+
+            {error && <p className="text-xs text-red-400">{error}</p>}
+
+            <Button type="submit" disabled={submitting} className="w-full">
+              {submitting ? 'Envoi…' : 'Passer la commande'}
+            </Button>
+          </form>
+        </div>
+      </div>
+    </div>
   );
 }
