@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ensureUploadableImage } from '@/lib/imageUpload';
 import { Button } from '@/components/ui/Button';
-import { SHOP_PRODUCTS, type ShopProduct } from '@/lib/products';
+import { SHOP_PRODUCTS, SHOP_CATEGORIES, type ShopProduct } from '@/lib/products';
 
 interface VenueLite {
   id: string;
@@ -25,6 +25,8 @@ interface OrderRow {
 export function ShopView({ venue, orders }: { venue: VenueLite; orders: OrderRow[] }) {
   const router = useRouter();
   const [selected, setSelected] = useState<ShopProduct | null>(null);
+  const [category, setCategory] = useState<ShopProduct['category'] | 'all'>('all');
+  const filteredProducts = category === 'all' ? SHOP_PRODUCTS : SHOP_PRODUCTS.filter((p) => p.category === category);
 
   return (
     <main className="min-h-screen px-6 py-12">
@@ -40,25 +42,48 @@ export function ShopView({ venue, orders }: { venue: VenueLite; orders: OrderRow
           livraison par email.
         </p>
 
-        <div className="mt-10 grid gap-4 sm:grid-cols-2">
-          {SHOP_PRODUCTS.map((p) => (
+        <div className="mt-8 flex flex-wrap gap-2">
+          {SHOP_CATEGORIES.map((c) => (
             <button
-              key={p.id}
-              onClick={() => setSelected(p)}
-              className="overflow-hidden rounded-2xl border hairline text-left transition-colors hover:border-brass"
+              key={c.id}
+              onClick={() => setCategory(c.id)}
+              className={`rounded-full border px-4 py-2 text-xs tracking-wide transition-colors ${
+                category === c.id ? 'border-brass text-brass' : 'hairline text-bone-dim hover:border-white/30'
+              }`}
             >
-              <div className="aspect-square w-full overflow-hidden bg-ink-900">
+              {c.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {filteredProducts.map((p) => (
+            <div
+              key={p.id}
+              className="group overflow-hidden rounded-2xl border hairline transition-colors hover:border-brass"
+            >
+              <div className="relative aspect-square w-full overflow-hidden bg-ink-900">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={p.image} alt={p.name} className="h-full w-full object-cover" />
+                <img
+                  src={p.image}
+                  alt={p.name}
+                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+                <span className="absolute right-3 top-3 rounded-full bg-bone px-3 py-1 font-mono text-xs font-semibold text-ink">
+                  {p.price}
+                </span>
               </div>
               <div className="p-5">
                 <p className="font-display text-lg italic text-bone">{p.name}</p>
-                <p className="mt-1 text-xs text-bone-dim">{p.description}</p>
-                <p className="mt-3 font-mono text-xs text-brass">
-                  {p.price} <span className="text-bone-faint">{p.unit}</span>
-                </p>
+                <p className="mt-1 text-xs leading-relaxed text-bone-dim">{p.description}</p>
+                <button
+                  onClick={() => setSelected(p)}
+                  className="mt-4 w-full rounded-full bg-bone py-2.5 text-xs font-medium tracking-wide text-ink transition-colors hover:bg-brass-bright"
+                >
+                  Commander
+                </button>
               </div>
-            </button>
+            </div>
           ))}
         </div>
 
