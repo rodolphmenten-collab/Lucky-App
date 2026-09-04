@@ -3,99 +3,82 @@ export interface ShopProduct {
   name: string;
   description: string;
   price: string;
-  unit: string;
-  allowsCustomText: boolean;
-  image: string;
-  category: 'table' | 'vitrine' | 'affichage' | 'chambre';
+  category: 'table' | 'affichage';
+  supplierUrl: string;
+  supplierName: string;
 }
 
 export const SHOP_CATEGORIES: { id: ShopProduct['category'] | 'all'; label: string }[] = [
   { id: 'all', label: 'Tout' },
   { id: 'table', label: 'Table' },
-  { id: 'vitrine', label: 'Vitrine' },
   { id: 'affichage', label: 'Affichage' },
-  { id: 'chambre', label: 'Chambre' },
 ];
 
+// Catalogue réel — chaque produit renvoie vers sa vraie fiche chez Hungry Club
+// (atelier français, Lyon), avec de vraies photos et un vrai prix. Lucky ne
+// fabrique rien lui-même : c'est un annuaire curé, pas une boutique en propre.
 export const SHOP_PRODUCTS: ShopProduct[] = [
   {
-    id: 'plaque-silver',
-    name: 'Plaque de table — argent brossé',
-    description: 'Plaque métallique ronde, finition argent brossé, gravure noire. Discrète et élégante sur chaque table.',
-    price: '9€',
-    unit: 'par unité',
-    allowsCustomText: false,
-    image: '/shop/plaque-silver.png',
+    id: 'plaque-rondo',
+    name: 'Plaque QR Code "Rondo"',
+    description: 'Plaque ronde, 5 couleurs disponibles, texte personnalisable en haut et en bas.',
+    price: '3,95€',
     category: 'table',
+    supplierUrl: 'https://hungryclub.fr/collections/supports-qr-code/products/plaque-qr-code-ronde',
+    supplierName: 'Hungry Club',
   },
   {
-    id: 'plaque-black',
-    name: 'Plaque de table — noir gravé doré',
-    description: 'Version noire avec gravure dorée, pour un rendu plus premium sur vos tables.',
-    price: '11€',
-    unit: 'par unité',
-    allowsCustomText: false,
-    image: '/shop/plaque-black.png',
+    id: 'plaque-logo',
+    name: 'Plaque QR Code "Logo"',
+    description: 'Plaque avec votre logo gravé, 5 couleurs, ligne de texte et numéro de table.',
+    price: '4,70€',
     category: 'table',
+    supplierUrl: 'https://hungryclub.fr/collections/supports-qr-code/products/plaque-qr-code-logo',
+    supplierName: 'Hungry Club',
   },
   {
-    id: 'acrylic-stand',
-    name: 'Chevalet acrylique noir',
-    description: 'Support autoportant en acrylique, texte et logo personnalisables. Le classique du bar et du restaurant.',
-    price: '14€',
-    unit: 'par unité',
-    allowsCustomText: true,
-    image: '/shop/acrylic-stand.png',
+    id: 'plaque-bois',
+    name: 'Plaque QR Code "Effet Bois"',
+    description: '4 teintes de bois, 4 modèles — une touche plus chaleureuse sur vos tables.',
+    price: '4,25€',
     category: 'table',
+    supplierUrl: 'https://hungryclub.fr/collections/supports-qr-code/products/plaque-qr-code-effet-bois',
+    supplierName: 'Hungry Club',
   },
   {
-    id: 'wood-stand',
-    name: 'Chevalet bois naturel',
-    description: 'Support en bois clair, pour une ambiance plus chaleureuse — idéal en terrasse ou hôtel-boutique.',
-    price: '16€',
-    unit: 'par unité',
-    allowsCustomText: false,
-    image: '/shop/wood-stand.png',
+    id: 'jeton-carre',
+    name: 'Jeton QR Code à poser',
+    description: 'Jeton compact posé sur table, 5 couleurs, 2 formes disponibles.',
+    price: '6,45€',
     category: 'table',
+    supplierUrl: 'https://hungryclub.fr/collections/supports-qr-code/products/jeton-qr-code-a-poser-carre',
+    supplierName: 'Hungry Club',
   },
   {
-    id: 'coaster',
-    name: 'Sous-verre QR',
-    description: 'Un sous-verre épais qui fait aussi office de QR code — discret, présent à chaque service.',
-    price: '5€',
-    unit: 'par unité',
-    allowsCustomText: false,
-    image: '/shop/coaster.png',
+    id: 'totem-bois',
+    name: 'Totem QR Code Bois — Premium',
+    description: 'Bois massif, gravure 1 ou 2 faces, 5 couleurs de plaque.',
+    price: '11,90€',
     category: 'table',
+    supplierUrl: 'https://hungryclub.fr/collections/supports-qr-code/products/totem-bois-plaque-qr-code',
+    supplierName: 'Hungry Club',
   },
   {
-    id: 'window-sticker',
-    name: 'Sticker vitrine',
-    description: 'Un sticker résistant aux intempéries pour votre entrée ou votre vitrine.',
-    price: '12€',
-    unit: 'par unité',
-    allowsCustomText: false,
-    image: '/shop/sticker.png',
-    category: 'vitrine',
+    id: 'chevalet-bois',
+    name: 'Chevalet QR Code Bois',
+    description: 'Le classique chevalet de table autoportant, 1 ou 2 faces, 2 teintes de bois.',
+    price: '16,90€',
+    category: 'table',
+    supplierUrl: 'https://hungryclub.fr/collections/supports-qr-code/products/chevalet-de-table',
+    supplierName: 'Hungry Club',
   },
   {
-    id: 'poster-a4',
-    name: 'Affiche encadrée (A4)',
-    description: 'Une affiche imprimée pour votre hall, vos toilettes, ou le mur de la réception.',
-    price: '9€',
-    unit: 'par unité',
-    allowsCustomText: true,
-    image: '/shop/poster.png',
+    id: 'plaque-murale-xl',
+    name: 'Plaque QR Code "Murale XL"',
+    description: 'Grand format pour hall, entrée ou mur de réception. 4 teintes, fixation murale.',
+    price: '55,00€',
     category: 'affichage',
-  },
-  {
-    id: 'room-card',
-    name: 'Insert carte de chambre',
-    description: 'Une carte fine à glisser dans les porte-clés de chambre d\u2019hôtel.',
-    price: '3€',
-    unit: 'par unité',
-    allowsCustomText: true,
-    image: '/shop/room-card.png',
-    category: 'chambre',
+    supplierUrl: 'https://hungryclub.fr/collections/supports-qr-code/products/plaque-qr-code-murale-xl',
+    supplierName: 'Hungry Club',
   },
 ];
