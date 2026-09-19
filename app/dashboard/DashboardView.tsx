@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation';
 import { QRCodeSVG } from 'qrcode.react';
 import { createClient } from '@/lib/supabase/client';
 import { AdminViewingBar } from '@/components/AdminViewingBar';
+import { formatPrice } from '@/lib/luckyCodes';
+import type { AttributionStats } from '@/lib/attribution';
 
 interface Stats {
   people_here_now: number;
@@ -28,11 +30,13 @@ export function DashboardView({
   venue,
   stats,
   venues,
+  attribution,
   isAdminViewing = false,
 }: {
   venue: VenueLite;
   stats: Stats | null;
   venues: VenueLite[];
+  attribution: AttributionStats | null;
   isAdminViewing?: boolean;
 }) {
   const qrRef = useRef<HTMLDivElement>(null);
@@ -91,6 +95,12 @@ export function DashboardView({
                 Modifier le profil
               </Link>
               <Link
+                href={`/dashboard/carte?venue=${venue.id}`}
+                className="rounded-full border hairline px-4 py-2 text-xs tracking-wide text-bone-dim hover:border-brass hover:text-brass"
+              >
+                Carte &amp; avantage
+              </Link>
+              <Link
                 href={`/dashboard/shop?venue=${venue.id}`}
                 className="rounded-full border hairline px-4 py-2 text-xs tracking-wide text-bone-dim hover:border-brass hover:text-brass"
               >
@@ -131,6 +141,80 @@ export function DashboardView({
             <p className="mt-1 text-xs text-bone-faint">Taux de connexion aujourd'hui</p>
           </div>
         </div>
+
+        {attribution && (
+          <section className="mt-12 rounded-2xl border border-brass/30 bg-brass/[0.03] p-6">
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <p className="font-display text-xl italic text-bone">Ce que Lucky a généré ici</p>
+              <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-bone-faint">
+                {attribution.windowDays} derniers jours
+              </p>
+            </div>
+
+            <div className="mt-6 grid gap-4 sm:grid-cols-3">
+              <div className="rounded-xl border hairline p-5">
+                <p className="font-display text-3xl text-bone">{attribution.meetupsConfirmed}</p>
+                <p className="mt-1 text-xs text-bone-faint">Rencontres confirmées</p>
+                <p className="mt-2 text-[11px] leading-relaxed text-bone-faint">
+                  Des connexions que les deux personnes ont confirmé avoir transformées en vraie
+                  rencontre, ici. {attribution.meetupsConfirmedToday} aujourd’hui.
+                </p>
+              </div>
+
+              <div className="rounded-xl border border-brass/40 p-5">
+                <p className="font-display text-3xl text-brass">
+                  {formatPrice(attribution.revenueCertifiedCents)}
+                </p>
+                <p className="mt-1 text-xs text-bone-faint">CA certifié</p>
+                <p className="mt-2 text-[11px] leading-relaxed text-bone-faint">
+                  {attribution.ordersServed} commande{attribution.ordersServed > 1 ? 's' : ''} passée
+                  {attribution.ordersServed > 1 ? 's' : ''} dans Lucky et confirmée
+                  {attribution.ordersServed > 1 ? 's' : ''} reçue{attribution.ordersServed > 1 ? 's' : ''}.
+                  Montants issus de votre carte, aucune saisie manuelle.
+                </p>
+              </div>
+
+              <div className="rounded-xl border hairline p-5">
+                <p className="font-display text-3xl text-bone-dim">
+                  {attribution.averageTicketCents
+                    ? `~ ${formatPrice(attribution.revenueEstimatedCents)}`
+                    : '—'}
+                </p>
+                <p className="mt-1 text-xs text-bone-faint">CA estimé</p>
+                <p className="mt-2 text-[11px] leading-relaxed text-bone-faint">
+                  {attribution.averageTicketCents ? (
+                    <>
+                      {attribution.meetupsWithoutOrder} rencontre
+                      {attribution.meetupsWithoutOrder > 1 ? 's' : ''} sans commande Lucky, valorisée
+                      {attribution.meetupsWithoutOrder > 1 ? 's' : ''} à votre panier moyen (
+                      {formatPrice(attribution.averageTicketCents)}). C’est une estimation, pas une
+                      mesure.
+                    </>
+                  ) : (
+                    <>
+                      Renseignez votre panier moyen dans « Carte &amp; avantage » pour estimer ce que
+                      pèsent les {attribution.meetupsWithoutOrder} rencontres sans commande Lucky.
+                    </>
+                  )}
+                </p>
+              </div>
+            </div>
+
+            {attribution.ordersPending > 0 && (
+              <p className="mt-4 text-xs text-bone-dim">
+                {attribution.ordersPending} bon{attribution.ordersPending > 1 ? 's' : ''} émis (
+                {formatPrice(attribution.revenuePendingCents)}) en attente de confirmation de
+                réception — pas encore compté.
+              </p>
+            )}
+
+            <p className="mt-5 border-t hairline pt-4 text-[11px] leading-relaxed text-bone-faint">
+              Rien n’est demandé à votre équipe de salle : le client confirme la rencontre, commande
+              éventuellement dans l’app, et présente son code au bar. Vous servez et mettez sur
+              l’addition comme d’habitude.
+            </p>
+          </section>
+        )}
 
         <div className="mt-10 grid gap-6 sm:grid-cols-2">
           <div className="rounded-2xl border hairline p-6">

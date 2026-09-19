@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { isPlatformAdminEmail } from '@/lib/admin';
 import { getAdminViewingVenueId } from '@/lib/adminViewing';
+import { getAttributionStats } from '@/lib/attribution';
 import { DashboardView } from './DashboardView';
 
 export default async function DashboardPage() {
@@ -18,7 +19,7 @@ export default async function DashboardPage() {
     const service = createServiceClient();
     const { data: venue } = await service
       .from('venues')
-      .select('id, slug, name, city, plan')
+      .select('id, slug, name, city, plan, average_ticket_cents')
       .eq('id', viewingVenueId)
       .maybeSingle();
 
@@ -30,14 +31,25 @@ export default async function DashboardPage() {
       );
     }
 
-    const { data: stats } = await service.rpc('venue_dashboard_stats', { p_venue_id: venue.id }).maybeSingle();
+    const [{ data: stats }, attribution] = await Promise.all([
+      service.rpc('venue_dashboard_stats', { p_venue_id: venue.id }).maybeSingle(),
+      getAttributionStats(service, venue.id, venue.average_ticket_cents ?? null),
+    ]);
 
-    return <DashboardView venue={venue} stats={stats as any} venues={[venue]} isAdminViewing />;
+    return (
+      <DashboardView
+        venue={venue}
+        stats={stats as any}
+        venues={[venue]}
+        attribution={attribution}
+        isAdminViewing
+      />
+    );
   }
 
   const { data: adminRows } = await supabase
     .from('venue_admins')
-    .select('venue_id, role, venues(id, slug, name, city, plan)')
+    .select('venue_id, role, venues(id, slug, name, city, plan, average_ticket_cents)')
     .eq('user_id', user.id);
 
   if (!adminRows || adminRows.length === 0) {
@@ -53,7 +65,21 @@ export default async function DashboardPage() {
   }
 
   const venue = (adminRows[0] as any).venues;
-  const { data: stats } = await supabase.rpc('venue_dashboard_stats', { p_venue_id: venue.id }).maybeSingle();
 
-  return <DashboardView venue={venue} stats={stats as any} venues={adminRows.map((r: any) => r.venues)} />;
+  // L'appartenance au lieu vient d'être prouvée par venue_admins : on peut
+  // agréger en service role (le calcul lit des tables que le patron n'a pas à
+  // pouvoir interroger ligne à ligne).
+  const [{ data: stats }, attribution] = await Promise.all([
+    supabase.rpc('venue_dashboard_stats', { p_venue_id: venue.id }).maybeSingle(),
+    getAttributionStats(createServiceClient(), venue.id, venue.average_ticket_cents ?? null),
+  ]);
+
+  return (
+    <DashboardView
+      venue={venue}
+      stats={stats as any}
+      venues={adminRows.map((r: any) => r.venues)}
+      attribution={attribution}
+    />
+  );
 }

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { useLanguage } from '@/components/LanguageProvider';
 import { PersonProfileModal } from '@/components/PersonProfileModal';
+import { MeetupPanel, type Meetup, type LuckyOrder } from '@/components/MeetupPanel';
 import type { Message, Intention } from '@/lib/types';
 
 interface OtherProfile {
@@ -32,6 +33,9 @@ export function ChatThread({
   justMatched,
   matchCreatedAt,
   feedbackGiven,
+  perkLabel,
+  initialMeetup,
+  initialOrders,
 }: {
   matchId: string;
   currentUserId: string;
@@ -42,6 +46,9 @@ export function ChatThread({
   justMatched: boolean;
   matchCreatedAt: string;
   feedbackGiven: boolean;
+  perkLabel: string | null;
+  initialMeetup: Meetup | null;
+  initialOrders: LuckyOrder[];
 }) {
   const supabase = createClient();
   const { t, lang } = useLanguage();
@@ -219,6 +226,15 @@ export function ChatThread({
           </button>
         </div>
       )}
+
+      <MeetupPanel
+        matchId={matchId}
+        currentUserId={currentUserId}
+        otherName={other?.first_name ?? ''}
+        perkLabel={perkLabel}
+        initialMeetup={initialMeetup}
+        initialOrders={initialOrders}
+      />
 
       {showFeedback && !feedbackDone && (
         <div className="mt-4 flex items-center justify-between gap-3 rounded-2xl border hairline bg-ink-800 px-5 py-4">

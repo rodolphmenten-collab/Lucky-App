@@ -17,7 +17,7 @@ export default async function ChatPage({
 
   const { data: match } = await supabase
     .from('matches')
-    .select('id, user_a, user_b, created_at, venues(name, slug)')
+    .select('id, user_a, user_b, created_at, venues(name, slug, perk_label)')
     .eq('id', params.matchId)
     .maybeSingle();
 
@@ -43,6 +43,21 @@ export default async function ChatPage({
     .eq('user_id', user.id)
     .maybeSingle();
 
+  // Rencontre et bons en cours : lus avec le client utilisateur, les policies
+  // RLS restreignent déjà aux participants du match.
+  const [{ data: meetup }, { data: orders }] = await Promise.all([
+    supabase
+      .from('meetups')
+      .select('id, match_id, code, status, requested_by, confirmed_at')
+      .eq('match_id', match.id)
+      .maybeSingle(),
+    supabase
+      .from('lucky_orders')
+      .select('id, match_id, from_user, to_user, item_name, price_cents, code, status, created_at')
+      .eq('match_id', match.id)
+      .order('created_at', { ascending: true }),
+  ]);
+
   return (
     <ChatThread
       matchId={match.id}
@@ -54,6 +69,9 @@ export default async function ChatPage({
       justMatched={searchParams.justMatched === '1'}
       matchCreatedAt={match.created_at}
       feedbackGiven={Boolean(existingFeedback)}
+      perkLabel={(match as any).venues?.perk_label ?? null}
+      initialMeetup={(meetup as any) ?? null}
+      initialOrders={(orders as any) ?? []}
     />
   );
 }
