@@ -34,7 +34,11 @@ export async function POST(request: Request) {
   let coverUrl = existingVenue.cover_photo_url;
   const coverFile = formData.get('coverFile') as File | null;
   if (coverFile && coverFile.size > 0) {
-    const path = `${venueId}/${Date.now()}-${coverFile.name}`;
+    const safeName = coverFile.name
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-zA-Z0-9.]+/g, '-');
+    const path = `${venueId}/${Date.now()}-${safeName}`;
     const bytes = new Uint8Array(await coverFile.arrayBuffer());
     const { error: uploadErr } = await service.storage.from('venue-photos').upload(path, bytes, {
       contentType: coverFile.type,

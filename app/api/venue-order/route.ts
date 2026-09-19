@@ -34,7 +34,11 @@ export async function POST(request: Request) {
 
   let logoUrl: string | null = null;
   if (logoFile && logoFile.size > 0) {
-    const path = `${venueId}/logo-${Date.now()}-${logoFile.name}`;
+    const safeName = logoFile.name
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-zA-Z0-9.]+/g, '-');
+    const path = `${venueId}/logo-${Date.now()}-${safeName}`;
     const bytes = new Uint8Array(await logoFile.arrayBuffer());
     const { error: uploadErr } = await service.storage.from('venue-photos').upload(path, bytes, {
       contentType: logoFile.type,
