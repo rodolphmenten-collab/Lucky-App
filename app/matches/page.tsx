@@ -45,7 +45,10 @@ export default async function MatchesPage() {
 
   const otherIds = [...matchesWithOtherId.map((m) => m.otherId), ...pendingWaves.map((w: any) => w.from_user)];
   const { data: profiles } = otherIds.length
-    ? await supabase.from('profiles').select('id, first_name, photo_url').in('id', otherIds)
+    ? await supabase
+        .from('profiles')
+        .select('id, first_name, photo_url, age, city, job, bio, intentions')
+        .in('id', otherIds)
     : { data: [] };
 
   const profileMap = Object.fromEntries((profiles ?? []).map((p) => [p.id, p]));

@@ -71,9 +71,19 @@ export function RoomNav() {
 
     checkActivity();
     const interval = setInterval(checkActivity, 20_000);
+
+    // Real-time: refresh the badge the instant a wave or message arrives,
+    // instead of waiting up to 20s for the next poll.
+    const channel = supabase
+      .channel('room-nav-activity')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'waves' }, () => checkActivity())
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, () => checkActivity())
+      .subscribe();
+
     return () => {
       cancelled = true;
       clearInterval(interval);
+      supabase.removeChannel(channel);
     };
   }, []);
 

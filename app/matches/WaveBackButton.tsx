@@ -3,7 +3,15 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-export function WaveBackButton({ fromUserId, venueId }: { fromUserId: string; venueId: string }) {
+export function WaveBackButton({
+  fromUserId,
+  venueId,
+  onDone,
+}: {
+  fromUserId: string;
+  venueId: string;
+  onDone?: () => void;
+}) {
   const router = useRouter();
   const [state, setState] = useState<'idle' | 'sending'>('idle');
 
@@ -20,6 +28,7 @@ export function WaveBackButton({ fromUserId, venueId }: { fromUserId: string; ve
       router.push(`/chat/${data.matchId}?justMatched=1`);
       return;
     }
+    onDone?.();
     setState('idle');
   }
 

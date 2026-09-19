@@ -1,9 +1,20 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { useLanguage } from '@/components/LanguageProvider';
 import { ConsumerLanguageSwitcher } from '@/components/ConsumerLanguageSwitcher';
 import { WaveBackButton } from './WaveBackButton';
+
+interface ProfileLite {
+  first_name: string;
+  photo_url: string | null;
+  age?: number | null;
+  city?: string | null;
+  job?: string | null;
+  bio?: string | null;
+  intentions?: string[] | null;
+}
 
 export function MatchesView({
   activeVenue,
@@ -14,9 +25,12 @@ export function MatchesView({
   activeVenue: { name: string; slug: string } | null;
   pendingWaves: { from_user: string; venue_id: string; venues: { name: string } | null }[];
   matches: { id: string; otherId: string; venues: { name: string } | null }[];
-  profileMap: Record<string, { first_name: string; photo_url: string | null }>;
+  profileMap: Record<string, ProfileLite>;
 }) {
   const { t } = useLanguage();
+  const [previewWave, setPreviewWave] = useState<{ from_user: string; venue_id: string; venueName?: string } | null>(
+    null
+  );
 
   return (
     <main className="mx-auto min-h-screen max-w-lg px-6 py-16">
@@ -45,8 +59,11 @@ export function MatchesView({
               const other = profileMap[w.from_user];
               return (
                 <div key={w.from_user} className="flex items-center justify-between gap-3 py-4">
-                  <div className="flex items-center gap-4">
-                    <div className="h-12 w-12 overflow-hidden rounded-full bg-ink-700">
+                  <button
+                    onClick={() => setPreviewWave({ from_user: w.from_user, venue_id: w.venue_id, venueName: w.venues?.name })}
+                    className="flex items-center gap-4 text-left"
+                  >
+                    <div className="h-12 w-12 shrink-0 overflow-hidden rounded-full bg-ink-700">
                       {other?.photo_url && (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={other.photo_url} alt="" className="h-full w-full object-cover" />
@@ -58,7 +75,7 @@ export function MatchesView({
                       </p>
                       <p className="font-mono text-[11px] text-bone-faint">{w.venues?.name}</p>
                     </div>
-                  </div>
+                  </button>
                   <WaveBackButton fromUserId={w.from_user} venueId={w.venue_id} />
                 </div>
               );
@@ -95,6 +112,78 @@ export function MatchesView({
           })}
         </div>
       )}
+
+      {previewWave && (
+        <ProfilePreview
+          profile={profileMap[previewWave.from_user]}
+          venueName={previewWave.venueName}
+          intentionLabels={t.intentions}
+          onClose={() => setPreviewWave(null)}
+          waveAction={
+            <WaveBackButton
+              fromUserId={previewWave.from_user}
+              venueId={previewWave.venue_id}
+              onDone={() => setPreviewWave(null)}
+            />
+          }
+        />
+      )}
     </main>
+  );
+}
+
+function ProfilePreview({
+  profile,
+  venueName,
+  intentionLabels,
+  onClose,
+  waveAction,
+}: {
+  profile: ProfileLite | undefined;
+  venueName?: string;
+  intentionLabels: Record<string, string>;
+  onClose: () => void;
+  waveAction: React.ReactNode;
+}) {
+  if (!profile) return null;
+
+  return (
+    <div className="fixed inset-0 z-30 flex items-end justify-center bg-black/60 p-0 sm:items-center sm:p-6">
+      <div className="w-full max-w-sm overflow-hidden rounded-t-3xl border hairline bg-ink-900 sm:rounded-3xl">
+        <div className="relative aspect-square w-full overflow-hidden bg-ink-800">
+          {profile.photo_url && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={profile.photo_url} alt="" className="h-full w-full object-cover" />
+          )}
+          <button
+            onClick={onClose}
+            className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-ink-900/80 text-bone backdrop-blur"
+          >
+            ✕
+          </button>
+        </div>
+        <div className="p-6">
+          <p className="font-display text-2xl italic text-bone">
+            {profile.first_name}
+            {profile.age ? `, ${profile.age}` : ''}
+          </p>
+          <p className="mt-1 text-xs text-bone-dim">
+            {[profile.job, profile.city].filter(Boolean).join(' · ')}
+          </p>
+          {venueName && <p className="mt-1 font-mono text-[11px] text-bone-faint">{venueName}</p>}
+          {profile.bio && <p className="mt-3 text-sm leading-relaxed text-bone-dim">{profile.bio}</p>}
+          {profile.intentions && profile.intentions.length > 0 && (
+            <div className="mt-4 flex flex-wrap gap-1.5">
+              {profile.intentions.map((i) => (
+                <span key={i} className="rounded-full border hairline px-3 py-1 text-[11px] text-bone-dim">
+                  {intentionLabels[i] ?? i}
+                </span>
+              ))}
+            </div>
+          )}
+          <div className="mt-5">{waveAction}</div>
+        </div>
+      </div>
+    </div>
   );
 }
