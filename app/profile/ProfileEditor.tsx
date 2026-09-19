@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/Button';
 import { useLanguage } from '@/components/LanguageProvider';
 import { ConsumerLanguageSwitcher } from '@/components/ConsumerLanguageSwitcher';
+import { INTEREST_LABELS, type InterestKey } from '@/lib/interests';
 import type { Profile } from '@/lib/types';
 
 export function ProfileEditor({
@@ -22,7 +23,7 @@ export function ProfileEditor({
 }) {
   const supabase = createClient();
   const router = useRouter();
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const [visible, setVisible] = useState(profile.visible);
   const [saving, setSaving] = useState(false);
 
@@ -83,6 +84,16 @@ export function ProfileEditor({
               {t.profile.linkedinLink}
             </a>
           )}
+        </div>
+      )}
+
+      {profile.interests && profile.interests.length > 0 && (
+        <div className="mt-4 flex flex-wrap gap-1.5">
+          {profile.interests.map((key) => (
+            <span key={key} className="rounded-full border hairline px-2.5 py-1 text-[11px] text-bone-dim">
+              {INTEREST_LABELS[lang]?.[key as InterestKey] ?? key}
+            </span>
+          ))}
         </div>
       )}
 

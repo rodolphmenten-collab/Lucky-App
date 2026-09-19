@@ -8,6 +8,7 @@ import { useLanguage } from '@/components/LanguageProvider';
 import { ConsumerLanguageSwitcher } from '@/components/ConsumerLanguageSwitcher';
 import { Button } from '@/components/ui/Button';
 import { INTENTION_META } from '@/lib/intentions';
+import { INTEREST_KEYS, INTEREST_LABELS, type InterestKey } from '@/lib/interests';
 import type { Intention, Profile } from '@/lib/types';
 
 const ALL_INTENTIONS: Intention[] = ['dating', 'business', 'social', 'looking'];
@@ -24,7 +25,7 @@ export function OnboardingForm({
   const router = useRouter();
   const supabase = createClient();
   const isEdit = Boolean(existingProfile);
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
 
   // 'profile' collects the details; 'verify' only appears for someone who wasn't
   // already signed in, right at the end, so they've invested effort before being
@@ -40,6 +41,12 @@ export function OnboardingForm({
   const [intentions, setIntentions] = useState<Intention[]>(existingProfile?.intentions ?? []);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(existingProfile?.photo_url ?? null);
+  const [interests, setInterests] = useState<string[]>(existingProfile?.interests ?? []);
+  const [extraPhotoFiles, setExtraPhotoFiles] = useState<(File | null)[]>([null, null, null, null, null]);
+  const [extraPhotoPreviews, setExtraPhotoPreviews] = useState<(string | null)[]>(() => {
+    const existing = existingProfile?.photos ?? [];
+    return [0, 1, 2, 3, 4].map((i) => existing[i] ?? null);
+  });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -53,7 +60,32 @@ export function OnboardingForm({
     setIntentions((prev) => (prev.includes(i) ? prev.filter((x) => x !== i) : [...prev, i]));
   }
 
+  function toggleInterest(key: string) {
+    setInterests((prev) =>
+      prev.includes(key) ? prev.filter((x) => x !== key) : prev.length >= 8 ? prev : [...prev, key]
+    );
+  }
+
   const [convertingPhoto, setConvertingPhoto] = useState(false);
+  const [convertingExtraIndex, setConvertingExtraIndex] = useState<number | null>(null);
+
+  async function onExtraPhotoChange(index: number, e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setConvertingExtraIndex(index);
+    const uploadable = await ensureUploadableImage(file);
+    setConvertingExtraIndex(null);
+    setExtraPhotoFiles((prev) => {
+      const next = [...prev];
+      next[index] = uploadable;
+      return next;
+    });
+    setExtraPhotoPreviews((prev) => {
+      const next = [...prev];
+      next[index] = URL.createObjectURL(uploadable);
+      return next;
+    });
+  }
 
   async function onPhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -74,7 +106,8 @@ export function OnboardingForm({
     try {
       let photoUrl: string | null = existingProfile?.photo_url ?? null;
       if (photoFile) {
-        const path = `${uid}/${Date.now()}-${photoFile.name}`;
+        const safeName = photoFile.name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9.]+/g, '-');
+        const path = `${uid}/${Date.now()}-${safeName}`;
         const { error: uploadErr } = await supabase.storage.from('avatars').upload(path, photoFile, {
           upsert: true,
         });
@@ -85,6 +118,24 @@ export function OnboardingForm({
         photoUrl = supabase.storage.from('avatars').getPublicUrl(path).data.publicUrl;
       }
 
+      const existingPhotos = existingProfile?.photos ?? [];
+      const photos: string[] = [];
+      for (let i = 0; i < extraPhotoFiles.length; i++) {
+        const file = extraPhotoFiles[i];
+        if (file) {
+          const safeName = file.name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9.]+/g, '-');
+          const path = `${uid}/gallery-${Date.now()}-${i}-${safeName}`;
+          const { error: uploadErr } = await supabase.storage.from('avatars').upload(path, file, { upsert: true });
+          if (uploadErr) {
+            console.error('Gallery photo upload error:', uploadErr);
+            return { error: `Photo upload failed: ${uploadErr.message}` };
+          }
+          photos.push(supabase.storage.from('avatars').getPublicUrl(path).data.publicUrl);
+        } else if (extraPhotoPreviews[i] && existingPhotos[i]) {
+          photos.push(existingPhotos[i]);
+        }
+      }
+
       const payload = {
         id: uid,
         first_name: firstName,
@@ -93,8 +144,10 @@ export function OnboardingForm({
         job: job || null,
         bio: bio || null,
         photo_url: photoUrl,
+        photos,
         linkedin_url: linkedinUrl || null,
         intentions,
+        interests,
         visible: existingProfile?.visible ?? true,
       };
 
@@ -333,6 +386,53 @@ export function OnboardingForm({
             >
               {INTENTION_META[i].symbol} {t.intentions[i]}
             </button>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <p className="mb-3 text-sm text-bone">{t.onboarding.interests}</p>
+        <div className="flex flex-wrap gap-2">
+          {INTEREST_KEYS.map((key) => (
+            <button
+              type="button"
+              key={key}
+              onClick={() => toggleInterest(key)}
+              className={`rounded-full border px-3.5 py-1.5 text-xs font-medium tracking-wide transition-colors ${
+                interests.includes(key)
+                  ? 'border-brass bg-brass/15 text-brass'
+                  : 'hairline text-bone-dim hover:border-white/30'
+              }`}
+            >
+              {INTEREST_LABELS[lang][key as InterestKey]}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <p className="mb-3 text-sm text-bone">{t.onboarding.morePhotos}</p>
+        <div className="grid grid-cols-5 gap-2">
+          {extraPhotoPreviews.map((preview, i) => (
+            <label
+              key={i}
+              className="relative flex aspect-square cursor-pointer items-center justify-center overflow-hidden rounded-xl border hairline bg-ink-800 text-[10px] text-bone-faint"
+            >
+              {convertingExtraIndex === i ? (
+                '…'
+              ) : preview ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={preview} alt="" className="h-full w-full object-cover" />
+              ) : (
+                t.onboarding.addPhoto
+              )}
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => onExtraPhotoChange(i, e)}
+                className="hidden"
+              />
+            </label>
           ))}
         </div>
       </div>

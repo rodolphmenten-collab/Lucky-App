@@ -31,8 +31,10 @@ export interface Profile {
   company: string | null;
   bio: string | null;
   photo_url: string | null;
+  photos: string[];
   linkedin_url: string | null;
   intentions: Intention[];
+  interests: string[];
   visible: boolean;
   created_at: string;
 }

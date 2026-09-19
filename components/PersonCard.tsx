@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { PresenceBadge } from '@/components/PresenceBadge';
 import { INTENTION_META } from '@/lib/intentions';
 import { useLanguage } from '@/components/LanguageProvider';
+import { PersonProfileModal } from '@/components/PersonProfileModal';
 import type { Intention, PresenceStatus } from '@/lib/types';
 
 export interface PersonCardData {
@@ -13,9 +14,12 @@ export interface PersonCardData {
   age: number | null;
   city: string | null;
   job: string | null;
+  bio?: string | null;
   photo_url: string | null;
+  photos?: string[];
   linkedin_url: string | null;
   intentions: Intention[];
+  interests?: string[];
   presence_status: PresenceStatus;
   last_verified_at: string;
   waved_at_me: boolean;
@@ -30,6 +34,7 @@ export function PersonCard({
   onWave: (userId: string) => Promise<void>;
 }) {
   const [state, setState] = useState<'idle' | 'sending' | 'sent'>(person.waved_by_me ? 'sent' : 'idle');
+  const [showProfile, setShowProfile] = useState(false);
   const { t } = useLanguage();
 
   async function handleWave() {
@@ -49,7 +54,7 @@ export function PersonCard({
         person.waved_at_me ? 'border-brass' : 'hairline'
       }`}
     >
-      <div className="relative aspect-[4/5] w-full overflow-hidden bg-ink-700">
+      <button onClick={() => setShowProfile(true)} className="relative aspect-[4/5] w-full overflow-hidden bg-ink-700">
         {person.photo_url && (
           <Image
             src={person.photo_url}
@@ -80,7 +85,7 @@ export function PersonCard({
             in
           </a>
         )}
-        <div className="absolute inset-x-3 bottom-3">
+        <div className="absolute inset-x-3 bottom-3 text-left">
           <p className="font-display text-lg italic leading-tight text-bone">
             {person.first_name}
             {person.age ? `, ${person.age}` : ''}
@@ -99,7 +104,7 @@ export function PersonCard({
             ))}
           </div>
         </div>
-      </div>
+      </button>
       <button
         onClick={handleWave}
         disabled={state !== 'idle'}
@@ -107,6 +112,17 @@ export function PersonCard({
       >
         {state === 'sent' ? t.room.waved : state === 'sending' ? '···' : person.waved_at_me ? t.room.waveBack : t.room.wave}
       </button>
+
+      {showProfile && (
+        <PersonProfileModal
+          person={person}
+          onClose={() => setShowProfile(false)}
+          onWave={async (userId) => {
+            await onWave(userId);
+            setState('sent');
+          }}
+        />
+      )}
     </div>
   );
 }

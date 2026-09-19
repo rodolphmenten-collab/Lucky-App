@@ -47,6 +47,9 @@ export const consumerCopy: Record<ConsumerLang, any> = {
       saving: 'Saving…',
       almostThere: "Almost there — we just need to confirm it's really you.",
       required: "Add your name and at least one reason you're here.",
+      interests: 'Interests (optional)',
+      morePhotos: 'More photos (optional)',
+      addPhoto: 'Add',
     },
     room: {
       leave: 'Leave the room',
@@ -162,6 +165,9 @@ export const consumerCopy: Record<ConsumerLang, any> = {
       saving: 'Enregistrement…',
       almostThere: 'Presque terminé — il ne reste qu\u2019à confirmer que c\u2019est bien vous.',
       required: 'Ajoutez votre prénom et au moins une raison de votre présence.',
+      interests: 'Centres d\u2019intérêt (optionnel)',
+      morePhotos: 'Plus de photos (optionnel)',
+      addPhoto: 'Ajouter',
     },
     room: {
       leave: 'Quitter la salle',
@@ -277,6 +283,9 @@ export const consumerCopy: Record<ConsumerLang, any> = {
       saving: 'Guardando…',
       almostThere: 'Ya casi — solo necesitamos confirmar que eres tú.',
       required: 'Añade tu nombre y al menos una razón de tu visita.',
+      interests: 'Intereses (opcional)',
+      morePhotos: 'Más fotos (opcional)',
+      addPhoto: 'Añadir',
     },
     room: {
       leave: 'Salir de la sala',
