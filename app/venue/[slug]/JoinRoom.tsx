@@ -82,11 +82,53 @@ export function JoinRoom({
           setErrorMsg(t.join.genericError);
         }
       },
-      () => {
+      (err) => {
+        // High-accuracy GPS can fail or time out indoors — retry once with a
+        // looser, wifi/cell-based fix before giving up.
+        if (err.code === err.TIMEOUT || err.code === err.POSITION_UNAVAILABLE) {
+          navigator.geolocation.getCurrentPosition(
+            async (position) => {
+              try {
+                const res = await fetch('/api/checkin', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    venueId,
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude,
+                  }),
+                });
+                const data = await res.json();
+
+                if (!res.ok) {
+                  setState('error');
+                  setErrorMsg(data.error ?? t.join.genericError);
+                  return;
+                }
+
+                if (!data.withinRadius) {
+                  setState('out_of_range');
+                  return;
+                }
+
+                router.refresh();
+              } catch {
+                setState('error');
+                setErrorMsg(t.join.genericError);
+              }
+            },
+            () => {
+              setState('error');
+              setErrorMsg(t.join.needsLocation);
+            },
+            { enableHighAccuracy: false, timeout: 20000, maximumAge: 60000 }
+          );
+          return;
+        }
         setState('error');
         setErrorMsg(t.join.needsLocation);
       },
-      { enableHighAccuracy: true, timeout: 10000 }
+      { enableHighAccuracy: true, timeout: 20000 }
     );
   }
 
