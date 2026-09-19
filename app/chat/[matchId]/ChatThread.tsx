@@ -4,12 +4,20 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { useLanguage } from '@/components/LanguageProvider';
-import type { Message } from '@/lib/types';
+import { PersonProfileModal } from '@/components/PersonProfileModal';
+import type { Message, Intention } from '@/lib/types';
 
 interface OtherProfile {
   id: string;
   first_name: string;
   photo_url: string | null;
+  photos?: string[];
+  age?: number | null;
+  city?: string | null;
+  job?: string | null;
+  bio?: string | null;
+  intentions?: Intention[];
+  interests?: string[];
 }
 
 const FEEDBACK_DELAY_HOURS = 3;
@@ -43,6 +51,7 @@ export function ChatThread({
   const [showMenu, setShowMenu] = useState(false);
   const [actionDone, setActionDone] = useState<string | null>(null);
   const [suggesting, setSuggesting] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
   const [feedbackDone, setFeedbackDone] = useState(feedbackGiven);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -153,16 +162,22 @@ export function ChatThread({
         <Link href="/matches" className="text-bone-faint">
           &larr;
         </Link>
-        <div className="h-9 w-9 overflow-hidden rounded-full bg-ink-700">
-          {other?.photo_url && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={other.photo_url} alt="" className="h-full w-full object-cover" />
-          )}
-        </div>
-        <div className="flex-1">
-          <p className="text-sm text-bone">{other?.first_name ?? 'Someone'}</p>
-          {venueName && <p className="font-mono text-[11px] text-bone-faint">{venueName}</p>}
-        </div>
+        <button
+          onClick={() => setShowProfile(true)}
+          className="flex flex-1 items-center gap-3 text-left"
+          disabled={!other}
+        >
+          <div className="h-9 w-9 shrink-0 overflow-hidden rounded-full bg-ink-700">
+            {other?.photo_url && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={other.photo_url} alt="" className="h-full w-full object-cover" />
+            )}
+          </div>
+          <div>
+            <p className="text-sm text-bone">{other?.first_name ?? 'Someone'}</p>
+            {venueName && <p className="font-mono text-[11px] text-bone-faint">{venueName}</p>}
+          </div>
+        </button>
         <div className="relative">
           <button onClick={() => setShowMenu((s) => !s)} className="px-2 text-bone-faint">
             &#8942;
@@ -268,6 +283,24 @@ export function ChatThread({
           {t.chat.send}
         </button>
       </form>
+
+      {showProfile && other && (
+        <PersonProfileModal
+          person={{
+            user_id: other.id,
+            first_name: other.first_name,
+            age: other.age,
+            city: other.city,
+            job: other.job,
+            bio: other.bio,
+            photo_url: other.photo_url,
+            photos: other.photos,
+            intentions: other.intentions ?? [],
+            interests: other.interests,
+          }}
+          onClose={() => setShowProfile(false)}
+        />
+      )}
     </main>
   );
 }

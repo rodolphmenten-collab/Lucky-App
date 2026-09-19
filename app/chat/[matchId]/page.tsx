@@ -26,7 +26,7 @@ export default async function ChatPage({
   const otherId = match.user_a === user.id ? match.user_b : match.user_a;
   const { data: other } = await supabase
     .from('profiles')
-    .select('id, first_name, photo_url')
+    .select('id, first_name, photo_url, photos, age, city, job, bio, intentions, interests')
     .eq('id', otherId)
     .single();
 

@@ -5,16 +5,31 @@ import { createPortal } from 'react-dom';
 import { INTENTION_META } from '@/lib/intentions';
 import { INTEREST_LABELS, type InterestKey } from '@/lib/interests';
 import { useLanguage } from '@/components/LanguageProvider';
-import type { PersonCardData } from './PersonCard';
+import type { Intention } from '@/lib/types';
+
+export interface ProfileModalPerson {
+  user_id: string;
+  first_name: string;
+  age?: number | null;
+  city?: string | null;
+  job?: string | null;
+  bio?: string | null;
+  photo_url?: string | null;
+  photos?: string[] | null;
+  intentions: Intention[];
+  interests?: string[] | null;
+  waved_at_me?: boolean;
+  waved_by_me?: boolean;
+}
 
 export function PersonProfileModal({
   person,
   onClose,
   onWave,
 }: {
-  person: PersonCardData;
+  person: ProfileModalPerson;
   onClose: () => void;
-  onWave: (userId: string) => Promise<void>;
+  onWave?: (userId: string) => Promise<void>;
 }) {
   const { t, lang } = useLanguage();
   const allPhotos = [person.photo_url, ...(person.photos ?? [])].filter(Boolean) as string[];
@@ -22,7 +37,7 @@ export function PersonProfileModal({
   const [waveState, setWaveState] = useState<'idle' | 'sending' | 'sent'>(person.waved_by_me ? 'sent' : 'idle');
 
   async function handleWave() {
-    if (waveState !== 'idle') return;
+    if (!onWave || waveState !== 'idle') return;
     setWaveState('sending');
     try {
       await onWave(person.user_id);
@@ -113,19 +128,21 @@ export function PersonProfileModal({
             </div>
           )}
 
-          <button
-            onClick={handleWave}
-            disabled={waveState !== 'idle'}
-            className="mt-6 w-full rounded-full bg-bone py-3 text-sm font-medium tracking-wide text-ink transition-colors hover:bg-brass-bright disabled:opacity-70"
-          >
-            {waveState === 'sent'
-              ? t.room.waved
-              : waveState === 'sending'
-                ? '···'
-                : person.waved_at_me
-                  ? t.room.waveBack
-                  : t.room.wave}
-          </button>
+          {onWave && (
+            <button
+              onClick={handleWave}
+              disabled={waveState !== 'idle'}
+              className="mt-6 w-full rounded-full bg-bone py-3 text-sm font-medium tracking-wide text-ink transition-colors hover:bg-brass-bright disabled:opacity-70"
+            >
+              {waveState === 'sent'
+                ? t.room.waved
+                : waveState === 'sending'
+                  ? '···'
+                  : person.waved_at_me
+                    ? t.room.waveBack
+                    : t.room.wave}
+            </button>
+          )}
         </div>
       </div>
     </div>,
