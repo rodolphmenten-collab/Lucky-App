@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { INTENTION_META } from '@/lib/intentions';
 import { INTEREST_LABELS, type InterestKey } from '@/lib/interests';
 import { useLanguage } from '@/components/LanguageProvider';
@@ -31,7 +32,7 @@ export function PersonProfileModal({
     }
   }
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-30 flex items-end justify-center bg-black/70 p-0 sm:items-center sm:p-6">
       <div className="max-h-[90vh] w-full max-w-sm overflow-y-auto rounded-t-3xl border hairline bg-ink-900 sm:rounded-3xl">
         <div className="relative aspect-[4/5] w-full overflow-hidden bg-ink-800">
@@ -127,6 +128,7 @@ export function PersonProfileModal({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
