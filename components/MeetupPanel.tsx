@@ -22,6 +22,8 @@ export interface LuckyOrder {
   to_user: string;
   item_name: string;
   price_cents: number;
+  discount_percent: number;
+  net_price_cents: number | null;
   code: string;
   status: 'pending' | 'served' | 'cancelled';
   created_at: string;
@@ -31,7 +33,13 @@ interface MenuItem {
   id: string;
   name: string;
   price_cents: number;
+  net_price_cents: number;
   category: string;
+}
+
+// Le net est figé à la commande ; les anciennes lignes n'en ont pas.
+function netOf(order: LuckyOrder): number {
+  return order.net_price_cents ?? order.price_cents;
 }
 
 /**
@@ -47,6 +55,7 @@ export function MeetupPanel({
   currentUserId,
   otherName,
   perkLabel,
+  discountPercent,
   initialMeetup,
   initialOrders,
 }: {
@@ -54,6 +63,7 @@ export function MeetupPanel({
   currentUserId: string;
   otherName: string;
   perkLabel: string | null;
+  discountPercent: number;
   initialMeetup: Meetup | null;
   initialOrders: LuckyOrder[];
 }) {
@@ -213,11 +223,18 @@ export function MeetupPanel({
         <div className="rounded-2xl border border-brass/40 bg-brass/5 px-5 py-4 text-center">
           <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-brass">{copy.codeLabel}</p>
           <p className="mt-1 font-display text-3xl tracking-[0.2em] text-bone">{meetup.code}</p>
-          {perkLabel ? (
+          {discountPercent > 0 && (
             <p className="mt-2 text-xs text-bone-dim">
-              {copy.perkPrefix} <span className="text-brass">{perkLabel}</span>
+              {copy.perkPrefix} <span className="text-brass">{copy.discountLine(discountPercent)}</span>
             </p>
-          ) : (
+          )}
+          {perkLabel && (
+            <p className="mt-1 text-xs text-bone-dim">
+              {discountPercent > 0 ? copy.andAlso : copy.perkPrefix}{' '}
+              <span className="text-brass">{perkLabel}</span>
+            </p>
+          )}
+          {discountPercent === 0 && !perkLabel && (
             <p className="mt-2 text-xs text-bone-faint">{copy.showAtBar}</p>
           )}
         </div>
@@ -248,7 +265,14 @@ export function MeetupPanel({
                   {mine ? copy.youOffered(otherName) : copy.offeredYou(otherName)}
                 </p>
                 <p className="mt-0.5 text-xs text-bone-dim">
-                  {order.item_name} · {formatPrice(order.price_cents)}
+                  {order.item_name} ·{' '}
+                  {order.discount_percent > 0 && (
+                    <span className="text-bone-faint line-through">{formatPrice(order.price_cents)}</span>
+                  )}{' '}
+                  <span className="text-bone">{formatPrice(netOf(order))}</span>
+                  {order.discount_percent > 0 && (
+                    <span className="text-brass"> · -{order.discount_percent}%</span>
+                  )}
                 </p>
               </div>
               <button
@@ -291,7 +315,9 @@ export function MeetupPanel({
           <div className="fixed inset-0 z-30 flex items-end justify-center bg-black/70 sm:items-center sm:p-6">
             <div className="max-h-[85vh] w-full max-w-sm overflow-y-auto rounded-t-3xl border hairline bg-ink-900 p-6 sm:rounded-3xl">
               <p className="font-display text-xl italic text-bone">{copy.offerTitle(otherName)}</p>
-              <p className="mt-1 text-xs text-bone-faint">{copy.offerSubtitle}</p>
+              <p className="mt-1 text-xs text-bone-faint">
+                {discountPercent > 0 ? copy.offerSubtitleDiscount(discountPercent) : copy.offerSubtitle}
+              </p>
 
               <div className="mt-5 space-y-2">
                 {menu === null && !menuError && (
@@ -308,7 +334,12 @@ export function MeetupPanel({
                     className="flex w-full items-center justify-between rounded-xl border hairline px-4 py-3 text-left text-sm text-bone transition-colors hover:border-brass hover:text-brass disabled:opacity-50"
                   >
                     <span>{item.name}</span>
-                    <span className="font-mono text-xs text-bone-dim">{formatPrice(item.price_cents)}</span>
+                    <span className="shrink-0 pl-3 text-right font-mono text-xs">
+                      {item.net_price_cents < item.price_cents && (
+                        <span className="text-bone-faint line-through">{formatPrice(item.price_cents)}</span>
+                      )}{' '}
+                      <span className="text-brass">{formatPrice(item.net_price_cents)}</span>
+                    </span>
                   </button>
                 ))}
               </div>
@@ -332,7 +363,20 @@ export function MeetupPanel({
               <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-brass">{copy.voucherLabel}</p>
               <p className="mt-4 font-display text-5xl tracking-[0.2em] text-bone">{voucher.code}</p>
               <p className="mt-4 text-sm text-bone">{voucher.item_name}</p>
-              <p className="text-xs text-bone-dim">{formatPrice(voucher.price_cents)}</p>
+
+              <div className="mt-4 rounded-2xl border border-brass/40 bg-brass/5 px-4 py-3">
+                <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-brass">
+                  {copy.amountToCharge}
+                </p>
+                <p className="mt-1 font-display text-2xl text-bone">{formatPrice(netOf(voucher))}</p>
+                {voucher.discount_percent > 0 && (
+                  <p className="mt-1 text-[11px] text-bone-dim">
+                    {copy.insteadOf} <span className="line-through">{formatPrice(voucher.price_cents)}</span> ·
+                    <span className="text-brass"> -{voucher.discount_percent}% Lucky</span>
+                  </p>
+                )}
+              </div>
+
               <p className="mt-6 text-xs leading-relaxed text-bone-faint">{copy.voucherHint}</p>
               <button
                 onClick={() => setVoucher(null)}

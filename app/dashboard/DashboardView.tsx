@@ -7,7 +7,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { createClient } from '@/lib/supabase/client';
 import { AdminViewingBar } from '@/components/AdminViewingBar';
 import { formatPrice } from '@/lib/luckyCodes';
-import type { AttributionStats } from '@/lib/attribution';
+import type { AttributionStats, TodayOrder } from '@/lib/attribution';
 
 interface Stats {
   people_here_now: number;
@@ -31,12 +31,14 @@ export function DashboardView({
   stats,
   venues,
   attribution,
+  todayOrders = [],
   isAdminViewing = false,
 }: {
   venue: VenueLite;
   stats: Stats | null;
   venues: VenueLite[];
   attribution: AttributionStats | null;
+  todayOrders?: TodayOrder[];
   isAdminViewing?: boolean;
 }) {
   const qrRef = useRef<HTMLDivElement>(null);
@@ -200,6 +202,13 @@ export function DashboardView({
               </div>
             </div>
 
+            {attribution.discountGrantedCents > 0 && (
+              <p className="mt-4 text-xs text-bone-dim">
+                Remise Lucky consentie sur la période : {formatPrice(attribution.discountGrantedCents)}.
+                Le CA ci-dessus est net, c'est ce qui est réellement entré en caisse.
+              </p>
+            )}
+
             {attribution.ordersPending > 0 && (
               <p className="mt-4 text-xs text-bone-dim">
                 {attribution.ordersPending} bon{attribution.ordersPending > 1 ? 's' : ''} émis (
@@ -208,10 +217,66 @@ export function DashboardView({
               </p>
             )}
 
+            {/* ---- Recoupement caisse ------------------------------------- */}
+            <div className="mt-6 border-t hairline pt-5">
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <p className="text-sm text-bone">Bons du jour</p>
+                <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-bone-faint">
+                  à recouper en fin de service
+                </p>
+              </div>
+
+              {todayOrders.length === 0 ? (
+                <p className="mt-3 text-xs text-bone-faint">Aucun bon émis aujourd’hui.</p>
+              ) : (
+                <div className="mt-3 overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead className="text-bone-faint">
+                      <tr>
+                        <th className="py-2 pr-3 font-normal">Heure</th>
+                        <th className="py-2 pr-3 font-normal">Code</th>
+                        <th className="py-2 pr-3 font-normal">Article</th>
+                        <th className="py-2 pr-3 text-right font-normal">Carte</th>
+                        <th className="py-2 pr-3 text-right font-normal">Encaissé</th>
+                        <th className="py-2 font-normal">État</th>
+                      </tr>
+                    </thead>
+                    <tbody className="text-bone-dim">
+                      {todayOrders.map((o) => (
+                        <tr key={o.id} className="border-t hairline">
+                          <td className="py-2 pr-3 font-mono">
+                            {new Date(o.created_at).toLocaleTimeString('fr-FR', {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}
+                          </td>
+                          <td className="py-2 pr-3 font-mono tracking-[0.1em] text-brass">{o.code}</td>
+                          <td className="py-2 pr-3 text-bone">{o.item_name}</td>
+                          <td className="py-2 pr-3 text-right">{formatPrice(o.price_cents)}</td>
+                          <td className="py-2 pr-3 text-right text-bone">
+                            {formatPrice(o.net_price_cents ?? o.price_cents)}
+                            {o.discount_percent > 0 && (
+                              <span className="text-bone-faint"> (-{o.discount_percent}%)</span>
+                            )}
+                          </td>
+                          <td className="py-2">
+                            {o.status === 'served' && <span className="text-brass">servi</span>}
+                            {o.status === 'pending' && <span className="text-bone-faint">en attente</span>}
+                            {o.status === 'cancelled' && <span className="text-bone-faint">annulé</span>}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
             <p className="mt-5 border-t hairline pt-4 text-[11px] leading-relaxed text-bone-faint">
-              Rien n’est demandé à votre équipe de salle : le client confirme la rencontre, commande
-              éventuellement dans l’app, et présente son code au bar. Vous servez et mettez sur
-              l’addition comme d’habitude.
+              Rien n’est demandé à votre équipe de salle : le bon affiche le code, l’article et le
+              prix remisé à encaisser. Le bar lit, sert, met sur l’addition. Aucune saisie, aucun
+              accès à ce dashboard — ce tableau est là pour que vous recoupiez vous-même en fin de
+              service.
             </p>
           </section>
         )}

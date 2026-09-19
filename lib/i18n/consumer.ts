@@ -127,7 +127,13 @@ export const consumerCopy: Record<ConsumerLang, any> = {
       cancel: 'Cancel',
       served: 'Served \u2014 enjoy.',
       voucherLabel: 'Show at the bar',
-      voucherHint: 'Show this code to the bar. They\u2019ll serve it and add it to the tab as usual.',
+      discountLine: (pct: number) => `${pct}% off anything ordered through Lucky`,
+      andAlso: 'And:',
+      offerSubtitleDiscount: (pct: number) =>
+        `Straight from the venue\u2019s list, ${pct}% off. Pay at the bar as usual.`,
+      amountToCharge: 'Amount to charge',
+      insteadOf: 'instead of',
+      voucherHint: 'Show this code to the bar. They apply the discount, serve it, and add it to the tab as usual \u2014 nothing to type in.',
       close: 'Close',
     },
     matches: {
@@ -267,7 +273,13 @@ export const consumerCopy: Record<ConsumerLang, any> = {
       cancel: 'Annuler',
       served: 'Servi \u2014 bonne d\u00e9gustation.',
       voucherLabel: '\u00c0 montrer au bar',
-      voucherHint: 'Montrez ce code au bar. On vous sert et \u00e7a part sur l\u2019addition, comme d\u2019habitude.',
+      discountLine: (pct: number) => `${pct}% de remise sur tout ce qui passe par Lucky`,
+      andAlso: 'Et :',
+      offerSubtitleDiscount: (pct: number) =>
+        `Directement dans la carte du lieu, ${pct}% de remise. R\u00e8glement au bar, comme d\u2019habitude.`,
+      amountToCharge: '\u00c0 encaisser',
+      insteadOf: 'au lieu de',
+      voucherHint: 'Montrez ce code au bar. Il applique la remise, sert, et met sur l\u2019addition comme d\u2019habitude \u2014 rien \u00e0 saisir.',
       close: 'Fermer',
     },
     matches: {
@@ -407,7 +419,13 @@ export const consumerCopy: Record<ConsumerLang, any> = {
       cancel: 'Cancelar',
       served: 'Servido \u2014 que aproveche.',
       voucherLabel: 'Ense\u00f1ar en la barra',
-      voucherHint: 'Ense\u00f1a este c\u00f3digo en la barra. Te lo sirven y va a la cuenta, como siempre.',
+      discountLine: (pct: number) => `${pct}% de descuento en todo lo que pasa por Lucky`,
+      andAlso: 'Y:',
+      offerSubtitleDiscount: (pct: number) =>
+        `Directo de la carta del local, ${pct}% de descuento. Se paga en la barra, como siempre.`,
+      amountToCharge: 'A cobrar',
+      insteadOf: 'en vez de',
+      voucherHint: 'Ense\u00f1a este c\u00f3digo en la barra. Aplican el descuento, lo sirven y va a la cuenta, como siempre \u2014 nada que teclear.',
       close: 'Cerrar',
     },
     matches: {

@@ -26,10 +26,46 @@ export interface AttributionStats {
   meetupsWithoutOrder: number;
   averageTicketCents: number | null;
   revenueEstimatedCents: number;
+  discountGrantedCents: number;
   windowDays: number;
 }
 
 const WINDOW_DAYS = 30;
+
+export interface TodayOrder {
+  id: string;
+  code: string;
+  item_name: string;
+  price_cents: number;
+  discount_percent: number;
+  net_price_cents: number | null;
+  status: string;
+  created_at: string;
+}
+
+/**
+ * Les bons émis aujourd'hui, pour recouper avec la caisse en fin de service.
+ * C'est la contrepartie du « zéro saisie » : personne ne tape le code, mais le
+ * patron doit pouvoir vérifier que chaque bon correspond bien à une ligne
+ * d'addition.
+ */
+export async function getTodayOrders(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  service: any,
+  venueId: string
+): Promise<TodayOrder[]> {
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+
+  const { data } = await service
+    .from('lucky_orders')
+    .select('id, code, item_name, price_cents, discount_percent, net_price_cents, status, created_at')
+    .eq('venue_id', venueId)
+    .gte('created_at', startOfToday.toISOString())
+    .order('created_at', { ascending: false });
+
+  return (data ?? []) as TodayOrder[];
+}
 
 export async function getAttributionStats(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -50,13 +86,18 @@ export async function getAttributionStats(
       .gte('confirmed_at', since),
     service
       .from('lucky_orders')
-      .select('id, match_id, price_cents, status, created_at')
+      .select('id, match_id, price_cents, net_price_cents, status, created_at')
       .eq('venue_id', venueId)
       .gte('created_at', since),
   ]);
 
   const meetups: { id: string; match_id: string; confirmed_at: string | null }[] = meetupsRes.data ?? [];
-  const orders: { match_id: string; price_cents: number; status: string }[] = ordersRes.data ?? [];
+  const orders: { match_id: string; price_cents: number; net_price_cents: number | null; status: string }[] =
+    ordersRes.data ?? [];
+
+  // Le CA attribué est ce qui entre réellement en caisse, remise déduite.
+  const net = (o: { price_cents: number; net_price_cents: number | null }) =>
+    o.net_price_cents ?? o.price_cents;
 
   const served = orders.filter((o) => o.status === 'served');
   const pending = orders.filter((o) => o.status === 'pending');
@@ -71,11 +112,12 @@ export async function getAttributionStats(
     meetupsConfirmed: meetups.length,
     ordersServed: served.length,
     ordersPending: pending.length,
-    revenueCertifiedCents: served.reduce((sum, o) => sum + (o.price_cents ?? 0), 0),
-    revenuePendingCents: pending.reduce((sum, o) => sum + (o.price_cents ?? 0), 0),
+    revenueCertifiedCents: served.reduce((sum, o) => sum + net(o), 0),
+    revenuePendingCents: pending.reduce((sum, o) => sum + net(o), 0),
     meetupsWithoutOrder,
     averageTicketCents: averageTicketCents ?? null,
     revenueEstimatedCents: averageTicketCents ? meetupsWithoutOrder * averageTicketCents : 0,
+    discountGrantedCents: served.reduce((sum, o) => sum + ((o.price_cents ?? 0) - net(o)), 0),
     windowDays: WINDOW_DAYS,
   };
 }

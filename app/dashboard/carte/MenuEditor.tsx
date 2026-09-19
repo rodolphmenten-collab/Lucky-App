@@ -27,7 +27,13 @@ export function MenuEditor({
   venue,
   initialItems,
 }: {
-  venue: { id: string; name: string; perk_label: string | null; average_ticket_cents: number | null };
+  venue: {
+    id: string;
+    name: string;
+    perk_label: string | null;
+    average_ticket_cents: number | null;
+    lucky_discount_percent: number | null;
+  };
   initialItems: { id: string; name: string; price_cents: number; category: string }[];
 }) {
   const [items, setItems] = useState<MenuItemRow[]>(
@@ -41,12 +47,15 @@ export function MenuEditor({
       : [{ id: null, name: '', priceEuros: '', category: 'drink' }]
   );
   const [perkLabel, setPerkLabel] = useState(venue.perk_label ?? '');
+  const [discountPercent, setDiscountPercent] = useState(String(venue.lucky_discount_percent ?? 0));
   const [averageTicket, setAverageTicket] = useState(
     venue.average_ticket_cents ? (venue.average_ticket_cents / 100).toFixed(2) : ''
   );
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const discountPct = Math.max(0, Math.min(100, Math.round(Number(discountPercent) || 0)));
 
   function update(index: number, patch: Partial<MenuItemRow>) {
     setItems((prev) => prev.map((row, i) => (i === index ? { ...row, ...patch } : row)));
@@ -72,6 +81,7 @@ export function MenuEditor({
         body: JSON.stringify({
           venueId: venue.id,
           perkLabel,
+          discountPercent: Math.max(0, Math.min(100, Math.round(Number(discountPercent) || 0))),
           averageTicketCents: averageTicket.trim() === '' ? null : toCents(averageTicket),
           items: items
             .filter((i) => i.name.trim().length > 0)
@@ -137,12 +147,41 @@ export function MenuEditor({
           />
         </section>
 
+        {/* ---- Remise Lucky ----------------------------------------------- */}
+        <section className="mt-8 rounded-2xl border border-brass/30 bg-brass/[0.03] p-6">
+          <p className="text-sm text-bone">Remise Lucky</p>
+          <p className="mt-2 text-xs leading-relaxed text-bone-dim">
+            Appliquée automatiquement à tout ce qui est commandé via Lucky — c’est la remise
+            convenue à la signature. Elle est affichée au client avant qu’il commande, et inscrite
+            sur le bon qu’il présente au bar : votre équipe lit le prix à encaisser, elle ne le
+            calcule pas.
+          </p>
+          <div className="mt-4 flex items-center gap-3">
+            <input
+              value={discountPercent}
+              onChange={(e) => {
+                setDiscountPercent(e.target.value);
+                setSaved(false);
+              }}
+              placeholder="15"
+              inputMode="numeric"
+              className="w-24 rounded-xl border hairline bg-transparent px-4 py-2.5 text-right text-sm text-bone placeholder:text-bone-faint focus:border-brass"
+            />
+            <span className="text-xs text-bone-faint">% de remise</span>
+          </div>
+          <p className="mt-3 text-[11px] text-bone-faint">
+            Une remise modifiée ne réécrit pas les commandes déjà passées : chaque bon garde le taux
+            en vigueur au moment où il a été émis.
+          </p>
+        </section>
+
         {/* ---- Carte ------------------------------------------------------ */}
         <section className="mt-8">
           <p className="text-sm text-bone">La carte proposée dans Lucky</p>
           <p className="mt-2 text-xs leading-relaxed text-bone-dim">
-            Quelques lignes suffisent : ce qu’on s’offre spontanément. Un article retiré n’efface
-            jamais les commandes déjà passées.
+            Quelques lignes suffisent : ce qu’on s’offre spontanément. La colonne de droite montre ce
+            que le client verra, remise déduite. Un article retiré n’efface jamais les commandes déjà
+            passées.
           </p>
 
           <div className="mt-5 space-y-2">
@@ -162,10 +201,17 @@ export function MenuEditor({
                   inputMode="decimal"
                   className="w-24 rounded-xl border hairline bg-transparent px-3 py-2.5 text-right text-sm text-bone placeholder:text-bone-faint focus:border-brass"
                 />
+                <span className="w-20 shrink-0 self-center text-right font-mono text-xs text-brass">
+                  {row.priceEuros.trim() === ''
+                    ? ''
+                    : `${((toCents(row.priceEuros) * (100 - discountPct)) / 100 / 100)
+                        .toFixed(2)
+                        .replace('.', ',')} €`}
+                </span>
                 <select
                   value={row.category}
                   onChange={(e) => update(index, { category: e.target.value })}
-                  className="w-32 rounded-xl border hairline bg-ink-800 px-3 py-2.5 text-xs text-bone-dim focus:border-brass"
+                  className="w-28 rounded-xl border hairline bg-ink-800 px-3 py-2.5 text-xs text-bone-dim focus:border-brass"
                 >
                   {CATEGORIES.map((c) => (
                     <option key={c.value} value={c.value}>

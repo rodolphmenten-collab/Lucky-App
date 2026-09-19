@@ -27,13 +27,25 @@ export async function GET(request: Request) {
   }
 
   const service = createServiceClient();
-  const { data: items } = await service
-    .from('venue_menu_items')
-    .select('id, name, price_cents, category')
-    .eq('venue_id', match.venue_id)
-    .eq('active', true)
-    .order('sort_order', { ascending: true })
-    .order('name', { ascending: true });
+  const [{ data: items }, { data: venue }] = await Promise.all([
+    service
+      .from('venue_menu_items')
+      .select('id, name, price_cents, category')
+      .eq('venue_id', match.venue_id)
+      .eq('active', true)
+      .order('sort_order', { ascending: true })
+      .order('name', { ascending: true }),
+    service.from('venues').select('lucky_discount_percent').eq('id', match.venue_id).maybeSingle(),
+  ]);
 
-  return NextResponse.json({ items: items ?? [] });
+  const discountPercent = Math.max(0, Math.min(100, venue?.lucky_discount_percent ?? 0));
+
+  // Le prix Lucky est calculé côté serveur : le client affiche, il ne décide pas.
+  return NextResponse.json({
+    discountPercent,
+    items: (items ?? []).map((i: { id: string; name: string; price_cents: number; category: string }) => ({
+      ...i,
+      net_price_cents: Math.round((i.price_cents * (100 - discountPercent)) / 100),
+    })),
+  });
 }

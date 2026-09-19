@@ -17,7 +17,7 @@ export default async function ChatPage({
 
   const { data: match } = await supabase
     .from('matches')
-    .select('id, user_a, user_b, created_at, venues(name, slug, perk_label)')
+    .select('id, user_a, user_b, created_at, venues(name, slug, perk_label, lucky_discount_percent)')
     .eq('id', params.matchId)
     .maybeSingle();
 
@@ -53,7 +53,7 @@ export default async function ChatPage({
       .maybeSingle(),
     supabase
       .from('lucky_orders')
-      .select('id, match_id, from_user, to_user, item_name, price_cents, code, status, created_at')
+      .select('id, match_id, from_user, to_user, item_name, price_cents, discount_percent, net_price_cents, code, status, created_at')
       .eq('match_id', match.id)
       .order('created_at', { ascending: true }),
   ]);
@@ -70,6 +70,7 @@ export default async function ChatPage({
       matchCreatedAt={match.created_at}
       feedbackGiven={Boolean(existingFeedback)}
       perkLabel={(match as any).venues?.perk_label ?? null}
+      discountPercent={(match as any).venues?.lucky_discount_percent ?? 0}
       initialMeetup={(meetup as any) ?? null}
       initialOrders={(orders as any) ?? []}
     />

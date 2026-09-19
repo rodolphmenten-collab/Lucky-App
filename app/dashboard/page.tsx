@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { isPlatformAdminEmail } from '@/lib/admin';
 import { getAdminViewingVenueId } from '@/lib/adminViewing';
-import { getAttributionStats } from '@/lib/attribution';
+import { getAttributionStats, getTodayOrders } from '@/lib/attribution';
 import { DashboardView } from './DashboardView';
 
 export default async function DashboardPage() {
@@ -31,9 +31,10 @@ export default async function DashboardPage() {
       );
     }
 
-    const [{ data: stats }, attribution] = await Promise.all([
+    const [{ data: stats }, attribution, todayOrders] = await Promise.all([
       service.rpc('venue_dashboard_stats', { p_venue_id: venue.id }).maybeSingle(),
       getAttributionStats(service, venue.id, venue.average_ticket_cents ?? null),
+      getTodayOrders(service, venue.id),
     ]);
 
     return (
@@ -42,6 +43,7 @@ export default async function DashboardPage() {
         stats={stats as any}
         venues={[venue]}
         attribution={attribution}
+        todayOrders={todayOrders}
         isAdminViewing
       />
     );
@@ -69,9 +71,11 @@ export default async function DashboardPage() {
   // L'appartenance au lieu vient d'être prouvée par venue_admins : on peut
   // agréger en service role (le calcul lit des tables que le patron n'a pas à
   // pouvoir interroger ligne à ligne).
-  const [{ data: stats }, attribution] = await Promise.all([
+  const serviceForStats = createServiceClient();
+  const [{ data: stats }, attribution, todayOrders] = await Promise.all([
     supabase.rpc('venue_dashboard_stats', { p_venue_id: venue.id }).maybeSingle(),
-    getAttributionStats(createServiceClient(), venue.id, venue.average_ticket_cents ?? null),
+    getAttributionStats(serviceForStats, venue.id, venue.average_ticket_cents ?? null),
+    getTodayOrders(serviceForStats, venue.id),
   ]);
 
   return (
@@ -80,6 +84,7 @@ export default async function DashboardPage() {
       stats={stats as any}
       venues={adminRows.map((r: any) => r.venues)}
       attribution={attribution}
+      todayOrders={todayOrders}
     />
   );
 }

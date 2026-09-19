@@ -60,9 +60,15 @@ export async function POST(request: Request) {
       ? null
       : Math.max(0, Math.min(1000000, Math.round(Number(body.averageTicketCents) || 0)));
 
+  const discountPercent = Math.max(0, Math.min(100, Math.round(Number(body.discountPercent) || 0)));
+
   const { error: venueErr } = await service
     .from('venues')
-    .update({ perk_label: perkLabel || null, average_ticket_cents: averageTicket })
+    .update({
+      perk_label: perkLabel || null,
+      average_ticket_cents: averageTicket,
+      lucky_discount_percent: discountPercent,
+    })
     .eq('id', venueId);
 
   if (venueErr) return NextResponse.json({ error: venueErr.message }, { status: 400 });

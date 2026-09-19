@@ -34,6 +34,7 @@ export function ChatThread({
   matchCreatedAt,
   feedbackGiven,
   perkLabel,
+  discountPercent,
   initialMeetup,
   initialOrders,
 }: {
@@ -47,6 +48,7 @@ export function ChatThread({
   matchCreatedAt: string;
   feedbackGiven: boolean;
   perkLabel: string | null;
+  discountPercent: number;
   initialMeetup: Meetup | null;
   initialOrders: LuckyOrder[];
 }) {
@@ -232,6 +234,7 @@ export function ChatThread({
         currentUserId={currentUserId}
         otherName={other?.first_name ?? ''}
         perkLabel={perkLabel}
+        discountPercent={discountPercent}
         initialMeetup={initialMeetup}
         initialOrders={initialOrders}
       />

@@ -34,11 +34,14 @@ export async function POST(request: Request) {
 
   const service = createServiceClient();
 
-  const { data: item } = await service
-    .from('venue_menu_items')
-    .select('id, venue_id, name, price_cents, active')
-    .eq('id', itemId)
-    .maybeSingle();
+  const [{ data: item }, { data: venue }] = await Promise.all([
+    service
+      .from('venue_menu_items')
+      .select('id, venue_id, name, price_cents, active')
+      .eq('id', itemId)
+      .maybeSingle(),
+    service.from('venues').select('lucky_discount_percent').eq('id', match.venue_id).maybeSingle(),
+  ]);
 
   // L'article doit appartenir à la carte du lieu où la rencontre a eu lieu.
   if (!item || !item.active || item.venue_id !== match.venue_id) {
@@ -46,6 +49,11 @@ export async function POST(request: Request) {
   }
 
   const otherId = match.user_a === user.id ? match.user_b : match.user_a;
+
+  // Remise figée à la commande : une renégociation ne doit pas réécrire le
+  // CA déjà attribué.
+  const discountPercent = Math.max(0, Math.min(100, venue?.lucky_discount_percent ?? 0));
+  const netPriceCents = Math.round((item.price_cents * (100 - discountPercent)) / 100);
 
   const { data: meetup } = await service
     .from('meetups')
@@ -66,6 +74,8 @@ export async function POST(request: Request) {
       // figés : la carte peut changer, l'historique du CA ne bouge pas
       item_name: item.name,
       price_cents: item.price_cents,
+      discount_percent: discountPercent,
+      net_price_cents: netPriceCents,
       status: 'pending',
     },
     'B'
@@ -78,7 +88,7 @@ export async function POST(request: Request) {
       const { data: sender } = await service.from('profiles').select('first_name').eq('id', user.id).maybeSingle();
       await sendPushToUser(service, otherId, {
         title: `${sender?.first_name ?? 'Quelqu’un'} vous offre un verre`,
-        body: `${item.name} · ${formatPrice(item.price_cents)}`,
+        body: `${item.name} · ${formatPrice(netPriceCents)}`,
         url: `/chat/${matchId}`,
       });
     } catch (err) {

@@ -19,20 +19,27 @@ export default async function DashboardMenuPage({
   const isAdmin = await isPlatformAdminEmail(user.email);
   const service = createServiceClient();
 
-  let venue: { id: string; name: string; perk_label: string | null; average_ticket_cents: number | null } | null =
-    null;
+  let venue:
+    | {
+        id: string;
+        name: string;
+        perk_label: string | null;
+        average_ticket_cents: number | null;
+        lucky_discount_percent: number | null;
+      }
+    | null = null;
 
   if (viewingVenueId && isAdmin) {
     const { data } = await service
       .from('venues')
-      .select('id, name, perk_label, average_ticket_cents')
+      .select('id, name, perk_label, average_ticket_cents, lucky_discount_percent')
       .eq('id', viewingVenueId)
       .maybeSingle();
     venue = data;
   } else {
     const { data: adminRows } = await supabase
       .from('venue_admins')
-      .select('venue_id, venues(id, name, perk_label, average_ticket_cents)')
+      .select('venue_id, venues(id, name, perk_label, average_ticket_cents, lucky_discount_percent)')
       .eq('user_id', user.id);
 
     if (!adminRows || adminRows.length === 0) redirect('/dashboard');
