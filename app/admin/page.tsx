@@ -5,6 +5,7 @@ import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { isPlatformAdminEmail } from '@/lib/admin';
 import { sendEmail, emailShell } from '@/lib/email';
 import { ImpersonateButton } from '@/components/ImpersonateButton';
+import { subscriptionStatusLabel } from '@/lib/billing';
 
 export default async function AdminPage() {
   const supabase = createClient();
@@ -50,7 +51,7 @@ export default async function AdminPage() {
       .limit(20),
     service
       .from('venues')
-      .select('id, slug, name, city, type, plan, contact_name, contact_email, invited_at, created_at')
+      .select('id, slug, name, city, type, plan, contact_name, contact_email, invited_at, created_at, subscription_status, trial_ends_at')
       .order('created_at', { ascending: false }),
     service.from('platform_admins').select('id, email, added_at').order('added_at', { ascending: true }),
   ]);
@@ -92,6 +93,10 @@ export default async function AdminPage() {
                 )}
               </div>
               <div className="flex shrink-0 items-center gap-3">
+                <SubscriptionBadge
+                  status={v.subscription_status ?? 'none'}
+                  trialEndsAt={v.trial_ends_at ?? null}
+                />
                 {v.invited_at && (
                   <span className="text-[11px] text-signal-live">
                     Invité le {new Date(v.invited_at).toLocaleDateString('fr-FR')}
@@ -109,6 +114,12 @@ export default async function AdminPage() {
                     </button>
                   </form>
                 )}
+                <Link
+                  href={`/admin/venues/${v.id}#abonnement`}
+                  className="rounded-full border hairline px-3 py-1.5 text-[11px] text-bone-dim hover:border-brass hover:text-brass"
+                >
+                  Abonnement
+                </Link>
                 <Link href={`/admin/venues/${v.id}`} className="text-xs text-brass underline">
                   Modifier
                 </Link>
@@ -360,4 +371,35 @@ async function dismissReport(formData: FormData) {
   const service = createServiceClient();
   await service.from('reports').update({ status: 'dismissed' }).eq('id', id);
   revalidatePath('/admin');
+}
+
+/**
+ * Pastille d'abonnement affichée sur chaque ligne de la liste : savoir qui paie
+ * ne doit pas demander d'ouvrir sept fiches.
+ */
+function SubscriptionBadge({ status, trialEndsAt }: { status: string; trialEndsAt: string | null }) {
+  const tone =
+    status === 'active'
+      ? 'border-brass/50 text-brass'
+      : status === 'trialing'
+        ? 'border-brass/30 text-brass/80'
+        : status === 'past_due' || status === 'unpaid'
+          ? 'border-red-400/40 text-red-400'
+          : 'hairline text-bone-faint';
+
+  const label = subscriptionStatusLabel(status);
+  const suffix =
+    status === 'trialing' && trialEndsAt
+      ? ` · J-${Math.max(
+          0,
+          Math.ceil((new Date(trialEndsAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+        )}`
+      : '';
+
+  return (
+    <span className={`rounded-full border px-3 py-1 text-[10px] uppercase tracking-[0.15em] ${tone}`}>
+      {label}
+      {suffix}
+    </span>
+  );
 }

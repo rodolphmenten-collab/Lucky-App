@@ -74,8 +74,10 @@ export async function createVenueCheckoutSession(
     billing_address_collection: 'required',
     // B2B : on collecte le numéro de TVA intracommunautaire pour les factures.
     tax_id_collection: { enabled: true },
-    success_url: `${siteUrl}/dashboard?abonnement=ok`,
-    cancel_url: `${siteUrl}/dashboard?abonnement=annule`,
+    // Surtout pas /dashboard : le lieu qui vient de payer n'a pas de session
+    // ouverte et tomberait sur un écran de connexion juste après avoir payé.
+    success_url: `${siteUrl}/abonnement?session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${siteUrl}/abonnement?annule=1`,
   };
 
   if (automaticTaxEnabled()) {

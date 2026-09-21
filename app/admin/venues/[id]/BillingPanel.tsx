@@ -71,7 +71,7 @@ export function BillingPanel({
         : 'text-bone-dim';
 
   return (
-    <section className="mt-10 rounded-2xl border border-brass/30 bg-brass/[0.03] p-6">
+    <section id="abonnement" className="mt-10 scroll-mt-8 rounded-2xl border border-brass/30 bg-brass/[0.03] p-6">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <p className="text-sm text-bone">Abonnement</p>
         <p className={`font-mono text-[11px] uppercase tracking-[0.2em] ${statusTone}`}>{statusLabel}</p>
