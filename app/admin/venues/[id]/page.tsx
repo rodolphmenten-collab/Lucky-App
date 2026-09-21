@@ -1,6 +1,8 @@
 import { redirect, notFound } from 'next/navigation';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { isPlatformAdminEmail } from '@/lib/admin';
+import { subscriptionStatusLabel } from '@/lib/billing';
+import { BillingPanel } from './BillingPanel';
 
 async function updateVenue(formData: FormData) {
   'use server';
@@ -159,6 +161,17 @@ export default async function EditVenuePage({ params }: { params: { id: string }
           Enregistrer
         </button>
       </form>
+
+      <BillingPanel
+        venueId={venue.id}
+        currentPlan={venue.plan}
+        status={venue.subscription_status ?? 'none'}
+        statusLabel={subscriptionStatusLabel(venue.subscription_status)}
+        contactEmail={venue.contact_email ?? null}
+        trialEndsAt={venue.trial_ends_at ?? null}
+        currentPeriodEnd={venue.current_period_end ?? null}
+        checkoutSentAt={venue.checkout_sent_at ?? null}
+      />
 
       <form action={deleteVenue} className="mt-4">
         <input type="hidden" name="id" value={venue.id} />

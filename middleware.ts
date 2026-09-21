@@ -7,6 +7,8 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|manifest.json|icons|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    // api/stripe/webhook est exclu : il est authentifié par la signature Stripe
+    // sur le corps brut, pas par une session, et n'a rien à rafraîchir.
+    '/((?!_next/static|_next/image|favicon.ico|manifest.json|icons|api/stripe/webhook|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 };
