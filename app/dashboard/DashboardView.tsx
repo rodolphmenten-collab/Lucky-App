@@ -226,6 +226,25 @@ export function DashboardView({
                 </p>
               </div>
 
+              {/* L'écran ne montre que la journée ; la compta, elle, raisonne au
+                  mois et veut sommer. D'où l'export, à côté du tableau plutôt
+                  que relégué ailleurs. */}
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <a
+                  href={`/api/dashboard/orders/export?venueId=${venue.id}&from=${monthStart()}`}
+                  className="rounded-full border hairline px-4 py-2 text-[11px] text-bone-dim hover:border-brass hover:text-brass"
+                >
+                  Exporter ce mois-ci
+                </a>
+                <a
+                  href={`/api/dashboard/orders/export?venueId=${venue.id}`}
+                  className="rounded-full border hairline px-4 py-2 text-[11px] text-bone-faint hover:border-brass hover:text-brass"
+                >
+                  Tout l’historique
+                </a>
+                <span className="text-[10px] text-bone-faint">CSV, ouvrable dans Excel</span>
+              </div>
+
               {todayOrders.length === 0 ? (
                 <p className="mt-3 text-xs text-bone-faint">Aucun bon émis aujourd’hui.</p>
               ) : (
@@ -311,4 +330,10 @@ export function DashboardView({
       </div>
     </main>
   );
+}
+
+/** Premier jour du mois courant, au format attendu par l'export (AAAA-MM-JJ). */
+function monthStart(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`;
 }
