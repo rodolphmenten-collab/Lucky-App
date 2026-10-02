@@ -378,6 +378,14 @@ export function MeetupPanel({
               </div>
 
               <p className="mt-6 text-xs leading-relaxed text-bone-faint">{copy.voucherHint}</p>
+
+              {/* Sans ce tap, le bon reste « en attente » et le CA n'est jamais
+                  certifié côté lieu : c'est le seul geste qu'on demande au
+                  client, il mérite d'être visible sur le bon lui-même. */}
+              <p className="mt-5 rounded-2xl border border-brass/30 bg-brass/5 px-4 py-3 text-xs leading-relaxed text-brass">
+                {copy.voucherConfirm}
+              </p>
+
               <button
                 onClick={() => setVoucher(null)}
                 className="mt-6 w-full rounded-full border hairline py-2.5 text-xs text-bone-dim"

@@ -134,6 +134,7 @@ export const consumerCopy: Record<ConsumerLang, any> = {
       amountToCharge: 'Amount to charge',
       insteadOf: 'instead of',
       voucherHint: 'Show this code to the bar. They apply the discount, serve it, and add it to the tab as usual \u2014 nothing to type in.',
+      voucherConfirm: 'Drink in hand? One last tap: \u201cReceived \u{1F942}\u201d. That\u2019s what credits the round to the venue.',
       close: 'Close',
     },
     matches: {
@@ -280,6 +281,7 @@ export const consumerCopy: Record<ConsumerLang, any> = {
       amountToCharge: '\u00c0 encaisser',
       insteadOf: 'au lieu de',
       voucherHint: 'Montrez ce code au bar. Il applique la remise, sert, et met sur l\u2019addition comme d\u2019habitude \u2014 rien \u00e0 saisir.',
+      voucherConfirm: 'Le verre en main ? Un dernier geste : \u00ab\u00a0Re\u00e7u \u{1F942}\u00a0\u00bb. C\u2019est ce qui valide la tourn\u00e9e aupr\u00e8s du lieu.',
       close: 'Fermer',
     },
     matches: {
@@ -426,6 +428,7 @@ export const consumerCopy: Record<ConsumerLang, any> = {
       amountToCharge: 'A cobrar',
       insteadOf: 'en vez de',
       voucherHint: 'Ense\u00f1a este c\u00f3digo en la barra. Aplican el descuento, lo sirven y va a la cuenta, como siempre \u2014 nada que teclear.',
+      voucherConfirm: '\u00bfYa tienes la copa? Un \u00faltimo gesto: \u00abRecibido \u{1F942}\u00bb. Es lo que valida la ronda ante el local.',
       close: 'Cerrar',
     },
     matches: {
