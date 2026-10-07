@@ -1,23 +1,23 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { DemoPlayer } from './DemoPlayer';
 
 /**
  * Page d'atterrissage du QR des flyers de prospection.
  *
  * Le lecteur est un patron debout derrière son comptoir, pas un prospect
- * assis devant un ordinateur : la démo passe avant l'argumentaire, et les
+ * assis devant un ordinateur : la vidéo passe avant l'argumentaire, et les
  * moyens de rappeler sont des liens qu'on déclenche d'un pouce (tel:, wa.me)
  * plutôt qu'un numéro à recopier.
  */
 export const metadata: Metadata = {
-  title: 'Lucky — la démo en 30 secondes',
+  title: 'Lucky — la démo en 45 secondes',
   description:
     'Ce que vos clients voient, et ce que ça met dans votre caisse. Démo de Lucky pour les bars, restaurants et hôtels.',
 };
 
 const PHONE = '+33688354676';
 const PHONE_DISPLAY = '06 88 35 46 76';
+const EMAIL = 'hello@lucky-app.io';
 
 export default function DemoPage() {
   return (
@@ -27,15 +27,22 @@ export default function DemoPage() {
         Ce que vos clients voient.
       </h1>
       <p className="mx-auto mt-3 max-w-xs text-center text-sm leading-relaxed text-bone-dim">
-        Trente secondes, et vous saurez exactement ce que Lucky change chez vous — jusqu’à l’euro.
+        Quarante-cinq secondes, et vous saurez ce que Lucky change chez vous — jusqu’à l’euro.
       </p>
 
-      <div className="mt-8">
-        <DemoPlayer />
-      </div>
+      {/* playsInline : sans cet attribut, iOS ouvre la vidéo en plein écran et
+          sort le patron de la page avant qu'il ait vu le numéro à appeler. */}
+      <video
+        className="mx-auto mt-8 w-full max-w-[320px] rounded-3xl border border-bone/15 shadow-[0_30px_60px_-20px_rgba(0,0,0,0.9)]"
+        src="/demo/lucky-demo.mp4"
+        poster="/demo/poster.jpg"
+        controls
+        playsInline
+        preload="metadata"
+      />
 
       {/* ---- Rappel ------------------------------------------------------ */}
-      <section className="mt-12 rounded-3xl border border-brass/30 bg-brass/[0.04] p-6 text-center">
+      <section className="mt-10 rounded-3xl border border-brass/30 bg-brass/[0.04] p-6 text-center">
         <p className="font-display text-xl italic text-bone">30 jours d’essai, offerts.</p>
         <p className="mt-2 text-xs leading-relaxed text-bone-dim">
           Sans engagement, résiliable à tout moment. On installe tout : votre compte, votre QR code,
@@ -58,6 +65,9 @@ export default function DemoPage() {
         >
           Écrire sur WhatsApp
         </a>
+        <a href={`mailto:${EMAIL}`} className="mt-4 block text-xs text-bone-dim underline decoration-bone/20">
+          {EMAIL}
+        </a>
 
         <p className="mt-5 text-[11px] text-bone-faint">À partir de 99 € HT / mois</p>
       </section>
@@ -67,8 +77,8 @@ export default function DemoPage() {
           Voir l’offre complète et les tarifs
         </Link>
         <p className="text-[10px] leading-relaxed text-bone-faint">
-          Les écrans ci-dessus sont une reconstitution de l’application : mêmes parcours, mêmes
-          informations, avec des exemples fictifs à la place de vrais clients.
+          Les scènes et les chiffres de la vidéo sont une démonstration : parcours réels de
+          l’application, exemples fictifs à la place de vrais clients.
         </p>
       </div>
     </main>
