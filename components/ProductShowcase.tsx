@@ -71,23 +71,37 @@ function ChatMockup({ lang }: { lang: 'en' | 'fr' }) {
 }
 
 function DashboardMockup({ lang }: { lang: 'en' | 'fr' }) {
-  const stats =
-    lang === 'fr'
-      ? [
-          { label: 'Présents', value: '18' },
-          { label: "Check-ins aujourd'hui", value: '64' },
-          { label: 'Taux de connexion', value: '71%' },
-        ]
-      : [
-          { label: 'People here', value: '18' },
-          { label: 'Check-ins today', value: '64' },
-          { label: 'Connection rate', value: '71%' },
-        ];
+  const fr = lang === 'fr';
+  const stats = fr
+    ? [
+        { label: 'Rencontres confirmées', value: '7' },
+        { label: 'CA certifié', value: '312 €' },
+        { label: 'CA estimé', value: '180 €' },
+      ]
+    : [
+        { label: 'Confirmed meetups', value: '7' },
+        { label: 'Certified revenue', value: '€312' },
+        { label: 'Estimated revenue', value: '€180' },
+      ];
+
+  const orders = fr
+    ? [
+        { time: '21:14', code: 'LK-4821', item: 'Spritz maison', net: '11,20 €', state: 'Encaissé' },
+        { time: '21:47', code: 'LK-4826', item: 'Coupe champagne', net: '14,40 €', state: 'Encaissé' },
+        { time: '22:03', code: 'LK-4831', item: 'Planche à partager', net: '18,00 €', state: 'En attente' },
+      ]
+    : [
+        { time: '9:14 PM', code: 'LK-4821', item: 'House spritz', net: '€11.20', state: 'Settled' },
+        { time: '9:47 PM', code: 'LK-4826', item: 'Glass of champagne', net: '€14.40', state: 'Settled' },
+        { time: '10:03 PM', code: 'LK-4831', item: 'Sharing board', net: '€18.00', state: 'Pending' },
+      ];
+
   return (
     <div className="rounded-2xl border hairline bg-ink-800 p-4">
       <p className="text-[10px] uppercase tracking-[0.2em] text-brass">
-        {lang === 'fr' ? 'Dashboard · Le Senequier' : 'Dashboard · Le Senequier'}
+        {fr ? 'Ce que Lucky a généré ici · Le Senequier' : 'What Lucky generated here · Le Senequier'}
       </p>
+
       <div className="mt-3 grid grid-cols-3 gap-2">
         {stats.map((s) => (
           <div key={s.label} className="rounded-xl border hairline p-2.5">
@@ -96,9 +110,42 @@ function DashboardMockup({ lang }: { lang: 'en' | 'fr' }) {
           </div>
         ))}
       </div>
+
+      <p className="mt-3 text-[9px] leading-tight text-bone-faint">
+        {fr
+          ? 'Remise Lucky consentie déduite — le CA affiché est net.'
+          : 'Lucky discount already deducted — revenue shown is net.'}
+      </p>
+
+      <p className="mt-4 text-[9px] uppercase tracking-[0.2em] text-bone-faint">
+        {fr ? 'Bons du jour' : "Today's vouchers"}
+      </p>
+      <div className="mt-2 space-y-1.5">
+        {orders.map((o) => (
+          <div
+            key={o.code}
+            className="flex items-center gap-2 rounded-lg border hairline px-2 py-1.5 text-[9px] text-bone-dim"
+          >
+            <span className="w-10 shrink-0 text-bone-faint">{o.time}</span>
+            <span className="w-14 shrink-0 font-mono text-brass">{o.code}</span>
+            <span className="flex-1 truncate text-bone">{o.item}</span>
+            <span className="shrink-0 text-bone">{o.net}</span>
+            <span
+              className={`shrink-0 rounded-full border px-1.5 py-0.5 text-[8px] ${
+                o.state === 'Encaissé' || o.state === 'Settled'
+                  ? 'border-emerald-500/50 bg-emerald-500/15 text-emerald-300'
+                  : 'border-brass/50 bg-brass/10 text-brass'
+              }`}
+            >
+              {o.state}
+            </span>
+          </div>
+        ))}
+      </div>
+
       <div className="mt-3 flex items-end gap-1">
         {[40, 65, 50, 80, 95, 70, 55].map((h, i) => (
-          <div key={i} className="flex-1 rounded-t bg-brass/40" style={{ height: `${h * 0.4}px` }} />
+          <div key={i} className="flex-1 rounded-t bg-brass/40" style={{ height: `${h * 0.3}px` }} />
         ))}
       </div>
     </div>
