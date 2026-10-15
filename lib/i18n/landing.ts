@@ -7,7 +7,7 @@ export const landingCopy = {
     eyebrow: 'For hotels, restaurants, bars & beach clubs',
     heroTitle: "Don't try to change the world. Connect it.",
     heroSubtitle:
-      'Your guests cross paths, sit at neighbouring tables, leave without a word. Lucky changes that, quietly, while they\u2019re still with you \u2014 and turns your venue into the one people remember.',
+      'Your guests cross paths, sit at neighbouring tables, leave without a word. Lucky changes that, quietly, while they’re still with you — and shows you, to the euro, what it put in your till.',
     ctaPrimary: 'Get your venue set up',
     ctaSecondary: 'See pricing',
     heroQuote:
@@ -17,38 +17,38 @@ export const landingCopy = {
       {
         mark: 'I.',
         title: 'Your QR, everywhere',
-        body: 'One code at reception, on every table, in every room. Guests scan it in a second \u2014 no app to install, no friction, no reason not to try.',
+        body: 'One code at reception, on every table, in every room. Guests scan it in a second — no app to install, no friction, no reason not to try.',
       },
       {
         mark: 'II.',
         title: 'Verified presence',
-        body: 'Every profile shown is confirmed present in real time \u2014 not a memory from six hours ago. When someone leaves, they disappear from the room: your guests only ever meet people who are actually there.',
+        body: 'Every profile shown is confirmed present in real time — not a memory from six hours ago. When someone leaves, they disappear from the room: your guests only ever meet people who are actually there.',
       },
       {
         mark: 'III.',
-        title: 'An atmosphere that sets you apart',
-        body: 'Word of mouth that builds itself, guests who come back because something is always happening. It\u2019s no longer just your menu or your décor people recommend \u2014 it\u2019s your venue.',
+        title: 'Revenue you can actually see',
+        body: 'When two guests meet, one can offer the other something from your menu — at a small Lucky discount. The order becomes a voucher your bar simply reads and serves. Your dashboard then shows the certified revenue it generated, net of that discount.',
       },
     ],
     previewEyebrow: 'What guests see',
     previewTitle: 'Presence, not memory.',
     previewBody:
-      'Every profile is confirmed present through location and activity signals, re-verified as the evening goes on. When someone leaves your venue, they disappear from the room \u2014 your guests never have to guess who\u2019s still around.',
+      'Every profile is confirmed present through location and activity signals, re-verified as the evening goes on. When someone leaves your venue, they disappear from the room — your guests never have to guess who’s still around.',
     showcaseRows: [
       {
         eyebrow: 'The room',
         title: 'Everyone present, at a glance.',
-        body: 'Your guests see who\u2019s sharing their evening \u2014 by affinity, not by chance. Business, Dating or Social: each person chooses what they\u2019re there for, and only sees profiles who are actually on-site.',
+        body: 'Your guests see who’s sharing their evening — by affinity, not by chance. Business, Dating or Social: each person chooses what they’re there for, and only sees profiles who are actually on-site.',
       },
       {
         eyebrow: 'The conversation',
-        title: 'From a wave to a conversation, without leaving your venue.',
-        body: 'One tap is enough to signal interest. If it\u2019s mutual, the conversation opens right away \u2014 while they\u2019re still sitting at your tables.',
+        title: 'From a wave to a drink on your menu.',
+        body: 'One tap is enough to signal interest. If it’s mutual, the conversation opens right away — and either of them can offer the other something from your menu, at a Lucky discount, without leaving their table.',
       },
       {
         eyebrow: 'Your dashboard',
-        title: 'Footfall and engagement, in real time.',
-        body: 'How many guests are present, how many connections have formed, what hours your venue comes alive. Enough to fine-tune your evenings \u2014 and prove the impact to your team.',
+        title: 'What Lucky generated here, to the euro.',
+        body: 'Certified revenue from orders actually placed and served, net of the discount you granted. Confirmed meet-ups. Today’s vouchers, line by line, with a CSV export to reconcile against your till at the end of service. Nothing for your floor team to do: the bar reads the voucher, serves, adds it to the bill.',
       },
     ],
     pricingEyebrow: 'Pricing',
@@ -57,33 +57,45 @@ export const landingCopy = {
     requestEyebrow: 'Get in touch',
     requestTitle: 'Want this atmosphere at your venue?',
     requestBody:
-      'We work directly with a curated set of hotels, restaurants, bars and beach clubs that want to give their guests an experience they won\u2019t find anywhere else. Reach out \u2014 we\u2019ll set up everything for you: account, QR code, and page included.',
+      'We work directly with a curated set of hotels, restaurants, bars and beach clubs that want to give their guests an experience they won’t find anywhere else. Reach out — we’ll set up everything for you: account, QR code, menu and page included.',
     faqEyebrow: 'FAQ',
-    faqTitle: 'Everything you\u2019re wondering.',
+    faqTitle: 'Everything you’re wondering.',
     faqItems: [
       {
         q: 'Do my guests need to download an app?',
-        a: 'No. Lucky works right in the browser after a QR code scan \u2014 no install, no friction.',
+        a: 'No. Lucky works right in the browser after a QR code scan — no install, no friction.',
       },
       {
         q: 'How does presence verification work?',
-        a: 'Location and activity are checked when someone joins the room, then re-checked regularly. If someone leaves your venue, they\u2019re automatically removed from the room.',
+        a: 'Location and activity are checked when someone joins the room, then re-checked regularly. If someone leaves your venue, they’re automatically removed from the room.',
+      },
+      {
+        q: 'How do you know what Lucky actually brought in?',
+        a: 'When a guest offers something from your menu through Lucky, they get a small discount — which is exactly why they go through the app rather than straight to the bar. That order becomes a voucher with a code, an item and the discounted price. Once it’s served, it counts as certified revenue, net of the discount. Nothing is typed in by hand: the amounts come from your own menu.',
+      },
+      {
+        q: 'Does this add work for my floor team?',
+        a: 'No. The voucher shows the code, the item and the amount to charge. The bar reads it, serves it, adds it to the bill. Your team never needs an account or access to the dashboard.',
+      },
+      {
+        q: 'How do I reconcile it with my till?',
+        a: 'Your dashboard lists the day’s vouchers line by line — time, code, item, menu price, amount charged, status — and exports the month as a CSV you can open in Excel.',
       },
       {
         q: 'How long does it take to set up my venue?',
-        a: 'Once your account is created, your QR code is ready immediately. Most venues are up and running within a day.',
+        a: 'Once your account is created, your QR code is ready immediately. Most venues are up and running within a day, menu included.',
       },
       {
         q: 'Can I change plans later?',
-        a: 'Yes, anytime. Reach out and we\u2019ll adjust your plan as your venue grows.',
+        a: 'Yes, anytime. Reach out and we’ll adjust your plan as your venue grows.',
       },
       {
-        q: 'Is my guests\u2019 data secure?',
-        a: 'Yes. Exact coordinates, message content, and blocking data are never visible from your dashboard \u2014 you only ever see aggregated statistics.',
+        q: 'Is my guests’ data secure?',
+        a: 'Yes. Exact coordinates, message content, and blocking data are never visible from your dashboard — you only ever see aggregated statistics.',
       },
       {
         q: 'Can I order physical materials (table QR codes, etc.)?',
-        a: 'Yes, directly from your dashboard once your account is active \u2014 table stands, stickers, posters, and hotel room card inserts.',
+        a: 'Standard materials are included with every plan. Premium branded versions — engraved stands, your colours — can be ordered from your dashboard.',
       },
     ],
     plans: [
@@ -93,12 +105,14 @@ export const landingCopy = {
         price: '€99',
         idealFor: 'Small bars & restaurants — up to ~50 concurrent guests',
         features: [
-          '1 venue QR code',
+          'Your menu + your Lucky offer',
+          'Certified revenue generated, in real time',
+          'Your QR code, print as many as you need',
           'Logo + cover photo',
           'Core presence stats',
           'Up to 50 concurrent guests',
+          'Standard physical materials included',
           'Email support',
-          'Physical materials ordered separately',
         ],
       },
       {
@@ -109,12 +123,13 @@ export const landingCopy = {
         idealFor: 'Mid-sized venues & coworking spaces — up to ~200 concurrent guests',
         features: [
           'Everything in Basique',
-          'Full photo gallery',
+          'Daily vouchers + CSV export to reconcile your till',
+          'Estimated revenue from your average ticket',
           'Advanced stats — peak hours, connection rate',
           'Custom presence duration',
+          'Full photo gallery',
           'Up to 200 concurrent guests',
           'Email + chat support',
-          '1 standard physical support included (custom branding available as an add-on)',
         ],
       },
       {
@@ -124,12 +139,11 @@ export const landingCopy = {
         idealFor: 'Hotels, beach clubs & large venues — unlimited capacity',
         features: [
           'Everything in Essentiel',
-          'QR code per zone (bar, lobby, terrace…)',
-          'Fully custom page design',
           'Unlimited concurrent guests',
-          'Monthly reports & data export',
+          'Fully custom page design',
+          'Monthly reports & full data export',
           'Dedicated onboarding support',
-          'Premium physical materials included, branded to your venue — fully handled for you',
+          'Premium branded materials included (up to 40), fully handled for you',
         ],
       },
     ],
@@ -140,7 +154,7 @@ export const landingCopy = {
     eyebrow: 'Pour hôtels, restaurants, bars & beach clubs',
     heroTitle: "N'essayez pas de changer le monde, connectez-le.",
     heroSubtitle:
-      'Vos clients se croisent, s\u2019installent aux tables voisines, repartent sans un mot. Lucky change cette réalité, discrètement, pendant qu\u2019ils sont encore chez vous \u2014 et fait de votre établissement celui dont on se souvient.',
+      'Vos clients se croisent, s’installent aux tables voisines, repartent sans un mot. Lucky change cette réalité, discrètement, pendant qu’ils sont encore chez vous — et vous montre, à l’euro près, ce que ça a mis dans votre caisse.',
     ctaPrimary: 'Configurer mon établissement',
     ctaSecondary: 'Voir les tarifs',
     heroQuote:
@@ -150,38 +164,38 @@ export const landingCopy = {
       {
         mark: 'I.',
         title: 'Votre QR, partout',
-        body: 'Un code à l\u2019accueil, sur chaque table, dans les chambres. Vos clients le scannent en un geste \u2014 aucune application à installer, aucune friction, aucune raison de ne pas essayer.',
+        body: 'Un code à l’accueil, sur chaque table, dans les chambres. Vos clients le scannent en un geste — aucune application à installer, aucune friction, aucune raison de ne pas essayer.',
       },
       {
         mark: 'II.',
         title: 'Présence vérifiée',
-        body: 'Chaque profil affiché est confirmé présent en temps réel \u2014 pas un souvenir de la veille. Quand quelqu\u2019un part, il disparaît de la salle : vos clients n\u2019échangent qu\u2019avec des personnes réellement sur place.',
+        body: 'Chaque profil affiché est confirmé présent en temps réel — pas un souvenir de la veille. Quand quelqu’un part, il disparaît de la salle : vos clients n’échangent qu’avec des personnes réellement sur place.',
       },
       {
         mark: 'III.',
-        title: 'Une ambiance qui vous distingue',
-        body: 'Un bouche-à-oreille qui se construit de lui-même, des clients qui reviennent parce qu\u2019il s\u2019y passe toujours quelque chose. Ce n\u2019est plus seulement votre carte ou votre décor qu\u2019on recommande \u2014 c\u2019est votre lieu.',
+        title: 'Du chiffre d’affaires que vous voyez',
+        body: 'Quand deux clients se rencontrent, l’un peut offrir à l’autre quelque chose sur votre carte — avec une remise Lucky. La commande devient un bon que votre bar lit et sert, sans rien saisir. Votre tableau de bord affiche ensuite le CA certifié que ça vous a rapporté, remise déduite.',
       },
     ],
     previewEyebrow: 'Ce que voient vos clients',
     previewTitle: 'La présence, pas le souvenir.',
     previewBody:
-      'Chaque profil est confirmé présent grâce à des signaux de localisation et d\u2019activité, revérifiés au fil de la soirée. Quand quelqu\u2019un quitte votre établissement, il disparaît de la salle \u2014 vos clients n\u2019ont jamais à deviner qui est encore là.',
+      'Chaque profil est confirmé présent grâce à des signaux de localisation et d’activité, revérifiés au fil de la soirée. Quand quelqu’un quitte votre établissement, il disparaît de la salle — vos clients n’ont jamais à deviner qui est encore là.',
     showcaseRows: [
       {
         eyebrow: 'La salle',
-        title: 'Chaque personne présente, en un coup d\u2019œil.',
-        body: 'Vos clients voient qui partage leur soirée \u2014 par affinité, pas au hasard. Business, Dating ou Social : chacun choisit ce qu\u2019il cherche, et ne voit que des profils réellement sur place.',
+        title: 'Chaque personne présente, en un coup d’œil.',
+        body: 'Vos clients voient qui partage leur soirée — par affinité, pas au hasard. Business, Dating ou Social : chacun choisit ce qu’il cherche, et ne voit que des profils réellement sur place.',
       },
       {
         eyebrow: 'La conversation',
-        title: 'D\u2019un signe à l\u2019échange, sans quitter votre établissement.',
-        body: 'Un geste suffit pour se signaler à quelqu\u2019un. Si l\u2019intérêt est partagé, la conversation s\u2019ouvre aussitôt \u2014 pendant qu\u2019ils sont encore assis à vos tables.',
+        title: 'D’un signe à un verre sur votre carte.',
+        body: 'Un geste suffit pour se signaler à quelqu’un. Si l’intérêt est partagé, la conversation s’ouvre aussitôt — et l’un peut offrir à l’autre quelque chose sur votre carte, avec une remise Lucky, sans quitter sa table.',
       },
       {
         eyebrow: 'Votre tableau de bord',
-        title: 'L\u2019affluence et l\u2019engagement, en temps réel.',
-        body: 'Combien de personnes sont présentes, combien de connexions se sont créées, à quelles heures votre établissement vit le plus. De quoi affiner vos soirées \u2014 et le prouver à vos équipes.',
+        title: 'Ce que Lucky a généré ici, à l’euro près.',
+        body: 'Le CA certifié des commandes réellement passées et servies, net de la remise que vous avez consentie. Les rencontres confirmées. Les bons du jour, ligne par ligne, avec un export CSV pour recouper votre caisse en fin de service. Rien n’est demandé à votre équipe de salle : le bar lit le bon, sert, met sur l’addition.',
       },
     ],
     pricingEyebrow: 'Tarifs',
@@ -190,33 +204,45 @@ export const landingCopy = {
     requestEyebrow: 'Nous contacter',
     requestTitle: 'Envie de cette ambiance chez vous ?',
     requestBody:
-      'Nous travaillons directement avec une sélection d\u2019hôtels, restaurants, bars et beach clubs qui veulent offrir à leurs clients une expérience qu\u2019ils ne trouveront nulle part ailleurs. Contactez-nous : nous nous occupons de tout \u2014 compte, QR code et page inclus.',
+      'Nous travaillons directement avec une sélection d’hôtels, restaurants, bars et beach clubs qui veulent offrir à leurs clients une expérience qu’ils ne trouveront nulle part ailleurs. Contactez-nous : nous nous occupons de tout — compte, QR code, carte et page inclus.',
     faqEyebrow: 'Questions fréquentes',
     faqTitle: 'Tout ce que vous vous demandez.',
     faqItems: [
       {
         q: 'Mes clients doivent-ils télécharger une application ?',
-        a: 'Non. Lucky fonctionne directement dans le navigateur après un scan de QR code \u2014 aucune installation, aucune friction.',
+        a: 'Non. Lucky fonctionne directement dans le navigateur après un scan de QR code — aucune installation, aucune friction.',
       },
       {
         q: 'Comment fonctionne la vérification de présence ?',
-        a: 'La position et l\u2019activité sont vérifiées au moment de l\u2019entrée dans la salle, puis revérifiées régulièrement. Si quelqu\u2019un quitte votre établissement, il disparaît automatiquement de la salle.',
+        a: 'La position et l’activité sont vérifiées au moment de l’entrée dans la salle, puis revérifiées régulièrement. Si quelqu’un quitte votre établissement, il disparaît automatiquement de la salle.',
+      },
+      {
+        q: 'Comment savez-vous ce que Lucky m’a réellement rapporté ?',
+        a: 'Quand un client en invite un autre sur votre carte via Lucky, il bénéficie d’une remise — c’est précisément ce qui le pousse à passer par l’application plutôt que directement au comptoir. Cette commande devient un bon, avec un code, un article et le prix remisé. Une fois servie, elle est comptée en CA certifié, net de la remise. Aucune saisie manuelle : les montants viennent de votre propre carte.',
+      },
+      {
+        q: 'Est-ce que ça ajoute du travail à mon équipe de salle ?',
+        a: 'Non. Le bon affiche le code, l’article et le montant à encaisser. Le bar lit, sert, met sur l’addition. Votre équipe n’a besoin ni de compte, ni d’accès au tableau de bord.',
+      },
+      {
+        q: 'Comment je recoupe avec ma caisse ?',
+        a: 'Votre tableau de bord liste les bons du jour ligne par ligne — heure, code, article, prix carte, montant encaissé, état — et exporte le mois en CSV, ouvrable dans Excel.',
       },
       {
         q: 'Combien de temps pour mettre en place mon établissement ?',
-        a: 'Une fois votre compte créé, votre QR code est disponible immédiatement. La plupart des établissements sont opérationnels en moins d\u2019une journée.',
+        a: 'Une fois votre compte créé, votre QR code est disponible immédiatement. La plupart des établissements sont opérationnels en moins d’une journée, carte comprise.',
       },
       {
         q: 'Puis-je changer de formule plus tard ?',
-        a: 'Oui, à tout moment. Contactez-nous et nous ajustons votre formule selon l\u2019évolution de votre établissement.',
+        a: 'Oui, à tout moment. Contactez-nous et nous ajustons votre formule selon l’évolution de votre établissement.',
       },
       {
         q: 'Les données de mes clients sont-elles sécurisées ?',
-        a: 'Oui. Les coordonnées exactes, le contenu des messages et les données de blocage ne sont jamais visibles depuis votre tableau de bord \u2014 vous n\u2019avez accès qu\u2019à des statistiques agrégées.',
+        a: 'Oui. Les coordonnées exactes, le contenu des messages et les données de blocage ne sont jamais visibles depuis votre tableau de bord — vous n’avez accès qu’à des statistiques agrégées.',
       },
       {
         q: 'Est-ce que je peux commander des supports physiques (QR à poser sur les tables) ?',
-        a: 'Oui, directement depuis votre tableau de bord une fois votre compte actif \u2014 chevalets, stickers, affiches, et inserts pour chambres d\u2019hôtel.',
+        a: 'Les supports standard sont inclus dans toutes les formules. Les versions premium — chevalets gravés, à vos couleurs — se commandent depuis votre tableau de bord.',
       },
     ],
     plans: [
@@ -224,14 +250,16 @@ export const landingCopy = {
         id: 'basique',
         name: 'Basique',
         price: '99€',
-        idealFor: 'Petits bars & restaurants — jusqu\u2019à ~50 personnes en simultané',
+        idealFor: 'Petits bars & restaurants — jusqu’à ~50 personnes en simultané',
         features: [
-          '1 QR code unique',
+          'Votre carte + votre avantage Lucky',
+          'CA certifié généré, en temps réel',
+          'Votre QR code, à imprimer autant que vous voulez',
           'Logo + photo de couverture',
-          'Statistiques de présence de base',
-          'Jusqu\u2019à 50 personnes connectées simultanément',
+          'Statistiques de présence',
+          'Jusqu’à 50 personnes connectées simultanément',
+          'Supports physiques standard inclus',
           'Support par email',
-          'Supports physiques à commander séparément',
         ],
       },
       {
@@ -239,15 +267,16 @@ export const landingCopy = {
         name: 'Essentiel',
         price: '149€',
         highlighted: true,
-        idealFor: 'Établissements de taille moyenne, coworkings — jusqu\u2019à ~200 personnes',
+        idealFor: 'Établissements de taille moyenne, coworkings — jusqu’à ~200 personnes',
         features: [
           'Tout Basique',
-          'Galerie photo complète',
+          'Bons du jour + export CSV pour recouper la caisse',
+          'CA estimé à partir de votre panier moyen',
           'Statistiques avancées — heures de pointe, taux de connexion',
           'Durée de présence personnalisable',
-          'Jusqu\u2019à 200 personnes connectées simultanément',
+          'Galerie photo complète',
+          'Jusqu’à 200 personnes connectées simultanément',
           'Support email + chat',
-          '1 support physique standard offert (personnalisation en option, payante)',
         ],
       },
       {
@@ -257,12 +286,11 @@ export const landingCopy = {
         idealFor: 'Hôtels, beach clubs, grands établissements — capacité illimitée',
         features: [
           'Tout Essentiel',
-          'QR code par zone (bar, lobby, terrasse…)',
-          'Page 100% personnalisée',
           'Capacité illimitée',
-          'Rapports mensuels + export des données',
+          'Page 100% personnalisée',
+          'Rapports mensuels + export complet des données',
           'Accompagnement dédié au lancement',
-          'Supports physiques haut de gamme inclus, personnalisés à vos couleurs — tout géré pour vous',
+          'Supports premium personnalisés inclus (jusqu’à 40), tout géré pour vous',
         ],
       },
     ],
