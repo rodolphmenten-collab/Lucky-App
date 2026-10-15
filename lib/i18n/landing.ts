@@ -10,6 +10,7 @@ export const landingCopy = {
       'Your guests cross paths, sit at neighbouring tables, leave without a word. Lucky changes that, quietly, while they’re still with you — and shows you, to the euro, what it put in your till.',
     ctaPrimary: 'Get your venue set up',
     ctaSecondary: 'See pricing',
+    ctaDemo: 'Watch the 45s demo',
     heroQuote:
       'The most memorable encounter of the night might be three tables away. Your guests just need to know it.',
     howItWorksEyebrow: 'How it works',
@@ -157,6 +158,7 @@ export const landingCopy = {
       'Vos clients se croisent, s’installent aux tables voisines, repartent sans un mot. Lucky change cette réalité, discrètement, pendant qu’ils sont encore chez vous — et vous montre, à l’euro près, ce que ça a mis dans votre caisse.',
     ctaPrimary: 'Configurer mon établissement',
     ctaSecondary: 'Voir les tarifs',
+    ctaDemo: 'Voir la démo en 45 s',
     heroQuote:
       'Les rencontres les plus mémorables de la soirée se produisent parfois à trois tables de distance. Encore faut-il que vos clients le sachent.',
     howItWorksEyebrow: 'Comment ça marche',
