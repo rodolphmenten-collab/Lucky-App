@@ -31,7 +31,7 @@ export default function LandingPage() {
   return (
     <main className="relative min-h-screen overflow-hidden">
       {/* Top nav */}
-      <div className="relative z-10 mx-auto flex max-w-5xl items-center justify-between gap-3 px-6 pt-8">
+      <div className="relative z-10 mx-auto flex max-w-7xl items-center justify-between gap-3 px-6 pt-8">
         <Logo size={48} showWordmark />
         <div className="flex items-center gap-3">
           <LanguageToggle lang={lang} onChange={changeLang} />
@@ -45,7 +45,7 @@ export default function LandingPage() {
       </div>
 
       {/* Hero */}
-      <section className="relative mx-auto flex min-h-[85vh] max-w-5xl flex-col justify-center px-6">
+      <section className="relative mx-auto flex min-h-[85vh] max-w-7xl flex-col items-center justify-center px-6 text-center">
         <div className="absolute inset-0 -z-10">
           <div className="absolute left-1/2 top-0 h-[560px] w-[560px] -translate-x-1/2 rounded-full bg-brass/10 blur-[140px]" />
         </div>
@@ -54,21 +54,27 @@ export default function LandingPage() {
           {t.eyebrow}
         </p>
 
-        <h1 className="mt-6 max-w-3xl animate-fade_up font-display text-5xl italic leading-[1.05] text-bone text-balance sm:text-7xl">
+        <h1 className="mt-6 max-w-5xl animate-fade_up font-display text-5xl italic leading-[1.05] text-bone text-balance sm:text-7xl">
           {t.heroTitle}
         </h1>
 
-        <p className="mt-6 max-w-lg animate-fade_up text-lg text-bone-dim text-balance">
+        <p className="mt-6 max-w-2xl animate-fade_up text-lg text-bone-dim text-balance">
           {t.heroSubtitle}
         </p>
 
-        <div className="mt-10 flex animate-fade_up flex-wrap items-center gap-4">
+        <div className="mt-10 flex animate-fade_up flex-wrap items-center justify-center gap-4">
           <a
             href="mailto:hello@lucky-app.io"
             className="inline-flex items-center justify-center gap-2 rounded-full bg-bone px-6 py-3 text-sm font-medium tracking-wide text-ink transition-colors duration-200 hover:bg-brass-bright"
           >
             {t.ctaPrimary}
           </a>
+          <Link
+            href="/demo"
+            className="inline-flex items-center justify-center gap-2 rounded-full border border-brass/60 px-6 py-3 text-sm font-medium tracking-wide text-brass transition-colors duration-200 hover:border-brass hover:bg-brass/10"
+          >
+            {t.ctaDemo}
+          </Link>
           <a
             href="#pricing"
             className="inline-flex items-center justify-center gap-2 rounded-full border border-white/20 px-6 py-3 text-sm font-medium tracking-wide text-bone transition-colors duration-200 hover:border-brass"
@@ -77,13 +83,13 @@ export default function LandingPage() {
           </a>
         </div>
 
-        <p className="mt-20 max-w-md animate-fade_up font-display text-xl italic text-bone-dim/80 text-balance">
+        <p className="mt-20 max-w-2xl animate-fade_up font-display text-xl italic text-bone-dim/80 text-balance">
           {t.heroQuote}
         </p>
       </section>
 
       {/* How it works */}
-      <section className="mx-auto max-w-5xl border-t hairline px-6 py-28">
+      <section className="mx-auto max-w-7xl border-t hairline px-6 py-28">
         <p className="font-mono text-xs uppercase tracking-[0.3em] text-brass">{t.howItWorksEyebrow}</p>
         <div className="mt-12 grid gap-12 sm:grid-cols-3 sm:gap-8">
           {t.steps.map((step, i) => (
@@ -97,7 +103,7 @@ export default function LandingPage() {
       </section>
 
       {/* Product preview */}
-      <section className="mx-auto max-w-5xl border-t hairline px-6 py-28">
+      <section className="mx-auto max-w-7xl border-t hairline px-6 py-28">
         <div className="mx-auto max-w-2xl text-center">
           <p className="font-mono text-xs uppercase tracking-[0.3em] text-brass">{t.previewEyebrow}</p>
           <h2 className="mt-4 font-display text-4xl italic leading-tight text-bone text-balance">
@@ -106,10 +112,18 @@ export default function LandingPage() {
           <p className="mt-5 text-sm leading-relaxed text-bone-dim">{t.previewBody}</p>
         </div>
         <ProductShowcase rows={t.showcaseRows as any} lang={lang} />
+        <div className="mt-16 text-center">
+          <Link
+            href="/demo"
+            className="inline-flex items-center justify-center gap-2 rounded-full border border-brass/60 px-6 py-3 text-sm font-medium tracking-wide text-brass transition-colors duration-200 hover:border-brass hover:bg-brass/10"
+          >
+            {t.ctaDemo}
+          </Link>
+        </div>
       </section>
 
       {/* Pricing */}
-      <section id="pricing" className="mx-auto max-w-5xl border-t hairline px-6 py-28">
+      <section id="pricing" className="mx-auto max-w-7xl border-t hairline px-6 py-28">
         <p className="font-mono text-xs uppercase tracking-[0.3em] text-brass">{t.pricingEyebrow}</p>
         <h2 className="mt-4 max-w-2xl font-display text-4xl italic leading-tight text-bone text-balance">
           {t.pricingTitle}
@@ -153,7 +167,7 @@ export default function LandingPage() {
       </section>
 
       {/* Venue types */}
-      <section className="mx-auto max-w-5xl border-t hairline px-6 py-16">
+      <section className="mx-auto max-w-7xl border-t hairline px-6 py-16">
         <div className="flex flex-wrap gap-2">
           {VENUE_TYPES.map((tType) => (
             <span key={tType} className="rounded-full border hairline px-4 py-2 text-xs text-bone-dim">
