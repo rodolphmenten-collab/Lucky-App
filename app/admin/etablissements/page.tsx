@@ -27,7 +27,7 @@ export default async function VenuesPage() {
     service
       .from('venues')
       .select(
-        'id, slug, name, city, type, plan, contact_name, contact_email, invited_at, created_at, subscription_status, trial_ends_at'
+        'id, slug, name, city, type, plan, contact_name, contact_email, invited_at, created_at, subscription_status, trial_ends_at, crm_venues(id)'
       )
       .order('created_at', { ascending: false }),
     service.from('reports').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
@@ -82,13 +82,13 @@ export default async function VenuesPage() {
                   </form>
                 )}
                 <Link
-                  href={`/admin/venues/${v.id}#abonnement`}
+                  href={ficheHref(v) + '#abonnement'}
                   className="rounded-full border hairline px-3 py-1.5 text-[11px] text-bone-dim hover:border-brass hover:text-brass"
                 >
                   Abonnement
                 </Link>
-                <Link href={`/admin/venues/${v.id}`} className="text-xs text-brass underline">
-                  Modifier
+                <Link href={ficheHref(v)} className="text-xs text-brass underline">
+                  Ouvrir la fiche
                 </Link>
               </div>
             </div>
@@ -100,6 +100,12 @@ export default async function VenuesPage() {
       </div>
     </main>
   );
+}
+
+/** La fiche unique quand elle existe, sinon la redirection s'en charge. */
+function ficheHref(v: any): string {
+  const crmId = Array.isArray(v.crm_venues) ? v.crm_venues[0]?.id : v.crm_venues?.id;
+  return crmId ? `/admin/crm/${crmId}` : `/admin/venues/${v.id}`;
 }
 
 function SubscriptionBadge({ status, trialEndsAt }: { status: string; trialEndsAt: string | null }) {
