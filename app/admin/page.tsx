@@ -87,7 +87,9 @@ export default async function AdminPage({
 
   const crmRows = crm ?? [];
   const venueRows = venues ?? [];
-  const venueById = new Map(venueRows.map((v: any) => [v.id, v]));
+  // Typé explicitement : sans cela TypeScript infère `{}` pour les valeurs et
+  // perd subscription_status et trial_ends_at au moment de la lecture.
+  const venueById = new Map<string, any>((venueRows ?? []).map((v: any) => [v.id as string, v]));
 
   const kpis = computeFounderKpis(venueRows as any, crmRows as any);
 
