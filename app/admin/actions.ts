@@ -127,15 +127,14 @@ export async function updateCrmVenue(formData: FormData) {
 }
 
 /**
- * Suppression d'une fiche du pipeline.
+ * Suppression d'une fiche du pipeline, et de son etablissement si elle en a un.
  *
- * Garde-fou volontaire : on refuse de supprimer une fiche rattachee a un
- * etablissement reel. Ces fiches portent la facturation et l'historique d'un
- * client ; les effacer depuis le pipeline serait trop facile et irreversible.
- * Pour celles-la, il faut passer par la fiche etablissement.
- *
- * Les notes partent avec la fiche (cascade), ce qui est voulu : une fiche de
- * test ne doit pas laisser de trainee.
+ * Tout ce qui pend a un etablissement part avec lui : presences, rencontres,
+ * bons encaisses, acces du patron. C'est voulu pour les lieux de test, et
+ * c'est exactement pour ca qu'on refuse de le faire quand une facturation
+ * tourne. Un lieu qui paie ou qui est en essai se resilie dans Stripe
+ * d'abord ; sinon on supprime en base un client que Stripe continue de
+ * prelever.
  */
 export async function deleteCrmVenue(formData: FormData) {
   const user = await requireAdmin();
@@ -147,24 +146,33 @@ export async function deleteCrmVenue(formData: FormData) {
   const service = createServiceClient();
   const { data: row } = await service
     .from('crm_venues')
-    .select('id, venue_id')
+    .select('id, name, venue_id')
     .eq('id', id)
     .maybeSingle();
 
-  if (!row || row.venue_id) return;
+  if (!row) return;
+
+  if (row.venue_id) {
+    const { data: venue } = await service
+      .from('venues')
+      .select('id, subscription_status')
+      .eq('id', row.venue_id)
+      .maybeSingle();
+
+    const facture = venue?.subscription_status === 'active' || venue?.subscription_status === 'trialing';
+    if (facture) return;
+
+    // L'etablissement d'abord : la fiche CRM passerait sinon en venue_id null
+    // et resterait affichee comme un prospect fantome.
+    if (venue) await service.from('venues').delete().eq('id', venue.id);
+  }
 
   await service.from('crm_venues').delete().eq('id', id);
   revalidatePath('/admin');
+  revalidatePath('/admin/etablissements');
+  revalidatePath('/admin/roadshow');
 }
 
-/**
- * Les reglages techniques de l'etablissement, depuis la fiche unique.
- *
- * Separe de updateCrmVenue a dessein : ces champs n'existent que si le lieu
- * est devenu un etablissement, et une erreur sur la latitude casse la
- * verification de presence pour tous ses clients. On ne les melange pas avec
- * les champs de prospection qu'on remplit vite sur le trottoir.
- */
 export async function updateVenueSettings(formData: FormData) {
   const user = await requireAdmin();
   if (!user) return;
