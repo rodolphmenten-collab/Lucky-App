@@ -16,19 +16,15 @@ import {
   toDateKey,
 } from '@/lib/crm';
 import { AdminNav } from '@/components/admin/AdminNav';
-import { StagePicker } from '@/components/admin/StagePicker';
+import { PipelineBoard, type BoardCard } from '@/components/admin/PipelineBoard';
 import { QuickAddVenue } from '@/components/admin/QuickAddVenue';
-import { setStage, quickAddVenue } from './actions';
+import { setStage, quickAddVenue, deleteCrmVenue } from './actions';
 
 export const dynamic = 'force-dynamic';
 
 const WINDOW_DAYS = 30;
 
-export default async function AdminPage({
-  searchParams,
-}: {
-  searchParams?: { stage?: string; mine?: string };
-}) {
+export default async function AdminPage() {
   const supabase = createClient();
   const {
     data: { user },
@@ -101,22 +97,32 @@ export default async function AdminPage({
   );
   const roi = roiRatio(revenueGeneratedCents, kpis.mrrCents);
 
-  const stageFilter = isStage(searchParams?.stage) ? searchParams!.stage! : null;
-  const mineOnly = searchParams?.mine === '1';
-
   const todayKey = toDateKey(new Date());
   const dueRows = crmRows
     .filter((c: any) => c.stage !== 'perdu' && c.next_action_at && c.next_action_at <= todayKey)
     .sort((a: any, b: any) => (a.next_action_at < b.next_action_at ? -1 : 1));
 
-  const visible = crmRows.filter((c: any) => {
-    if (stageFilter && c.stage !== stageFilter) return false;
-    if (!stageFilter && c.stage === 'perdu') return false;
-    if (mineOnly && (c.owner_email ?? '').toLowerCase() !== me) return false;
-    return true;
+  // Le board est un composant client : on lui passe des lignes simples,
+  // deja fusionnees avec l'etat d'abonnement du lieu quand il existe.
+  const cards: BoardCard[] = crmRows.map((c: any) => {
+    const v = c.venue_id ? venueById.get(c.venue_id) : null;
+    return {
+      id: c.id,
+      venueId: c.venue_id ?? null,
+      name: c.name,
+      city: c.city ?? null,
+      type: c.type ?? null,
+      source: c.source ?? null,
+      contactName: c.contact_name ?? null,
+      contactPhone: c.contact_phone ?? null,
+      ownerEmail: c.owner_email ?? null,
+      expectedPlan: c.expected_plan ?? null,
+      stage: c.stage,
+      nextAction: c.next_action ?? null,
+      nextActionAt: c.next_action_at ?? null,
+      subscriptionStatus: v?.subscription_status ?? null,
+    };
   });
-
-  const countByStage = (s: string) => crmRows.filter((c: any) => c.stage === s).length;
 
   return (
     <main className="min-h-screen px-4 py-8 sm:px-6 sm:py-12">
@@ -208,142 +214,24 @@ export default async function AdminPage({
         )}
 
         {/* ------------------------------------------------------------------
-            Pipeline.
+            Pipeline en colonnes. Le detail du glisser-deposer est dans
+            PipelineBoard : il doit marcher au doigt, donc rien de natif.
         ------------------------------------------------------------------ */}
         <div className="mt-10 flex flex-wrap items-center justify-between gap-4">
           <h2 className="font-display text-2xl italic text-bone">Pipeline</h2>
           <QuickAddVenue action={quickAddVenue} defaultOwner={me} />
         </div>
 
-        <div className="mt-4 flex flex-wrap gap-2">
-          <FilterChip href={buildHref(null, mineOnly)} active={!stageFilter} label={`Tous (${crmRows.filter((c: any) => c.stage !== 'perdu').length})`} />
-          {ACTIVE_STAGES.map((s) => (
-            <FilterChip
-              key={s}
-              href={buildHref(s, mineOnly)}
-              active={stageFilter === s}
-              label={`${STAGE_SHORT[s]} (${countByStage(s)})`}
-            />
-          ))}
-          <FilterChip href={buildHref('perdu', mineOnly)} active={stageFilter === 'perdu'} label={`Perdus (${countByStage('perdu')})`} />
-          <span className="mx-1 w-px self-stretch bg-white/10" />
-          <FilterChip href={buildHref(stageFilter, !mineOnly)} active={mineOnly} label="Mes lieux" />
-        </div>
+        <PipelineBoard
+          cards={cards}
+          setStageAction={setStage}
+          deleteAction={deleteCrmVenue}
+          me={me}
+        />
 
-        <div className="mt-4 space-y-3">
-          {visible.map((c: any) => {
-            const venue = c.venue_id ? venueById.get(c.venue_id) : null;
-            const trialDays = venue?.trial_ends_at ? daysUntil(venue.trial_ends_at) : null;
-            return (
-              <article key={c.id} className="rounded-2xl border hairline p-4 sm:p-5">
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <Link href={`/admin/crm/${c.id}`} className="font-display text-xl text-bone">
-                      {c.name}
-                    </Link>
-                    <p className="mt-1 font-mono text-[11px] text-bone-faint">
-                      {[c.city, c.type, c.source ? (SOURCE_LABELS[c.source] ?? c.source) : null]
-                        .filter(Boolean)
-                        .join(' · ')}
-                      {c.tables_count ? ` · ${c.tables_count} tables` : ''}
-                    </p>
-                    {(c.contact_name || c.contact_phone) && (
-                      <p className="mt-1 text-xs text-bone-dim">
-                        {[c.contact_name, c.contact_role].filter(Boolean).join(', ')}
-                        {c.contact_phone && (
-                          <>
-                            {' · '}
-                            <a href={`tel:${c.contact_phone}`} className="underline decoration-brass/40">
-                              {c.contact_phone}
-                            </a>
-                          </>
-                        )}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="flex shrink-0 flex-wrap items-center gap-2">
-                    {c.expected_plan && (
-                      <span className="rounded-full border hairline px-3 py-1 text-[11px] text-bone-dim">
-                        {formatEuros(planMonthlyCents(c.expected_plan))}/mois
-                      </span>
-                    )}
-                    {venue && venue.subscription_status !== 'none' && (
-                      <span
-                        className={`rounded-full border px-3 py-1 text-[10px] uppercase tracking-[0.15em] ${
-                          venue.subscription_status === 'active'
-                            ? 'border-brass/50 text-brass'
-                            : venue.subscription_status === 'past_due' || venue.subscription_status === 'unpaid'
-                              ? 'border-red-400/40 text-red-400'
-                              : 'hairline text-bone-dim'
-                        }`}
-                      >
-                        {subscriptionStatusLabel(venue.subscription_status)}
-                        {venue.subscription_status === 'trialing' && trialDays !== null
-                          ? ` · J-${Math.max(0, trialDays)}`
-                          : ''}
-                      </span>
-                    )}
-                    {c.owner_email && (
-                      <span className="rounded-full border hairline px-3 py-1 text-[11px] text-bone-faint">
-                        {c.owner_email.split('@')[0]}
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                {/* Une pression = l'étape change. C'est ce qu'on fait en sortant
-                    du rendez-vous, debout, sur la tablette. */}
-                <StagePicker crmId={c.id} current={c.stage} action={setStage} />
-
-                {c.next_action && (
-                  <p className="mt-3 text-xs text-bone-dim">
-                    <span className="text-brass">Prochaine action — </span>
-                    {c.next_action}
-                    {c.next_action_at && ` (${new Date(c.next_action_at).toLocaleDateString('fr-FR')})`}
-                  </p>
-                )}
-
-                <div className="mt-3 flex flex-wrap gap-3 text-xs">
-                  <Link href={`/admin/crm/${c.id}`} className="text-brass underline">
-                    Fiche et notes
-                  </Link>
-                  {c.venue_id ? (
-                    <Link href={`/admin/venues/${c.venue_id}`} className="text-bone-dim underline">
-                      Établissement
-                    </Link>
-                  ) : (
-                    c.stage === 'signe' && (
-                      <Link
-                        href={`/admin/venues/new?crm=${c.id}`}
-                        className="rounded-full border border-brass/50 px-3 py-1 text-brass"
-                      >
-                        Créer l&rsquo;établissement
-                      </Link>
-                    )
-                  )}
-                </div>
-              </article>
-            );
-          })}
-
-          {visible.length === 0 && (
-            <p className="rounded-2xl border hairline px-5 py-10 text-center text-sm text-bone-faint">
-              Aucun lieu ici. Ajoute-en un avec le bouton ci-dessus.
-            </p>
-          )}
-        </div>
       </div>
     </main>
   );
-}
-
-function buildHref(stage: string | null, mine: boolean): string {
-  const p = new URLSearchParams();
-  if (stage) p.set('stage', stage);
-  if (mine) p.set('mine', '1');
-  const q = p.toString();
-  return q ? `/admin?${q}` : '/admin';
 }
 
 function Kpi({
@@ -376,15 +264,3 @@ function Kpi({
   );
 }
 
-function FilterChip({ href, active, label }: { href: string; active: boolean; label: string }) {
-  return (
-    <Link
-      href={href}
-      className={`rounded-full border px-4 py-2 text-xs transition-colors ${
-        active ? 'border-brass bg-brass/10 text-brass' : 'hairline text-bone-dim hover:border-white/30'
-      }`}
-    >
-      {label}
-    </Link>
-  );
-}

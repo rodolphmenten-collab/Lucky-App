@@ -122,6 +122,37 @@ export async function updateCrmVenue(formData: FormData) {
   refresh(id);
 }
 
+/**
+ * Suppression d'une fiche du pipeline.
+ *
+ * Garde-fou volontaire : on refuse de supprimer une fiche rattachee a un
+ * etablissement reel. Ces fiches portent la facturation et l'historique d'un
+ * client ; les effacer depuis le pipeline serait trop facile et irreversible.
+ * Pour celles-la, il faut passer par la fiche etablissement.
+ *
+ * Les notes partent avec la fiche (cascade), ce qui est voulu : une fiche de
+ * test ne doit pas laisser de trainee.
+ */
+export async function deleteCrmVenue(formData: FormData) {
+  const user = await requireAdmin();
+  if (!user) return;
+
+  const id = formData.get('crmId') as string;
+  if (!id) return;
+
+  const service = createServiceClient();
+  const { data: row } = await service
+    .from('crm_venues')
+    .select('id, venue_id')
+    .eq('id', id)
+    .maybeSingle();
+
+  if (!row || row.venue_id) return;
+
+  await service.from('crm_venues').delete().eq('id', id);
+  revalidatePath('/admin');
+}
+
 export async function quickAddVenue(formData: FormData) {
   const user = await requireAdmin();
   if (!user) return;
