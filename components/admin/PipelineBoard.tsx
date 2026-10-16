@@ -462,18 +462,26 @@ export function PipelineBoard({
                           Appeler
                         </a>
                       )}
-                      {c.venueId ? (
-                        <span className="text-[10px] text-bone-faint" title="Client : suppression depuis sa fiche">
-                          client
+                      {c.venueId && c.subscriptionStatus && c.subscriptionStatus !== 'none' ? (
+                        <span
+                          className="text-[10px] text-bone-faint"
+                          title="Abonnement en cours : résilier dans Stripe avant de supprimer"
+                        >
+                          facturé
                         </span>
                       ) : confirmId === c.id ? (
                         <span className="flex items-center gap-2">
                           <button
                             type="button"
                             onClick={() => remove(c.id)}
+                            title={
+                              c.venueId
+                                ? 'Supprime aussi l’établissement, son QR et tout son historique'
+                                : undefined
+                            }
                             className="min-h-[32px] rounded-full bg-red-400/20 px-3 text-[11px] text-red-300"
                           >
-                            Supprimer
+                            {c.venueId ? 'Supprimer tout' : 'Supprimer'}
                           </button>
                           <button
                             type="button"
