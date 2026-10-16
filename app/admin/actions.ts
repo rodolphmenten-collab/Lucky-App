@@ -106,6 +106,8 @@ export async function updateCrmVenue(formData: FormData) {
       name: text('name') ?? undefined,
       city: text('city'),
       type: text('type'),
+      category: text('category'),
+      country: text('country'),
       address: text('address'),
       contact_name: text('contact_name'),
       contact_role: text('contact_role'),
@@ -116,6 +118,8 @@ export async function updateCrmVenue(formData: FormData) {
       owner_email: text('owner_email'),
       tables_count: Number.isFinite(tables) ? tables : null,
       lost_reason: text('lost_reason'),
+      roadshow_date: text('roadshow_date'),
+      roadshow_label: text('roadshow_label'),
     })
     .eq('id', id);
 
@@ -151,6 +155,58 @@ export async function deleteCrmVenue(formData: FormData) {
 
   await service.from('crm_venues').delete().eq('id', id);
   revalidatePath('/admin');
+}
+
+/**
+ * Les reglages techniques de l'etablissement, depuis la fiche unique.
+ *
+ * Separe de updateCrmVenue a dessein : ces champs n'existent que si le lieu
+ * est devenu un etablissement, et une erreur sur la latitude casse la
+ * verification de presence pour tous ses clients. On ne les melange pas avec
+ * les champs de prospection qu'on remplit vite sur le trottoir.
+ */
+export async function updateVenueSettings(formData: FormData) {
+  const user = await requireAdmin();
+  if (!user) return;
+
+  const venueId = formData.get('venueId') as string;
+  const crmId = formData.get('crmId') as string;
+  if (!venueId) return;
+
+  const num = (k: string) => {
+    const v = Number(formData.get(k));
+    return Number.isFinite(v) ? v : null;
+  };
+
+  const lat = num('latitude');
+  const lon = num('longitude');
+  const radius = num('radius');
+  const duration = num('duration');
+  const plan = (formData.get('plan') as string) || null;
+
+  const patch: Record<string, unknown> = {};
+  if (lat !== null) patch.latitude = lat;
+  if (lon !== null) patch.longitude = lon;
+  if (radius !== null && radius > 0) patch.verification_radius_m = radius;
+  if (duration !== null && duration > 0) patch.checkin_duration_minutes = duration;
+  if (plan) patch.plan = plan;
+
+  if (Object.keys(patch).length === 0) return;
+
+  const service = createServiceClient();
+  await service.from('venues').update(patch).eq('id', venueId);
+
+  if (crmId) {
+    // On garde la trace du reglage : six semaines plus tard, savoir que
+    // quelqu'un a deplace le point GPS evite une enquete.
+    await service.from('crm_notes').insert({
+      crm_venue_id: crmId,
+      author_email: user.email,
+      body: `Reglages etablissement mis a jour (${Object.keys(patch).join(', ')}).`,
+    });
+    revalidatePath(`/admin/crm/${crmId}`);
+  }
+  revalidatePath('/admin/etablissements');
 }
 
 export async function quickAddVenue(formData: FormData) {

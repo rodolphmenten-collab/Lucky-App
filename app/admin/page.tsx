@@ -58,7 +58,7 @@ export default async function AdminPage() {
     service
       .from('crm_venues')
       .select(
-        'id, venue_id, name, city, type, contact_name, contact_role, contact_email, contact_phone, stage, stage_changed_at, owner_email, source, expected_plan, tables_count, next_action, next_action_at, updated_at'
+        'id, venue_id, name, city, type, country, category, contact_name, contact_role, contact_email, contact_phone, stage, stage_changed_at, owner_email, source, expected_plan, tables_count, next_action, next_action_at, updated_at'
       )
       .order('updated_at', { ascending: false }),
     service
@@ -115,6 +115,8 @@ export default async function AdminPage() {
       source: c.source ?? null,
       contactName: c.contact_name ?? null,
       contactPhone: c.contact_phone ?? null,
+      country: c.country ?? null,
+      category: c.category ?? null,
       ownerEmail: c.owner_email ?? null,
       expectedPlan: c.expected_plan ?? null,
       stage: c.stage,
