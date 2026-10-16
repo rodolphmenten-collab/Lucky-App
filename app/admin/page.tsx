@@ -1,13 +1,34 @@
 import { redirect } from 'next/navigation';
-import { revalidatePath } from 'next/cache';
 import Link from 'next/link';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { isPlatformAdminEmail } from '@/lib/admin';
-import { sendEmail, emailShell } from '@/lib/email';
-import { ImpersonateButton } from '@/components/ImpersonateButton';
 import { subscriptionStatusLabel } from '@/lib/billing';
+import {
+  ACTIVE_STAGES,
+  STAGE_SHORT,
+  SOURCE_LABELS,
+  computeFounderKpis,
+  daysUntil,
+  formatEuros,
+  isStage,
+  planMonthlyCents,
+  roiRatio,
+  toDateKey,
+} from '@/lib/crm';
+import { AdminNav } from '@/components/admin/AdminNav';
+import { StagePicker } from '@/components/admin/StagePicker';
+import { QuickAddVenue } from '@/components/admin/QuickAddVenue';
+import { setStage, quickAddVenue } from './actions';
 
-export default async function AdminPage() {
+export const dynamic = 'force-dynamic';
+
+const WINDOW_DAYS = 30;
+
+export default async function AdminPage({
+  searchParams,
+}: {
+  searchParams?: { stage?: string; mine?: string };
+}) {
   const supabase = createClient();
   const {
     data: { user },
@@ -19,387 +40,349 @@ export default async function AdminPage() {
       <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 text-center">
         <p className="font-display text-2xl italic text-bone">Accès non autorisé.</p>
         <p className="mt-3 text-sm text-bone-dim">
-          Ce compte ne fait pas partie de l&rsquo;équipe admin Lucky. Demande à un admin
-          existant de t&rsquo;ajouter depuis la section Équipe du back-office.
+          Ce compte ne fait pas partie de l&rsquo;équipe admin Lucky.
         </p>
       </main>
     );
   }
 
-  // Service role : la vue admin doit voir tous les établissements, en passant outre les RLS.
+  const me = (user.email ?? '').toLowerCase();
   const service = createServiceClient();
+  const since = new Date(Date.now() - WINDOW_DAYS * 24 * 60 * 60 * 1000).toISOString();
 
   const [
-    { count: venueCount },
+    { data: crm },
+    { data: venues },
     { count: userCount },
     { count: activeCheckIns },
-    { data: reports },
-    { data: venues },
-    { data: admins },
+    { data: orders },
+    { count: meetupsConfirmed },
+    { count: pendingReports },
   ] = await Promise.all([
-    service.from('venues').select('*', { count: 'exact', head: true }),
+    service
+      .from('crm_venues')
+      .select(
+        'id, venue_id, name, city, type, contact_name, contact_role, contact_email, contact_phone, stage, stage_changed_at, owner_email, source, expected_plan, tables_count, next_action, next_action_at, updated_at'
+      )
+      .order('updated_at', { ascending: false }),
+    service
+      .from('venues')
+      .select('id, slug, name, plan, subscription_status, trial_ends_at, created_at'),
     service.from('profiles').select('*', { count: 'exact', head: true }),
     service
       .from('check_ins')
       .select('*', { count: 'exact', head: true })
       .in('presence_status', ['verified_now', 'recently_verified']),
     service
-      .from('reports')
-      .select('id, reason, details, status, created_at, reporter_id, reported_id')
-      .eq('status', 'pending')
-      .order('created_at', { ascending: false })
-      .limit(20),
+      .from('lucky_orders')
+      .select('price_cents, net_price_cents, status')
+      .gte('created_at', since),
     service
-      .from('venues')
-      .select('id, slug, name, city, type, plan, contact_name, contact_email, invited_at, created_at, subscription_status, trial_ends_at')
-      .order('created_at', { ascending: false }),
-    service.from('platform_admins').select('id, email, added_at').order('added_at', { ascending: true }),
+      .from('meetups')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'confirmed')
+      .gte('confirmed_at', since),
+    service.from('reports').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
   ]);
 
+  const crmRows = crm ?? [];
+  const venueRows = venues ?? [];
+  const venueById = new Map(venueRows.map((v: any) => [v.id, v]));
+
+  const kpis = computeFounderKpis(venueRows as any, crmRows as any);
+
+  // CA généré pour les lieux : uniquement les bons réellement servis, remise déduite.
+  const served = (orders ?? []).filter((o: any) => o.status === 'served');
+  const revenueGeneratedCents = served.reduce(
+    (sum: number, o: any) => sum + (o.net_price_cents ?? o.price_cents ?? 0),
+    0
+  );
+  const roi = roiRatio(revenueGeneratedCents, kpis.mrrCents);
+
+  const stageFilter = isStage(searchParams?.stage) ? searchParams!.stage! : null;
+  const mineOnly = searchParams?.mine === '1';
+
+  const todayKey = toDateKey(new Date());
+  const dueRows = crmRows
+    .filter((c: any) => c.stage !== 'perdu' && c.next_action_at && c.next_action_at <= todayKey)
+    .sort((a: any, b: any) => (a.next_action_at < b.next_action_at ? -1 : 1));
+
+  const visible = crmRows.filter((c: any) => {
+    if (stageFilter && c.stage !== stageFilter) return false;
+    if (!stageFilter && c.stage === 'perdu') return false;
+    if (mineOnly && (c.owner_email ?? '').toLowerCase() !== me) return false;
+    return true;
+  });
+
+  const countByStage = (s: string) => crmRows.filter((c: any) => c.stage === s).length;
+
   return (
-    <main className="min-h-screen px-6 py-12">
-      <div className="mx-auto max-w-4xl">
-        <p className="font-mono text-xs uppercase tracking-[0.3em] text-brass">Admin</p>
-        <h1 className="mt-2 font-display text-3xl italic text-bone">Back-office</h1>
+    <main className="min-h-screen px-4 py-8 sm:px-6 sm:py-12">
+      <div className="mx-auto max-w-6xl">
+        <AdminNav current="pipeline" pendingReports={pendingReports ?? 0} />
 
-        <div className="mt-8 grid grid-cols-3 gap-4">
-          <StatCard label="Établissements" value={venueCount ?? 0} />
-          <StatCard label="Utilisateurs" value={userCount ?? 0} />
-          <StatCard label="Présences actives" value={activeCheckIns ?? 0} />
+        {/* ------------------------------------------------------------------
+            Cockpit. Ce qui est facturé en haut, ce qui est probable en dessous,
+            jamais additionné.
+        ------------------------------------------------------------------ */}
+        <section className="mt-8 grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <Kpi
+            label="MRR"
+            value={formatEuros(kpis.mrrCents)}
+            sub={`${kpis.payingVenues} lieu${kpis.payingVenues > 1 ? 'x' : ''} payant${kpis.payingVenues > 1 ? 's' : ''} · ${formatEuros(kpis.arrCents)} ARR`}
+            tone="strong"
+          />
+          <Kpi
+            label="Essais en cours"
+            value={formatEuros(kpis.trialMrrCents)}
+            sub={
+              kpis.trialVenues === 0
+                ? 'Aucun essai'
+                : `${kpis.trialVenues} lieu${kpis.trialVenues > 1 ? 'x' : ''}${kpis.trialsEndingIn7Days > 0 ? ` · ${kpis.trialsEndingIn7Days} se termine${kpis.trialsEndingIn7Days > 1 ? 'nt' : ''} sous 7 j` : ''}`
+            }
+            tone={kpis.trialsEndingIn7Days > 0 ? 'warn' : 'default'}
+          />
+          <Kpi
+            label={`CA généré pour les lieux · ${WINDOW_DAYS} j`}
+            value={formatEuros(revenueGeneratedCents)}
+            sub={
+              roi === null
+                ? `${served.length} bon${served.length > 1 ? 's' : ''} servi${served.length > 1 ? 's' : ''}`
+                : `${roi.toFixed(1)} € générés pour 1 € d'abonnement`
+            }
+            tone="strong"
+          />
+          <Kpi
+            label="Pipeline pondéré"
+            value={formatEuros(kpis.weightedPipelineMrrCents)}
+            sub={`${kpis.pipelineVenues} lieu${kpis.pipelineVenues > 1 ? 'x' : ''} ouverts · ${formatEuros(kpis.pipelineMrrCents)} brut`}
+          />
+        </section>
+
+        <section className="mt-3 grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <Kpi small label="Rencontres confirmées" value={String(meetupsConfirmed ?? 0)} sub={`${WINDOW_DAYS} derniers jours`} />
+          <Kpi small label="Présences en ce moment" value={String(activeCheckIns ?? 0)} />
+          <Kpi small label="Utilisateurs" value={String(userCount ?? 0)} />
+          <Kpi
+            small
+            label="À régler"
+            value={String(kpis.pastDueVenues + kpis.signedNotBilled)}
+            sub={
+              [
+                kpis.pastDueVenues > 0 ? `${kpis.pastDueVenues} impayé${kpis.pastDueVenues > 1 ? 's' : ''}` : null,
+                kpis.signedNotBilled > 0 ? `${kpis.signedNotBilled} signé${kpis.signedNotBilled > 1 ? 's' : ''} non facturé${kpis.signedNotBilled > 1 ? 's' : ''}` : null,
+              ]
+                .filter(Boolean)
+                .join(' · ') || 'Rien en souffrance'
+            }
+            tone={kpis.pastDueVenues > 0 ? 'alert' : 'default'}
+          />
+        </section>
+
+        {/* ------------------------------------------------------------------
+            Les relances dues. Première chose qu'on regarde le matin.
+        ------------------------------------------------------------------ */}
+        {dueRows.length > 0 && (
+          <section className="mt-8 rounded-2xl border border-brass/40 bg-brass/5 p-5">
+            <p className="font-mono text-xs uppercase tracking-[0.2em] text-brass">
+              À faire {kpis.actionsOverdue > 0 && `· ${kpis.actionsOverdue} en retard`}
+            </p>
+            <ul className="mt-3 space-y-2">
+              {dueRows.slice(0, 8).map((c: any) => (
+                <li key={c.id} className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+                  <Link href={`/admin/crm/${c.id}`} className="text-bone underline decoration-brass/40">
+                    {c.name}
+                  </Link>
+                  <span className="text-bone-dim">{c.next_action}</span>
+                  <span
+                    className={`font-mono text-[11px] ${c.next_action_at < todayKey ? 'text-red-400' : 'text-bone-faint'}`}
+                  >
+                    {new Date(c.next_action_at).toLocaleDateString('fr-FR')}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        {/* ------------------------------------------------------------------
+            Pipeline.
+        ------------------------------------------------------------------ */}
+        <div className="mt-10 flex flex-wrap items-center justify-between gap-4">
+          <h2 className="font-display text-2xl italic text-bone">Pipeline</h2>
+          <QuickAddVenue action={quickAddVenue} defaultOwner={me} />
         </div>
 
-        <div className="mt-12 flex items-center justify-between">
-          <h2 className="font-display text-xl italic text-bone">Établissements</h2>
-          <Link
-            href="/admin/venues/new"
-            className="rounded-full border hairline px-4 py-2 text-xs tracking-wide text-bone-dim hover:border-white/30"
-          >
-            + Nouvel établissement
-          </Link>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <FilterChip href={buildHref(null, mineOnly)} active={!stageFilter} label={`Tous (${crmRows.filter((c: any) => c.stage !== 'perdu').length})`} />
+          {ACTIVE_STAGES.map((s) => (
+            <FilterChip
+              key={s}
+              href={buildHref(s, mineOnly)}
+              active={stageFilter === s}
+              label={`${STAGE_SHORT[s]} (${countByStage(s)})`}
+            />
+          ))}
+          <FilterChip href={buildHref('perdu', mineOnly)} active={stageFilter === 'perdu'} label={`Perdus (${countByStage('perdu')})`} />
+          <span className="mx-1 w-px self-stretch bg-white/10" />
+          <FilterChip href={buildHref(stageFilter, !mineOnly)} active={mineOnly} label="Mes lieux" />
         </div>
 
-        <div className="mt-4 divide-y hairline rounded-2xl border hairline">
-          {(venues ?? []).map((v: any) => (
-            <div key={v.id} className="flex items-center justify-between gap-4 px-5 py-4">
-              <div>
-                <p className="text-sm text-bone">{v.name}</p>
-                <p className="font-mono text-[11px] text-bone-faint">
-                  {v.city} · {v.type} · {v.plan} · /venue/{v.slug}
-                </p>
-                {v.contact_name && (
-                  <p className="mt-1 text-xs text-bone-dim">
-                    {v.contact_name} · {v.contact_email}
+        <div className="mt-4 space-y-3">
+          {visible.map((c: any) => {
+            const venue = c.venue_id ? venueById.get(c.venue_id) : null;
+            const trialDays = venue?.trial_ends_at ? daysUntil(venue.trial_ends_at) : null;
+            return (
+              <article key={c.id} className="rounded-2xl border hairline p-4 sm:p-5">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <Link href={`/admin/crm/${c.id}`} className="font-display text-xl text-bone">
+                      {c.name}
+                    </Link>
+                    <p className="mt-1 font-mono text-[11px] text-bone-faint">
+                      {[c.city, c.type, c.source ? (SOURCE_LABELS[c.source] ?? c.source) : null]
+                        .filter(Boolean)
+                        .join(' · ')}
+                      {c.tables_count ? ` · ${c.tables_count} tables` : ''}
+                    </p>
+                    {(c.contact_name || c.contact_phone) && (
+                      <p className="mt-1 text-xs text-bone-dim">
+                        {[c.contact_name, c.contact_role].filter(Boolean).join(', ')}
+                        {c.contact_phone && (
+                          <>
+                            {' · '}
+                            <a href={`tel:${c.contact_phone}`} className="underline decoration-brass/40">
+                              {c.contact_phone}
+                            </a>
+                          </>
+                        )}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="flex shrink-0 flex-wrap items-center gap-2">
+                    {c.expected_plan && (
+                      <span className="rounded-full border hairline px-3 py-1 text-[11px] text-bone-dim">
+                        {formatEuros(planMonthlyCents(c.expected_plan))}/mois
+                      </span>
+                    )}
+                    {venue && venue.subscription_status !== 'none' && (
+                      <span
+                        className={`rounded-full border px-3 py-1 text-[10px] uppercase tracking-[0.15em] ${
+                          venue.subscription_status === 'active'
+                            ? 'border-brass/50 text-brass'
+                            : venue.subscription_status === 'past_due' || venue.subscription_status === 'unpaid'
+                              ? 'border-red-400/40 text-red-400'
+                              : 'hairline text-bone-dim'
+                        }`}
+                      >
+                        {subscriptionStatusLabel(venue.subscription_status)}
+                        {venue.subscription_status === 'trialing' && trialDays !== null
+                          ? ` · J-${Math.max(0, trialDays)}`
+                          : ''}
+                      </span>
+                    )}
+                    {c.owner_email && (
+                      <span className="rounded-full border hairline px-3 py-1 text-[11px] text-bone-faint">
+                        {c.owner_email.split('@')[0]}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Une pression = l'étape change. C'est ce qu'on fait en sortant
+                    du rendez-vous, debout, sur la tablette. */}
+                <StagePicker crmId={c.id} current={c.stage} action={setStage} />
+
+                {c.next_action && (
+                  <p className="mt-3 text-xs text-bone-dim">
+                    <span className="text-brass">Prochaine action — </span>
+                    {c.next_action}
+                    {c.next_action_at && ` (${new Date(c.next_action_at).toLocaleDateString('fr-FR')})`}
                   </p>
                 )}
-              </div>
-              <div className="flex shrink-0 items-center gap-3">
-                <SubscriptionBadge
-                  status={v.subscription_status ?? 'none'}
-                  trialEndsAt={v.trial_ends_at ?? null}
-                />
-                {v.invited_at && (
-                  <span className="text-[11px] text-signal-live">
-                    Invité le {new Date(v.invited_at).toLocaleDateString('fr-FR')}
-                  </span>
-                )}
-                <ImpersonateButton venueId={v.id} />
-                {!v.invited_at && v.contact_email && (
-                  <form action={sendVenueInvite}>
-                    <input type="hidden" name="venueId" value={v.id} />
-                    <button
-                      type="submit"
-                      className="rounded-full border hairline px-3 py-1.5 text-[11px] text-bone-dim hover:border-brass hover:text-brass"
-                    >
-                      Envoyer l&rsquo;invitation
-                    </button>
-                  </form>
-                )}
-                <Link
-                  href={`/admin/venues/${v.id}#abonnement`}
-                  className="rounded-full border hairline px-3 py-1.5 text-[11px] text-bone-dim hover:border-brass hover:text-brass"
-                >
-                  Abonnement
-                </Link>
-                <Link href={`/admin/venues/${v.id}`} className="text-xs text-brass underline">
-                  Modifier
-                </Link>
-              </div>
-            </div>
-          ))}
-          {(!venues || venues.length === 0) && (
-            <p className="px-5 py-6 text-center text-sm text-bone-faint">Aucun établissement pour l&rsquo;instant.</p>
+
+                <div className="mt-3 flex flex-wrap gap-3 text-xs">
+                  <Link href={`/admin/crm/${c.id}`} className="text-brass underline">
+                    Fiche et notes
+                  </Link>
+                  {c.venue_id ? (
+                    <Link href={`/admin/venues/${c.venue_id}`} className="text-bone-dim underline">
+                      Établissement
+                    </Link>
+                  ) : (
+                    c.stage === 'signe' && (
+                      <Link
+                        href={`/admin/venues/new?crm=${c.id}`}
+                        className="rounded-full border border-brass/50 px-3 py-1 text-brass"
+                      >
+                        Créer l&rsquo;établissement
+                      </Link>
+                    )
+                  )}
+                </div>
+              </article>
+            );
+          })}
+
+          {visible.length === 0 && (
+            <p className="rounded-2xl border hairline px-5 py-10 text-center text-sm text-bone-faint">
+              Aucun lieu ici. Ajoute-en un avec le bouton ci-dessus.
+            </p>
           )}
         </div>
-
-        <h2 className="mt-12 font-display text-xl italic text-bone">Signalements en attente</h2>
-        <div className="mt-4 divide-y hairline rounded-2xl border hairline">
-          {(reports ?? []).map((r: any) => (
-            <form key={r.id} action={reviewReport} className="flex items-center justify-between gap-4 px-5 py-4">
-              <input type="hidden" name="reportId" value={r.id} />
-              <div>
-                <p className="text-sm text-bone">{r.reason}</p>
-                {r.details && <p className="mt-1 text-xs text-bone-dim">{r.details}</p>}
-                <p className="mt-1 font-mono text-[11px] text-bone-faint">
-                  {new Date(r.created_at).toLocaleString('fr-FR')}
-                </p>
-              </div>
-              <div className="flex gap-2">
-                <button
-                  formAction={dismissReport}
-                  className="rounded-full border hairline px-3 py-1.5 text-[11px] text-bone-dim"
-                >
-                  Ignorer
-                </button>
-                <button
-                  formAction={reviewReport}
-                  className="rounded-full border border-brass/50 px-3 py-1.5 text-[11px] text-brass"
-                >
-                  Marquer comme traité
-                </button>
-              </div>
-            </form>
-          ))}
-          {(!reports || reports.length === 0) && (
-            <p className="px-5 py-6 text-center text-sm text-bone-faint">Aucun signalement en attente.</p>
-          )}
-        </div>
-
-        <h2 className="mt-12 font-display text-xl italic text-bone">Équipe</h2>
-        <p className="mt-2 text-xs text-bone-faint">
-          Toute personne listée ici peut accéder à ce back-office dès qu&rsquo;elle se
-          connecte avec cet email (code par email, ou mot de passe si elle en a défini
-          un via /admin-login).
-        </p>
-        <div className="mt-4 divide-y hairline rounded-2xl border hairline">
-          {(admins ?? []).map((a: any) => (
-            <div key={a.id} className="flex items-center justify-between px-5 py-4">
-              <div>
-                <p className="text-sm text-bone">{a.email}</p>
-                <p className="mt-0.5 font-mono text-[11px] text-bone-faint">
-                  Ajouté le {new Date(a.added_at).toLocaleDateString('fr-FR')}
-                </p>
-              </div>
-              {a.email.toLowerCase() !== user.email?.toLowerCase() && (
-                <form action={removeAdmin}>
-                  <input type="hidden" name="adminId" value={a.id} />
-                  <button type="submit" className="text-xs text-red-400 hover:text-red-300">
-                    Retirer
-                  </button>
-                </form>
-              )}
-            </div>
-          ))}
-        </div>
-        <form action={addAdmin} className="mt-4 flex gap-2">
-          <input
-            type="email"
-            name="email"
-            required
-            placeholder="collegue@lucky-app.io"
-            className="flex-1 rounded-full border hairline bg-transparent px-5 py-3 text-sm text-bone placeholder:text-bone-faint focus:border-brass"
-          />
-          <button
-            type="submit"
-            className="rounded-full bg-bone px-5 py-3 text-sm font-medium text-ink hover:bg-brass-bright"
-          >
-            Ajouter
-          </button>
-        </form>
       </div>
     </main>
   );
 }
 
-function StatCard({ label, value }: { label: string; value: number }) {
+function buildHref(stage: string | null, mine: boolean): string {
+  const p = new URLSearchParams();
+  if (stage) p.set('stage', stage);
+  if (mine) p.set('mine', '1');
+  const q = p.toString();
+  return q ? `/admin?${q}` : '/admin';
+}
+
+function Kpi({
+  label,
+  value,
+  sub,
+  tone = 'default',
+  small = false,
+}: {
+  label: string;
+  value: string;
+  sub?: string;
+  tone?: 'default' | 'strong' | 'warn' | 'alert';
+  small?: boolean;
+}) {
+  const border =
+    tone === 'strong'
+      ? 'border-brass/40'
+      : tone === 'alert'
+        ? 'border-red-400/40'
+        : tone === 'warn'
+          ? 'border-brass/25'
+          : 'hairline';
   return (
-    <div className="rounded-2xl border hairline p-5">
-      <p className="font-display text-3xl text-bone">{value}</p>
-      <p className="mt-1 text-xs text-bone-faint">{label}</p>
+    <div className={`rounded-2xl border ${border} p-4 sm:p-5`}>
+      <p className="text-[11px] leading-tight text-bone-faint">{label}</p>
+      <p className={`mt-2 font-display text-bone ${small ? 'text-2xl' : 'text-3xl sm:text-4xl'}`}>{value}</p>
+      {sub && <p className="mt-1 text-[11px] leading-tight text-bone-dim">{sub}</p>}
     </div>
   );
 }
 
-function inviteEmailHtml(firstName: string, venueName: string, actionLink: string) {
-  return emailShell(`
-    <h1 style="font-size:22px; margin: 0 0 16px;">Bienvenue chez Lucky, ${firstName} !</h1>
-    <p style="font-size:14px; line-height:1.6; color:#333;">
-      Nous sommes ravis d'accueillir <strong>${venueName}</strong> au sein du réseau Lucky.
-    </p>
-    <p style="font-size:14px; line-height:1.6; color:#333;">
-      Grâce à vous, les personnes présentes chez vous pourront se découvrir et
-      entrer en contact les unes avec les autres, en toute confiance, pendant
-      qu'elles profitent de votre établissement.
-    </p>
-    <p style="font-size:14px; line-height:1.6; color:#333;">
-      Pour activer votre compte et accéder à votre tableau de bord, il ne vous
-      reste qu'à choisir un mot de passe :
-    </p>
-    <p style="margin: 24px 0;">
-      <a href="${actionLink}" style="display:inline-block; background:#0B0A08; color:#F4EFE6; padding:12px 24px; border-radius:999px; text-decoration:none; font-size:14px; font-weight:600;">
-        Activer mon compte
-      </a>
-    </p>
-    <p style="font-size:14px; color:#333;">À très vite,<br />L'équipe Lucky</p>
-  `);
-}
-
-async function sendVenueInvite(formData: FormData) {
-  'use server';
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user || !(await isPlatformAdminEmail(user.email))) return;
-
-  const venueId = formData.get('venueId') as string;
-  const service = createServiceClient();
-
-  const { data: venue } = await service
-    .from('venues')
-    .select('id, name, contact_name, contact_email')
-    .eq('id', venueId)
-    .maybeSingle();
-
-  if (!venue || !venue.contact_email) return;
-
-  const redirectTo = `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback?next=${encodeURIComponent('/venue-set-password')}`;
-
-  const { data: userList } = await service.auth.admin.listUsers();
-  const existingUser = userList?.users?.find(
-    (u: any) => u.email?.toLowerCase() === venue.contact_email.toLowerCase()
-  );
-
-  const { data: linkData, error: linkError } = await service.auth.admin.generateLink(
-    existingUser
-      ? { type: 'recovery', email: venue.contact_email, options: { redirectTo } }
-      : { type: 'invite', email: venue.contact_email, options: { redirectTo } }
-  );
-
-  if (linkError || !linkData?.properties?.action_link) return;
-
-  const userId = existingUser?.id ?? linkData.user?.id;
-  if (userId) {
-    await service.from('venue_admins').insert({ venue_id: venue.id, user_id: userId, role: 'owner' }).select().maybeSingle();
-  }
-
-  const firstName = (venue.contact_name || '').split(' ')[0] || 'là-bas';
-
-  await sendEmail({
-    to: venue.contact_email,
-    subject: `Bienvenue chez Lucky, ${firstName} !`,
-    html: inviteEmailHtml(firstName, venue.name, linkData.properties.action_link),
-  });
-
-  await service.from('venues').update({ invited_at: new Date().toISOString() }).eq('id', venueId);
-  revalidatePath('/admin');
-}
-
-async function addAdmin(formData: FormData) {
-  'use server';
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user || !(await isPlatformAdminEmail(user.email))) return;
-
-  const email = (formData.get('email') as string)?.trim().toLowerCase();
-  if (!email) return;
-
-  const service = createServiceClient();
-  await service.from('platform_admins').insert({ email }).select().maybeSingle();
-
-  const redirectTo = `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback?next=${encodeURIComponent('/admin-set-password')}`;
-
-  const { data: userList } = await service.auth.admin.listUsers();
-  const existingUser = userList?.users?.find((u: any) => u.email?.toLowerCase() === email);
-
-  const { data: linkData, error: linkError } = await service.auth.admin.generateLink(
-    existingUser
-      ? { type: 'recovery', email, options: { redirectTo } }
-      : { type: 'invite', email, options: { redirectTo } }
-  );
-
-  if (!linkError && linkData?.properties?.action_link) {
-    await sendEmail({
-      to: email,
-      subject: 'Vous avez maintenant accès au back-office Lucky',
-      html: emailShell(`
-        <h1 style="font-size:22px; margin: 0 0 16px;">Bienvenue dans l'équipe Lucky</h1>
-        <p style="font-size:14px; line-height:1.6; color:#333;">
-          Vous avez été ajouté(e) comme administrateur(trice) du back-office Lucky par ${user.email}.
-        </p>
-        <p style="font-size:14px; line-height:1.6; color:#333;">
-          Pour activer votre accès, choisissez un mot de passe :
-        </p>
-        <p style="margin: 24px 0;">
-          <a href="${linkData.properties.action_link}" style="display:inline-block; background:#0B0A08; color:#F4EFE6; padding:12px 24px; border-radius:999px; text-decoration:none; font-size:14px; font-weight:600;">
-            Activer mon accès
-          </a>
-        </p>
-      `),
-    });
-  }
-
-  revalidatePath('/admin');
-}
-
-async function removeAdmin(formData: FormData) {
-  'use server';
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user || !(await isPlatformAdminEmail(user.email))) return;
-
-  const adminId = formData.get('adminId') as string;
-  const service = createServiceClient();
-  await service.from('platform_admins').delete().eq('id', adminId);
-  revalidatePath('/admin');
-}
-
-async function reviewReport(formData: FormData) {
-  'use server';
-  const id = formData.get('reportId') as string;
-  const service = createServiceClient();
-  await service.from('reports').update({ status: 'reviewed' }).eq('id', id);
-  revalidatePath('/admin');
-}
-
-async function dismissReport(formData: FormData) {
-  'use server';
-  const id = formData.get('reportId') as string;
-  const service = createServiceClient();
-  await service.from('reports').update({ status: 'dismissed' }).eq('id', id);
-  revalidatePath('/admin');
-}
-
-/**
- * Pastille d'abonnement affichée sur chaque ligne de la liste : savoir qui paie
- * ne doit pas demander d'ouvrir sept fiches.
- */
-function SubscriptionBadge({ status, trialEndsAt }: { status: string; trialEndsAt: string | null }) {
-  const tone =
-    status === 'active'
-      ? 'border-brass/50 text-brass'
-      : status === 'trialing'
-        ? 'border-brass/30 text-brass/80'
-        : status === 'past_due' || status === 'unpaid'
-          ? 'border-red-400/40 text-red-400'
-          : 'hairline text-bone-faint';
-
-  const label = subscriptionStatusLabel(status);
-  const suffix =
-    status === 'trialing' && trialEndsAt
-      ? ` · J-${Math.max(
-          0,
-          Math.ceil((new Date(trialEndsAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
-        )}`
-      : '';
-
+function FilterChip({ href, active, label }: { href: string; active: boolean; label: string }) {
   return (
-    <span className={`rounded-full border px-3 py-1 text-[10px] uppercase tracking-[0.15em] ${tone}`}>
+    <Link
+      href={href}
+      className={`rounded-full border px-4 py-2 text-xs transition-colors ${
+        active ? 'border-brass bg-brass/10 text-brass' : 'hairline text-bone-dim hover:border-white/30'
+      }`}
+    >
       {label}
-      {suffix}
-    </span>
+    </Link>
   );
 }
