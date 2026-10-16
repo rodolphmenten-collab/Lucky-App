@@ -202,7 +202,7 @@ export default async function CrmVenuePage({ params }: { params: { id: string } 
               <option value="">À définir</option>
               {Object.values(PLANS).map((p) => (
                 <option key={p.key} value={p.key}>
-                  {p.name} — {formatEurosPrecise(p.monthlyCentsExclTax)}/mois
+                  {p.label} — {formatEurosPrecise(p.monthlyCentsExclTax)}/mois
                 </option>
               ))}
             </select>
