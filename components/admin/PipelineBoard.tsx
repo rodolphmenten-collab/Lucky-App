@@ -45,6 +45,8 @@ export interface BoardCard {
   contactPhone: string | null;
   country: string | null;
   category: string | null;
+  isGroup: boolean;
+  groupName: string | null;
   ownerEmail: string | null;
   expectedPlan: string | null;
   stage: string;
@@ -424,7 +426,13 @@ export function PipelineBoard({
                       style={{ touchAction: 'pan-y' }}
                       className="cursor-grab select-none active:cursor-grabbing"
                     >
-                      <p className="text-sm font-medium leading-snug text-bone">{c.name}</p>
+                      <p className="text-sm font-medium leading-snug text-bone">
+                        {c.isGroup && <span className="mr-1.5 text-brass">◆</span>}
+                        {c.name}
+                      </p>
+                      {c.groupName && (
+                        <p className="mt-0.5 text-[10px] text-brass/80">{c.groupName}</p>
+                      )}
                       <p className="mt-1 font-mono text-[10px] text-bone-faint">
                         {[c.city, c.type].filter(Boolean).join(' · ')}
                       </p>
