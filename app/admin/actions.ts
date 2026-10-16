@@ -100,44 +100,76 @@ export async function updateCrmVenue(formData: FormData) {
   const tables = parseInt((formData.get('tables_count') as string) || '', 10);
 
   const service = createServiceClient();
-  await service
+
+  const patch: Record<string, unknown> = {
+    name: text('name') ?? undefined,
+    city: text('city'),
+    type: text('type'),
+    category: text('category'),
+    country: text('country'),
+    address: text('address'),
+    contact_name: text('contact_name'),
+    contact_role: text('contact_role'),
+    contact_email: text('contact_email'),
+    contact_phone: text('contact_phone'),
+    source: text('source'),
+    expected_plan: text('expected_plan'),
+    owner_email: text('owner_email'),
+    tables_count: Number.isFinite(tables) ? tables : null,
+    lost_reason: text('lost_reason'),
+    roadshow_date: text('roadshow_date'),
+    roadshow_label: text('roadshow_label'),
+    is_group: formData.get('is_group') === 'on',
+    group_id: ((formData.get('group_id') as string) || '') || null,
+  };
+
+  let { error } = await service.from('crm_venues').update(patch).eq('id', id);
+
+  // Une colonne absente (migration pas encore passee) faisait echouer tout
+  // l'enregistrement sans rien dire : on perdait la saisie en croyant avoir
+  // sauve. On retire la colonne fautive et on reessaie, plutot que de rendre
+  // la fiche inutilisable jusqu'a la migration.
+  const manquantes: string[] = [];
+  for (let essai = 0; essai < 6 && error; essai++) {
+    const m = /column "?([a-z_]+)"? of relation|could not find the '([a-z_]+)' column/i.exec(
+      error.message ?? ''
+    );
+    const col = m?.[1] ?? m?.[2];
+    if (!col || !(col in patch)) break;
+    delete patch[col];
+    manquantes.push(col);
+    ({ error } = await service.from('crm_venues').update(patch).eq('id', id));
+  }
+
+  if (error) {
+    redirect(`/admin/crm/${id}?erreur=${encodeURIComponent(error.message.slice(0, 160))}`);
+  }
+
+  const { data: linked } = await service
     .from('crm_venues')
-    .update({
-      name: text('name') ?? undefined,
-      city: text('city'),
-      type: text('type'),
-      category: text('category'),
-      country: text('country'),
-      address: text('address'),
-      contact_name: text('contact_name'),
-      contact_role: text('contact_role'),
-      contact_email: text('contact_email'),
-      contact_phone: text('contact_phone'),
-      source: text('source'),
-      expected_plan: text('expected_plan'),
-      owner_email: text('owner_email'),
-      tables_count: Number.isFinite(tables) ? tables : null,
-      lost_reason: text('lost_reason'),
-      roadshow_date: text('roadshow_date'),
-      roadshow_label: text('roadshow_label'),
-      is_group: formData.get('is_group') === 'on',
-      group_id: ((formData.get('group_id') as string) || '') || null,
-    })
-    .eq('id', id);
+    .select('venue_id')
+    .eq('id', id)
+    .maybeSingle();
+
+  if (linked?.venue_id) {
+    const mirror: Record<string, unknown> = {};
+    const name = text('name');
+    const city = text('city');
+    if (name) mirror.name = name;
+    if (city) mirror.city = city;
+    mirror.contact_name = text('contact_name');
+    mirror.contact_email = text('contact_email');
+    await service.from('venues').update(mirror).eq('id', linked.venue_id);
+  }
 
   refresh(id);
+  if (manquantes.length) {
+    redirect(
+      `/admin/crm/${id}?ignore=${encodeURIComponent(manquantes.join(', '))}`
+    );
+  }
 }
 
-/**
- * Suppression d'une fiche du pipeline, et de son etablissement si elle en a un.
- *
- * Tout ce qui pend a un etablissement part avec lui : presences, rencontres,
- * bons encaisses, acces du patron. C'est voulu pour les lieux de test, et
- * c'est exactement pour ca qu'on refuse de le faire quand une facturation
- * tourne. Un lieu qui paie ou qui est en essai se resilie dans Stripe
- * d'abord ; sinon on supprime en base un client que Stripe continue de
- * prelever.
- */
 export async function deleteCrmVenue(formData: FormData) {
   const user = await requireAdmin();
   if (!user) return;
