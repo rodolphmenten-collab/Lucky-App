@@ -12,7 +12,7 @@ import Link from 'next/link';
 export const metadata: Metadata = {
   title: 'Lucky — la démo en 45 secondes',
   description:
-    'Vos clients scannent le QR, se rencontrent, et chaque verre qu’ils s’offrent devient du chiffre d’affaires en plus. La démo de Lucky en 45 secondes, pour les bars, restaurants et hôtels.',
+    'Vos clients scannent le QR, se rencontrent, et ce qu’ils s’offrent sur votre carte devient du chiffre d’affaires en plus. La démo de Lucky en 45 secondes, pour les hôtels, cafés, restaurants, bars, rooftops, beach clubs et coworkings.',
 };
 
 const PHONE = '+33688354676';
@@ -27,8 +27,8 @@ export default function DemoPage() {
         Lucky, en 45 secondes.
       </h1>
       <p className="mx-auto mt-3 max-w-[21rem] text-center text-sm leading-relaxed text-bone-dim">
-        Vos clients scannent le QR posé sur la table, se rencontrent, et chaque verre qu’ils
-        s’offrent devient du chiffre d’affaires en plus pour votre établissement.
+        Vos clients scannent le QR, se rencontrent, et ce qu’ils s’offrent sur votre carte
+        devient du chiffre d’affaires en plus pour votre établissement.
       </p>
 
       {/* playsInline : sans cet attribut, iOS ouvre la vidéo en plein écran et
