@@ -12,7 +12,9 @@ import {
   stageLabel,
 } from '@/lib/crm';
 import { StagePicker } from '@/components/admin/StagePicker';
-import { setStage, addNote, setNextAction, updateCrmVenue } from '../../actions';
+import { VenuePanel } from '@/components/admin/VenuePanel';
+import { BillingPanel } from '@/components/admin/BillingPanel';
+import { setStage, addNote, setNextAction, updateCrmVenue, updateVenueSettings } from '../../actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -43,7 +45,9 @@ export default async function CrmVenuePage({ params }: { params: { id: string } 
     c.venue_id
       ? service
           .from('venues')
-          .select('id, slug, plan, subscription_status, trial_ends_at, current_period_end, average_ticket_cents')
+          .select(
+            'id, slug, plan, subscription_status, trial_ends_at, current_period_end, checkout_sent_at, contact_email, latitude, longitude, verification_radius_m, checkin_duration_minutes, average_ticket_cents'
+          )
           .eq('id', c.venue_id)
           .maybeSingle()
       : Promise.resolve({ data: null }),
@@ -69,6 +73,16 @@ export default async function CrmVenuePage({ params }: { params: { id: string } 
   }
 
   const trialDays = venue?.trial_ends_at ? daysUntil(venue.trial_ends_at) : null;
+
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://lucky-app.io';
+
+  // Un etablissement cree depuis le pipeline part a 0,0. Si la fiche de
+  // prospection a de vraies coordonnees, on les propose plutot que de laisser
+  // le patron chercher : c'est la panne la plus silencieuse du produit.
+  const gpsManquant = !!venue && !venue.latitude && !venue.longitude;
+  const coordsFiche = c.latitude != null && c.longitude != null;
+  const latValue = gpsManquant && coordsFiche ? c.latitude : venue?.latitude;
+  const lonValue = gpsManquant && coordsFiche ? c.longitude : venue?.longitude;
 
   return (
     <main className="min-h-screen px-4 py-8 sm:px-6 sm:py-12">
@@ -139,6 +153,91 @@ export default async function CrmVenuePage({ params }: { params: { id: string } 
         </section>
 
         {/* ---------------------------------------------------------------
+            Tout ce qui n'existe qu'une fois le lieu devenu client : le QR,
+            les reglages de presence, l'abonnement. Une seule fiche par lieu,
+            du premier cafe jusqu'au prelevement.
+        --------------------------------------------------------------- */}
+        {venue && (
+          <>
+            <h2 className="mt-10 font-display text-xl italic text-bone">Établissement</h2>
+
+            <div className="mt-4 rounded-2xl border hairline p-5">
+              <VenuePanel slug={venue.slug} siteUrl={siteUrl} />
+            </div>
+
+            <form action={updateVenueSettings} className="mt-4 rounded-2xl border hairline p-5">
+              <input type="hidden" name="venueId" value={venue.id} />
+              <input type="hidden" name="crmId" value={c.id} />
+
+              <p className="font-mono text-xs uppercase tracking-[0.2em] text-brass">
+                Position et présence
+              </p>
+
+              {gpsManquant && (
+                <p className="mt-3 rounded-xl border border-brass/40 bg-brass/5 p-3 text-xs leading-relaxed text-bone-dim">
+                  Les coordonnées de l&rsquo;établissement sont à 0,0 : personne ne peut valider
+                  sa présence ici.
+                  {coordsFiche
+                    ? ' Celles relevées en prospection sont déjà pré-remplies ci-dessous — vérifie-les et enregistre.'
+                    : ' Relève-les sur place ou depuis Google Maps.'}
+                </p>
+              )}
+
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                <Input name="latitude" label="Latitude" type="number" defaultValue={latValue} />
+                <Input name="longitude" label="Longitude" type="number" defaultValue={lonValue} />
+                <Input
+                  name="radius"
+                  label="Rayon de vérification (m)"
+                  type="number"
+                  defaultValue={venue.verification_radius_m}
+                />
+                <Input
+                  name="duration"
+                  label="Déconnexion automatique (min)"
+                  type="number"
+                  defaultValue={venue.checkin_duration_minutes}
+                />
+                <label className="block sm:col-span-2">
+                  <span className="text-xs text-bone-faint">Formule facturée</span>
+                  <select
+                    name="plan"
+                    defaultValue={venue.plan ?? 'basique'}
+                    className="mt-1 min-h-[48px] w-full rounded-xl border hairline bg-ink-800 px-4 text-sm text-bone"
+                  >
+                    {Object.values(PLANS).map((p) => (
+                      <option key={p.key} value={p.key}>
+                        {p.label} — {formatEurosPrecise(p.monthlyCentsExclTax)}/mois
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+
+              <button
+                type="submit"
+                className="mt-4 min-h-[48px] rounded-full bg-bone px-6 text-sm font-medium text-ink hover:bg-brass-bright"
+              >
+                Enregistrer les réglages
+              </button>
+            </form>
+
+            <div id="abonnement" className="mt-4 rounded-2xl border hairline p-5">
+              <BillingPanel
+                venueId={venue.id}
+                currentPlan={venue.plan ?? 'basique'}
+                status={venue.subscription_status ?? 'none'}
+                statusLabel={subscriptionStatusLabel(venue.subscription_status)}
+                contactEmail={venue.contact_email ?? c.contact_email ?? null}
+                trialEndsAt={venue.trial_ends_at ?? null}
+                currentPeriodEnd={venue.current_period_end ?? null}
+                checkoutSentAt={venue.checkout_sent_at ?? null}
+              />
+            </div>
+          </>
+        )}
+
+        {/* ---------------------------------------------------------------
             Le journal.
         --------------------------------------------------------------- */}
         <h2 className="mt-10 font-display text-xl italic text-bone">Journal</h2>
@@ -184,13 +283,28 @@ export default async function CrmVenuePage({ params }: { params: { id: string } 
           <input type="hidden" name="crmId" value={c.id} />
           <Input name="name" label="Nom" defaultValue={c.name} required />
           <Input name="city" label="Ville" defaultValue={c.city} />
-          <Input name="type" label="Type (bar, hôtel…)" defaultValue={c.type} />
+          <Input name="type" label="Type (bar, restaurant, hotel)" defaultValue={c.type} />
+          <Input name="category" label="Catégorie (brasserie, café…)" defaultValue={c.category} />
+          <label className="block">
+            <span className="text-xs text-bone-faint">Pays</span>
+            <select
+              name="country"
+              defaultValue={c.country ?? ''}
+              className="mt-1 min-h-[48px] w-full rounded-xl border hairline bg-ink-800 px-4 text-sm text-bone"
+            >
+              <option value="">Non renseigné</option>
+              <option value="FR">France</option>
+              <option value="BE">Belgique</option>
+            </select>
+          </label>
           <Input name="address" label="Adresse" defaultValue={c.address} />
           <Input name="contact_name" label="Contact" defaultValue={c.contact_name} />
           <Input name="contact_role" label="Rôle du contact" defaultValue={c.contact_role} />
           <Input name="contact_email" label="Email" type="email" defaultValue={c.contact_email} />
           <Input name="contact_phone" label="Téléphone" type="tel" defaultValue={c.contact_phone} />
           <Input name="tables_count" label="Nombre de tables" type="number" defaultValue={c.tables_count} />
+          <Input name="roadshow_date" label="Date de tournée (vide = hors tournée)" type="date" defaultValue={c.roadshow_date} />
+          <Input name="roadshow_label" label="Nom de la journée" defaultValue={c.roadshow_label} />
 
           <label className="block">
             <span className="text-xs text-bone-faint">Formule pressentie</span>
