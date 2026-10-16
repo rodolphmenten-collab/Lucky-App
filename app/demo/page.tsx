@@ -12,7 +12,7 @@ import Link from 'next/link';
 export const metadata: Metadata = {
   title: 'Lucky — la démo en 45 secondes',
   description:
-    'Ce que vos clients voient, et ce que ça met dans votre caisse. Démo de Lucky pour les bars, restaurants et hôtels.',
+    'Deux clients se repèrent, s’offrent un verre sur votre carte, le montant arrive en caisse. La démo de Lucky en 45 secondes, pour les bars, restaurants et hôtels.',
 };
 
 const PHONE = '+33688354676';
@@ -24,10 +24,11 @@ export default function DemoPage() {
     <main className="mx-auto min-h-screen max-w-md px-6 py-10">
       <p className="text-center font-mono text-[10px] uppercase tracking-[0.3em] text-brass">Lucky</p>
       <h1 className="mt-3 text-center font-display text-3xl italic leading-tight text-bone">
-        Ce que vos clients voient.
+        Une soirée chez vous, avec Lucky.
       </h1>
-      <p className="mx-auto mt-3 max-w-xs text-center text-sm leading-relaxed text-bone-dim">
-        Quarante-cinq secondes, et vous saurez ce que Lucky change chez vous — jusqu’à l’euro.
+      <p className="mx-auto mt-3 max-w-[20rem] text-center text-sm leading-relaxed text-bone-dim">
+        Deux clients se repèrent, s’offrent un verre sur votre carte, et le montant arrive dans
+        votre caisse. 45 secondes, du premier regard à l’addition.
       </p>
 
       {/* playsInline : sans cet attribut, iOS ouvre la vidéo en plein écran et
