@@ -19,7 +19,13 @@ import { setStage, addNote, setNextAction, updateCrmVenue, updateVenueSettings }
 
 export const dynamic = 'force-dynamic';
 
-export default async function CrmVenuePage({ params }: { params: { id: string } }) {
+export default async function CrmVenuePage({
+  params,
+  searchParams,
+}: {
+  params: { id: string };
+  searchParams?: { erreur?: string; ignore?: string };
+}) {
   const supabase = createClient();
   const {
     data: { user },
@@ -119,6 +125,20 @@ export default async function CrmVenuePage({ params }: { params: { id: string } 
             <Link href={`/admin/crm/${groupeParent.id}`} className="text-brass underline">
               {groupeParent.name}
             </Link>
+          </p>
+        )}
+
+        {searchParams?.erreur && (
+          <p className="mt-4 rounded-2xl border border-red-400/50 bg-red-400/10 p-4 text-sm text-red-300">
+            L&rsquo;enregistrement a échoué, rien n&rsquo;a été sauvegardé :{' '}
+            <span className="font-mono text-xs">{searchParams.erreur}</span>
+          </p>
+        )}
+        {searchParams?.ignore && (
+          <p className="mt-4 rounded-2xl border border-brass/50 bg-brass/10 p-4 text-sm text-bone-dim">
+            Enregistré, mais ces champs n&rsquo;existent pas encore en base et ont été ignorés :{' '}
+            <span className="font-mono text-xs text-brass">{searchParams.ignore}</span>. Passe la
+            migration correspondante pour les activer.
           </p>
         )}
 
