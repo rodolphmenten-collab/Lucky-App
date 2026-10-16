@@ -57,9 +57,10 @@ export default async function AdminPage() {
   ] = await Promise.all([
     service
       .from('crm_venues')
-      .select(
-        'id, venue_id, name, city, type, country, category, contact_name, contact_role, contact_email, contact_phone, stage, stage_changed_at, owner_email, source, expected_plan, tables_count, next_action, next_action_at, updated_at'
-      )
+      // `*` et pas une liste de colonnes : une colonne ajoutee par une
+      // migration pas encore passee ne doit pas faire disparaitre les 133
+      // lignes du pipeline. Les champs absents retombent simplement sur null.
+      .select('*')
       .order('updated_at', { ascending: false }),
     service
       .from('venues')
