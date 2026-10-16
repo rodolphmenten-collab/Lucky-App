@@ -9,6 +9,7 @@ import {
   daysUntil,
   formatEuros,
   formatEurosPrecise,
+  planMonthlyCents,
   stageLabel,
 } from '@/lib/crm';
 import { StagePicker } from '@/components/admin/StagePicker';
@@ -29,9 +30,10 @@ export default async function CrmVenuePage({ params }: { params: { id: string } 
 
   const service = createServiceClient();
 
-  const [{ data: c }, { data: admins }] = await Promise.all([
+  const [{ data: c }, { data: admins }, { data: groupes }] = await Promise.all([
     service.from('crm_venues').select('*').eq('id', params.id).maybeSingle(),
     service.from('platform_admins').select('email').order('added_at'),
+    service.from('crm_venues').select('id, name').eq('is_group', true).order('name'),
   ]);
 
   if (!c) notFound();
@@ -74,6 +76,19 @@ export default async function CrmVenuePage({ params }: { params: { id: string } 
 
   const trialDays = venue?.trial_ends_at ? daysUntil(venue.trial_ends_at) : null;
 
+  // Les lieux rattaches, quand cette fiche est elle-meme un groupe.
+  const { data: membres } = c.is_group
+    ? await service
+        .from('crm_venues')
+        .select('id, name, city, stage, venue_id, expected_plan')
+        .eq('group_id', c.id)
+        .order('name')
+    : { data: [] as any[] };
+
+  const groupeParent = c.group_id
+    ? (groupes ?? []).find((g: any) => g.id === c.group_id) ?? null
+    : null;
+
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://lucky-app.io';
 
   // Un etablissement cree depuis le pipeline part a 0,0. Si la fiche de
@@ -97,6 +112,15 @@ export default async function CrmVenuePage({ params }: { params: { id: string } 
           {' · '}
           {stageLabel(c.stage)} depuis le {new Date(c.stage_changed_at).toLocaleDateString('fr-FR')}
         </p>
+
+        {groupeParent && (
+          <p className="mt-2 text-xs text-bone-dim">
+            Groupe —{' '}
+            <Link href={`/admin/crm/${groupeParent.id}`} className="text-brass underline">
+              {groupeParent.name}
+            </Link>
+          </p>
+        )}
 
         <StagePicker crmId={c.id} current={c.stage} action={setStage} />
 
@@ -151,6 +175,53 @@ export default async function CrmVenuePage({ params }: { params: { id: string } 
             </button>
           </form>
         </section>
+
+        {/* ---------------------------------------------------------------
+            Les lieux du groupe. Un groupe n'a ni QR ni abonnement : ce qu'on
+            veut voir ici, c'est son poids — combien de lieux, et combien ils
+            pesent ensemble.
+        --------------------------------------------------------------- */}
+        {c.is_group && (
+          <>
+            <h2 className="mt-10 font-display text-xl italic text-bone">
+              Lieux du groupe ({(membres ?? []).length})
+            </h2>
+            {(membres ?? []).length > 0 && (
+              <p className="mt-1 text-xs text-bone-dim">
+                {formatEuros(
+                  (membres ?? []).reduce(
+                    (t: number, m: any) => t + planMonthlyCents(m.expected_plan),
+                    0
+                  )
+                )}
+                /mois si tout le groupe signe.
+              </p>
+            )}
+            <div className="mt-3 divide-y hairline rounded-2xl border hairline">
+              {(membres ?? []).map((m: any) => (
+                <Link
+                  key={m.id}
+                  href={`/admin/crm/${m.id}`}
+                  className="flex items-center justify-between gap-3 px-5 py-3 hover:bg-white/[0.02]"
+                >
+                  <span className="min-w-0">
+                    <span className="block text-sm text-bone">{m.name}</span>
+                    <span className="block font-mono text-[11px] text-bone-faint">{m.city}</span>
+                  </span>
+                  <span className="shrink-0 rounded-full border hairline px-3 py-1 text-[10px] uppercase tracking-[0.12em] text-bone-dim">
+                    {stageLabel(m.stage)}
+                  </span>
+                </Link>
+              ))}
+              {(membres ?? []).length === 0 && (
+                <p className="px-5 py-8 text-center text-sm text-bone-faint">
+                  Aucun lieu rattaché. Ouvre la fiche d&rsquo;un lieu et choisis ce groupe dans
+                  « Rattaché au groupe ».
+                </p>
+              )}
+            </div>
+          </>
+        )}
 
         {/* ---------------------------------------------------------------
             Tout ce qui n'existe qu'une fois le lieu devenu client : le QR,
@@ -337,6 +408,41 @@ export default async function CrmVenuePage({ params }: { params: { id: string } 
               ))}
             </select>
           </label>
+
+          {!c.venue_id && (
+            <label className="flex items-center gap-3 sm:col-span-2">
+              <input
+                type="checkbox"
+                name="is_group"
+                defaultChecked={!!c.is_group}
+                className="h-5 w-5 accent-[#C9A46A]"
+              />
+              <span className="text-sm text-bone-dim">
+                Cette fiche est un groupe, pas un lieu
+                <span className="block text-[11px] text-bone-faint">
+                  Un groupe se prospecte comme un lieu mais n&rsquo;a ni QR ni abonnement propre.
+                </span>
+              </span>
+            </label>
+          )}
+
+          {!c.is_group && (
+            <label className="block sm:col-span-2">
+              <span className="text-xs text-bone-faint">Rattaché au groupe</span>
+              <select
+                name="group_id"
+                defaultValue={c.group_id ?? ''}
+                className="mt-1 min-h-[48px] w-full rounded-xl border hairline bg-ink-800 px-4 text-sm text-bone"
+              >
+                <option value="">Indépendant</option>
+                {(groupes ?? []).map((g: any) => (
+                  <option key={g.id} value={g.id}>
+                    {g.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
 
           <label className="block">
             <span className="text-xs text-bone-faint">Source</span>
