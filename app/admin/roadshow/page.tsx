@@ -33,9 +33,7 @@ export default async function RoadshowPage({
   const [{ data: all }, { count: pendingReports }] = await Promise.all([
     service
       .from('crm_venues')
-      .select(
-        'id, name, address, city, category, type, stage, contact_name, contact_phone, latitude, longitude, roadshow_date, roadshow_label'
-      )
+      .select('*')
       .not('roadshow_date', 'is', null)
       .order('roadshow_date', { ascending: true })
       .order('city', { ascending: true })
