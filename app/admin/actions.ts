@@ -120,6 +120,8 @@ export async function updateCrmVenue(formData: FormData) {
       lost_reason: text('lost_reason'),
       roadshow_date: text('roadshow_date'),
       roadshow_label: text('roadshow_label'),
+      is_group: formData.get('is_group') === 'on',
+      group_id: ((formData.get('group_id') as string) || '') || null,
     })
     .eq('id', id);
 

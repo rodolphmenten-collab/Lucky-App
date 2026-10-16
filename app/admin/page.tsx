@@ -105,6 +105,12 @@ export default async function AdminPage() {
 
   // Le board est un composant client : on lui passe des lignes simples,
   // deja fusionnees avec l'etat d'abonnement du lieu quand il existe.
+  // Nom du groupe parent, resolu une fois pour toutes plutot qu'une requete
+  // par carte.
+  const nomParGroupe = new Map<string, string>(
+    crmRows.filter((c: any) => c.is_group).map((c: any) => [c.id as string, c.name as string])
+  );
+
   const cards: BoardCard[] = crmRows.map((c: any) => {
     const v = c.venue_id ? venueById.get(c.venue_id) : null;
     return {
@@ -124,6 +130,8 @@ export default async function AdminPage() {
       nextAction: c.next_action ?? null,
       nextActionAt: c.next_action_at ?? null,
       subscriptionStatus: v?.subscription_status ?? null,
+      isGroup: !!c.is_group,
+      groupName: c.group_id ? (nomParGroupe.get(c.group_id) ?? null) : null,
     };
   });
 
