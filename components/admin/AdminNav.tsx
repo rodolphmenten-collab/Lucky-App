@@ -2,6 +2,7 @@ import Link from 'next/link';
 
 const TABS = [
   { key: 'pipeline', href: '/admin', label: 'Pipeline' },
+  { key: 'roadshow', href: '/admin/roadshow', label: 'Roadshow' },
   { key: 'venues', href: '/admin/etablissements', label: 'Établissements' },
   { key: 'moderation', href: '/admin/moderation', label: 'Modération' },
   { key: 'equipe', href: '/admin/equipe', label: 'Équipe' },
@@ -11,7 +12,7 @@ export function AdminNav({
   current,
   pendingReports = 0,
 }: {
-  current: 'pipeline' | 'venues' | 'moderation' | 'equipe';
+  current: 'pipeline' | 'roadshow' | 'venues' | 'moderation' | 'equipe';
   pendingReports?: number;
 }) {
   return (

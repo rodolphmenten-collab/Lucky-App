@@ -2,7 +2,14 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import { ACTIVE_STAGES, STAGE_SHORT, formatEuros, planMonthlyCents, type Stage } from '@/lib/crm';
+import {
+  ACTIVE_STAGES,
+  SOURCE_LABELS,
+  STAGE_SHORT,
+  formatEuros,
+  planMonthlyCents,
+  type Stage,
+} from '@/lib/crm';
 
 /**
  * Le pipeline en colonnes, façon Odoo/HubSpot.
@@ -36,6 +43,8 @@ export interface BoardCard {
   source: string | null;
   contactName: string | null;
   contactPhone: string | null;
+  country: string | null;
+  category: string | null;
   ownerEmail: string | null;
   expectedPlan: string | null;
   stage: string;
@@ -60,6 +69,10 @@ export function PipelineBoard({
   const [rows, setRows] = useState(cards);
   const [mineOnly, setMineOnly] = useState(false);
   const [query, setQuery] = useState('');
+  const [country, setCountry] = useState('');
+  const [city, setCity] = useState('');
+  const [category, setCategory] = useState('');
+  const [source, setSource] = useState('');
   const [showLost, setShowLost] = useState(false);
   const [confirmId, setConfirmId] = useState<string | null>(null);
 
@@ -72,10 +85,51 @@ export function PipelineBoard({
     [showLost]
   );
 
+  // Les listes deroulantes se construisent sur les donnees reelles : pas de
+  // ville codee en dur qui disparait le jour ou plus aucun lieu n'y est.
+  // Les villes se restreignent au pays choisi, sinon on propose Lille a
+  // quelqu'un qui vient de filtrer sur la Belgique.
+  const countries = useMemo(
+    () => [...new Set(rows.map((r) => r.country).filter(Boolean))].sort() as string[],
+    [rows]
+  );
+  const cities = useMemo(
+    () =>
+      [
+        ...new Set(
+          rows
+            .filter((r) => !country || r.country === country)
+            .map((r) => r.city)
+            .filter(Boolean)
+        ),
+      ].sort((a, b) => (a as string).localeCompare(b as string)) as string[],
+    [rows, country]
+  );
+  const categories = useMemo(
+    () =>
+      [...new Set(rows.map((r) => r.category).filter(Boolean))].sort((a, b) =>
+        (a as string).localeCompare(b as string)
+      ) as string[],
+    [rows]
+  );
+  const sources = useMemo(
+    () => [...new Set(rows.map((r) => r.source).filter(Boolean))].sort() as string[],
+    [rows]
+  );
+
+  // Changer de pays invalide la ville choisie.
+  useEffect(() => {
+    if (city && !cities.includes(city)) setCity('');
+  }, [cities, city]);
+
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
     return rows.filter((r) => {
       if (mineOnly && (r.ownerEmail ?? '').toLowerCase() !== me) return false;
+      if (country && r.country !== country) return false;
+      if (city && r.city !== city) return false;
+      if (category && r.category !== category) return false;
+      if (source && r.source !== source) return false;
       if (!q) return true;
       return (
         r.name.toLowerCase().includes(q) ||
@@ -83,7 +137,17 @@ export function PipelineBoard({
         (r.contactName ?? '').toLowerCase().includes(q)
       );
     });
-  }, [rows, mineOnly, me, query]);
+  }, [rows, mineOnly, me, query, country, city, category, source]);
+
+  const activeFilters = [country, city, category, source].filter(Boolean).length + (mineOnly ? 1 : 0);
+  function resetFilters() {
+    setCountry('');
+    setCity('');
+    setCategory('');
+    setSource('');
+    setMineOnly(false);
+    setQuery('');
+  }
 
   const byStage = useMemo(() => {
     const m = new Map<string, BoardCard[]>();
@@ -283,7 +347,23 @@ export function PipelineBoard({
         />
         <Toggle on={mineOnly} onClick={() => setMineOnly((v) => !v)} label="Mes lieux" />
         <Toggle on={showLost} onClick={() => setShowLost((v) => !v)} label="Perdus" />
-        <span className="ml-auto text-xs text-bone-faint">
+      </div>
+
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        <Select value={country} onChange={setCountry} label="Tous pays" options={countries} format={paysLabel} />
+        <Select value={city} onChange={setCity} label="Toutes villes" options={cities} />
+        <Select value={category} onChange={setCategory} label="Toutes catégories" options={categories} />
+        <Select value={source} onChange={setSource} label="Toutes sources" options={sources} format={sourceLabel} />
+        {activeFilters > 0 && (
+          <button
+            type="button"
+            onClick={resetFilters}
+            className="min-h-[44px] rounded-full border border-brass/50 px-4 text-xs text-brass"
+          >
+            Tout afficher
+          </button>
+        )}
+        <span className="ml-auto whitespace-nowrap text-xs text-bone-faint">
           {total} lieu{total > 1 ? 'x' : ''}
         </span>
       </div>
@@ -428,6 +508,47 @@ export function PipelineBoard({
         })}
       </div>
     </div>
+  );
+}
+
+function paysLabel(code: string) {
+  return { FR: 'France', BE: 'Belgique' }[code] ?? code;
+}
+
+function sourceLabel(code: string) {
+  return SOURCE_LABELS[code] ?? code;
+}
+
+function Select({
+  value,
+  onChange,
+  label,
+  options,
+  format,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  label: string;
+  options: string[];
+  format?: (v: string) => string;
+}) {
+  if (options.length < 2) return null;
+  return (
+    <select
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      aria-label={label}
+      className={`min-h-[44px] max-w-[46vw] truncate rounded-full border bg-ink-800 px-4 text-xs sm:max-w-none ${
+        value ? 'border-brass text-brass' : 'hairline text-bone-dim'
+      }`}
+    >
+      <option value="">{label}</option>
+      {options.map((o) => (
+        <option key={o} value={o}>
+          {format ? format(o) : o}
+        </option>
+      ))}
+    </select>
   );
 }
 
