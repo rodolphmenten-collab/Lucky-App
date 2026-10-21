@@ -1,16 +1,32 @@
 'use client';
 
 import { useState } from 'react';
+import {
+  PLANS,
+  COMMITMENTS,
+  DEFAULT_COMMITMENT,
+  monthlyCentsAfterDiscount,
+  formatCentsExclTax,
+  type PlanKey,
+  type CommitmentMonths,
+} from '@/lib/stripe';
 
-const PLAN_OPTIONS = [
-  { value: 'basique', label: 'Basique — 99 € HT / mois' },
-  { value: 'essentiel', label: 'Essentiel — 149 € HT / mois' },
-  { value: 'premium', label: 'Premium — 299 € HT / mois' },
-];
+const PLAN_OPTIONS: { value: PlanKey; label: string }[] = (
+  Object.values(PLANS) as (typeof PLANS)[PlanKey][]
+).map((p) => ({
+  value: p.key,
+  label: `${p.label} — ${formatCentsExclTax(p.monthlyCentsExclTax)} HT / mois · jusqu'à ${p.supportsIncluded} supports`,
+}));
+
+const COMMITMENT_OPTIONS = (Object.values(COMMITMENTS) as (typeof COMMITMENTS)[CommitmentMonths][]).map((c) => ({
+  value: c.months,
+  label: c.discountPercent ? `${c.label} — remise de ${c.discountPercent} %` : `${c.label} — plein tarif`,
+}));
 
 export function BillingPanel({
   venueId,
   currentPlan,
+  currentCommitment,
   statusLabel,
   status,
   contactEmail,
@@ -20,6 +36,7 @@ export function BillingPanel({
 }: {
   venueId: string;
   currentPlan: string;
+  currentCommitment: number | null;
   statusLabel: string;
   status: string;
   contactEmail: string | null;
@@ -28,6 +45,9 @@ export function BillingPanel({
   checkoutSentAt: string | null;
 }) {
   const [plan, setPlan] = useState(currentPlan);
+  const [commitment, setCommitment] = useState<CommitmentMonths>(
+    (currentCommitment as CommitmentMonths) || DEFAULT_COMMITMENT
+  );
   const [busy, setBusy] = useState(false);
   const [link, setLink] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -41,7 +61,7 @@ export function BillingPanel({
       const res = await fetch('/api/admin/billing/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ venueId, plan, send }),
+        body: JSON.stringify({ venueId, plan, send, commitmentMonths: commitment }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -100,9 +120,44 @@ export function BillingPanel({
         ))}
       </select>
 
+      <select
+        value={commitment}
+        onChange={(e) => setCommitment(Number(e.target.value) as CommitmentMonths)}
+        className="mt-3 w-full rounded-full border hairline bg-ink-900 px-5 py-3 text-sm text-bone"
+      >
+        {COMMITMENT_OPTIONS.map((o) => (
+          <option key={o.value} value={o.value}>
+            Engagement {o.label}
+          </option>
+        ))}
+      </select>
+
+      {/* Le montant affiché ici est celui qui partira dans le lien de paiement :
+          c'est le seul endroit où l'on voit, avant d'envoyer, ce que le lieu
+          verra sur sa facture. */}
+      <div className="mt-4 rounded-xl border border-brass/30 bg-brass/5 px-4 py-3">
+        <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-brass">Ce que paiera le lieu</p>
+        <p className="mt-1 font-display text-2xl text-bone">
+          {formatCentsExclTax(monthlyCentsAfterDiscount(plan as PlanKey, commitment))}
+          <span className="text-sm text-bone-dim"> HT / mois</span>
+        </p>
+        {COMMITMENTS[commitment].discountPercent > 0 && (
+          <p className="mt-1 text-[11px] text-bone-dim">
+            au lieu de{' '}
+            <span className="line-through">{formatCentsExclTax(PLANS[plan as PlanKey].monthlyCentsExclTax)}</span> ·{' '}
+            <span className="text-brass">−{COMMITMENTS[commitment].discountPercent} %</span> pendant{' '}
+            {COMMITMENTS[commitment].label}
+          </p>
+        )}
+        <p className="mt-1 text-[11px] text-bone-faint">
+          {PLANS[plan as PlanKey].supportsIncluded} supports inclus
+        </p>
+      </div>
+
       <p className="mt-2 text-[11px] leading-relaxed text-bone-faint">
         30 jours d’essai : la carte est enregistrée à la signature, le premier prélèvement intervient
-        à J+30. Prix hors taxes, TVA ajoutée sur la facture.
+        à J+30. Prix hors taxes, TVA ajoutée sur la facture. La remise est portée par un coupon
+        Stripe ; l’engagement lui-même tient par le contrat, pas par Stripe.
       </p>
 
       <div className="mt-4 flex flex-wrap gap-3">
