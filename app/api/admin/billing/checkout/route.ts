@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { isPlatformAdminEmail } from '@/lib/admin';
-import { isPlanKey } from '@/lib/stripe';
+import { isPlanKey, isCommitmentMonths, DEFAULT_COMMITMENT } from '@/lib/stripe';
 import { createVenueCheckoutSession } from '@/lib/billing';
 import { sendEmail, emailShell } from '@/lib/email';
 
@@ -20,9 +20,16 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
   }
 
-  const { venueId, plan, send } = await request.json();
+  const { venueId, plan, send, commitmentMonths } = await request.json();
   if (!venueId || !isPlanKey(plan)) {
     return NextResponse.json({ error: 'venueId ou plan invalide' }, { status: 400 });
+  }
+
+  // Une durée inconnue ne doit pas silencieusement devenir « sans remise » :
+  // on refuse, plutôt que d'envoyer au lieu un lien au mauvais montant.
+  const months = commitmentMonths ?? DEFAULT_COMMITMENT;
+  if (!isCommitmentMonths(months)) {
+    return NextResponse.json({ error: 'Durée d’engagement invalide (3, 6 ou 12 mois).' }, { status: 400 });
   }
 
   const service = createServiceClient();
@@ -34,7 +41,12 @@ export async function POST(request: Request) {
 
   if (!venue) return NextResponse.json({ error: 'Établissement introuvable' }, { status: 404 });
 
-  const { url, error } = await createVenueCheckoutSession(service, venue, plan);
+  await service
+    .from('venues')
+    .update({ commitment_months: months, plan })
+    .eq('id', venueId);
+
+  const { url, error } = await createVenueCheckoutSession(service, venue, plan, months);
   if (error || !url) return NextResponse.json({ error: error ?? 'Échec' }, { status: 400 });
 
   if (!send) return NextResponse.json({ url, emailed: false });
