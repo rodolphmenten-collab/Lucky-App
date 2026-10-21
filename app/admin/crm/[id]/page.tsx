@@ -317,6 +317,7 @@ export default async function CrmVenuePage({
               <BillingPanel
                 venueId={venue.id}
                 currentPlan={venue.plan ?? 'basique'}
+                currentCommitment={venue.commitment_months ?? c.commitment_months ?? null}
                 status={venue.subscription_status ?? 'none'}
                 statusLabel={subscriptionStatusLabel(venue.subscription_status)}
                 contactEmail={venue.contact_email ?? c.contact_email ?? null}
@@ -394,6 +395,29 @@ export default async function CrmVenuePage({
           <Input name="contact_email" label="Email" type="email" defaultValue={c.contact_email} />
           <Input name="contact_phone" label="Téléphone" type="tel" defaultValue={c.contact_phone} />
           <Input name="tables_count" label="Nombre de tables" type="number" defaultValue={c.tables_count} />
+          {/* Le nombre de supports détermine la formule : c'est une couverture
+              de salle qu'on vend, pas une liste de fonctions. En dessous d'un
+              certain nombre, le QR n'est pas scanné et le lieu ne voit rien
+              venir. */}
+          <Input
+            name="supports_count"
+            label="Supports installés (détermine la formule)"
+            type="number"
+            defaultValue={c.supports_count}
+          />
+          <label className="block">
+            <span className="text-xs text-bone-faint">Durée d&rsquo;engagement</span>
+            <select
+              name="commitment_months"
+              defaultValue={c.commitment_months ? String(c.commitment_months) : ''}
+              className="mt-1 min-h-[48px] w-full rounded-xl border hairline bg-ink-800 px-4 text-sm text-bone"
+            >
+              <option value="">À définir</option>
+              <option value="3">3 mois — plein tarif</option>
+              <option value="6">6 mois — remise de 10 %</option>
+              <option value="12">12 mois — remise de 20 %</option>
+            </select>
+          </label>
           <Input name="roadshow_date" label="Date de tournée (vide = hors tournée)" type="date" defaultValue={c.roadshow_date} />
           <Input name="roadshow_label" label="Nom de la journée" defaultValue={c.roadshow_label} />
 
