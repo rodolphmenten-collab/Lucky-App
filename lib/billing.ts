@@ -2,9 +2,12 @@ import type Stripe from 'stripe';
 import {
   getStripe,
   priceIdForPlan,
+  couponIdForCommitment,
   automaticTaxEnabled,
   TRIAL_DAYS,
+  DEFAULT_COMMITMENT,
   type PlanKey,
+  type CommitmentMonths,
 } from '@/lib/stripe';
 
 export interface VenueBillingRow {
@@ -29,7 +32,8 @@ export async function createVenueCheckoutSession(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   service: any,
   venue: VenueBillingRow,
-  plan: PlanKey
+  plan: PlanKey,
+  commitmentMonths: CommitmentMonths = DEFAULT_COMMITMENT
 ): Promise<{ url?: string; error?: string }> {
   const stripe = getStripe();
   if (!stripe) return { error: 'STRIPE_SECRET_KEY absente — facturation non configurée.' };
@@ -68,9 +72,9 @@ export async function createVenueCheckoutSession(
     payment_method_collection: 'always',
     subscription_data: {
       trial_period_days: TRIAL_DAYS,
-      metadata: { venue_id: venue.id, plan },
+      metadata: { venue_id: venue.id, plan, commitment_months: String(commitmentMonths) },
     },
-    metadata: { venue_id: venue.id, plan },
+    metadata: { venue_id: venue.id, plan, commitment_months: String(commitmentMonths) },
     billing_address_collection: 'required',
     // B2B : on collecte le numéro de TVA intracommunautaire pour les factures.
     tax_id_collection: { enabled: true },
@@ -79,6 +83,14 @@ export async function createVenueCheckoutSession(
     success_url: `${siteUrl}/abonnement?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${siteUrl}/abonnement?annule=1`,
   };
+
+  // La remise d'engagement est portée par un coupon. Sans lui, le lieu signe
+  // un contrat à 134,10 € et se fait prelever 149 € : l'ecart ne se voit qu'a
+  // la premiere facture, c'est-a-dire trente jours trop tard.
+  const couponId = couponIdForCommitment(commitmentMonths);
+  if (couponId) {
+    params.discounts = [{ coupon: couponId }];
+  }
 
   if (automaticTaxEnabled()) {
     params.automatic_tax = { enabled: true };

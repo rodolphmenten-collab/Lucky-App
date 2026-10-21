@@ -23,6 +23,10 @@ export interface PlanDefinition {
    *  est celui du Price Stripe, jamais celui-ci. */
   monthlyCentsExclTax: number;
   priceIdEnv: string;
+  /** Nombre de supports inclus dans la formule. C'est lui qui détermine la
+   *  formule : on vend une couverture de salle, pas une liste de fonctions.
+   *  Le produit est identique dans les trois formules. */
+  supportsIncluded: number;
 }
 
 export const PLANS: Record<PlanKey, PlanDefinition> = {
@@ -31,22 +35,105 @@ export const PLANS: Record<PlanKey, PlanDefinition> = {
     label: 'Basique',
     monthlyCentsExclTax: 9900,
     priceIdEnv: 'STRIPE_PRICE_BASIQUE',
+    supportsIncluded: 10,
   },
   essentiel: {
     key: 'essentiel',
     label: 'Essentiel',
     monthlyCentsExclTax: 14900,
     priceIdEnv: 'STRIPE_PRICE_ESSENTIEL',
+    supportsIncluded: 25,
   },
   premium: {
     key: 'premium',
     label: 'Premium',
     monthlyCentsExclTax: 29900,
     priceIdEnv: 'STRIPE_PRICE_PREMIUM',
+    supportsIncluded: 40,
   },
 };
 
 export const TRIAL_DAYS = 30;
+
+// ---------------------------------------------------------------------------
+// Durées d'engagement
+//
+// La remise passe par un coupon Stripe appliqué au prix mensuel, pas par un
+// prix dédié par durée : trois prix et deux coupons se redupliquent plus
+// facilement qu'une grille de neuf prix, et la remise apparaît en clair sur
+// la facture du lieu.
+//
+// L'engagement lui-même n'est pas tenu par Stripe mais par le contrat : Stripe
+// ne sait pas refuser une résiliation anticipée. C'est l'article 10 du contrat
+// qui rend les mensualités restantes exigibles.
+// ---------------------------------------------------------------------------
+
+export type CommitmentMonths = 3 | 6 | 12;
+
+export interface CommitmentDefinition {
+  months: CommitmentMonths;
+  label: string;
+  /** Remise en pourcentage appliquée au prix mensuel. */
+  discountPercent: number;
+  /** Identifiant du coupon Stripe. Surchargeable par variable d'environnement
+   *  pour le jour où le compte Stripe change. */
+  couponIdEnv: string | null;
+  defaultCouponId: string | null;
+}
+
+export const COMMITMENTS: Record<CommitmentMonths, CommitmentDefinition> = {
+  3: {
+    months: 3,
+    label: '3 mois',
+    discountPercent: 0,
+    couponIdEnv: null,
+    defaultCouponId: null,
+  },
+  6: {
+    months: 6,
+    label: '6 mois',
+    discountPercent: 10,
+    couponIdEnv: 'STRIPE_COUPON_6M',
+    defaultCouponId: 'engagement-6-mois',
+  },
+  12: {
+    months: 12,
+    label: '12 mois',
+    discountPercent: 20,
+    couponIdEnv: 'STRIPE_COUPON_12M',
+    defaultCouponId: 'engagement-12-mois',
+  },
+};
+
+export const DEFAULT_COMMITMENT: CommitmentMonths = 3;
+
+export function isCommitmentMonths(value: unknown): value is CommitmentMonths {
+  return value === 3 || value === 6 || value === 12;
+}
+
+export function couponIdForCommitment(months: CommitmentMonths): string | null {
+  const c = COMMITMENTS[months];
+  if (!c.couponIdEnv) return null;
+  return process.env[c.couponIdEnv] ?? c.defaultCouponId;
+}
+
+/**
+ * Montant mensuel HT après remise, en centimes.
+ *
+ * Affichage uniquement, comme `monthlyCentsExclTax` : ce qui est facturé est
+ * le prix Stripe diminué du coupon. Les deux doivent concorder — s'ils
+ * divergent, c'est le coupon Stripe qui fait foi, pas cette fonction.
+ */
+export function monthlyCentsAfterDiscount(plan: PlanKey, months: CommitmentMonths): number {
+  const base = PLANS[plan].monthlyCentsExclTax;
+  const pct = COMMITMENTS[months].discountPercent;
+  if (!pct) return base;
+  return Math.round((base * (100 - pct)) / 100);
+}
+
+export function formatCentsExclTax(cents: number): string {
+  return (cents / 100).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+}
 
 export function isPlanKey(value: unknown): value is PlanKey {
   return typeof value === 'string' && value in PLANS;
