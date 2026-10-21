@@ -98,6 +98,8 @@ export async function updateCrmVenue(formData: FormData) {
 
   const text = (k: string) => ((formData.get(k) as string) || '').trim() || null;
   const tables = parseInt((formData.get('tables_count') as string) || '', 10);
+  const supports = parseInt((formData.get('supports_count') as string) || '', 10);
+  const engagement = parseInt((formData.get('commitment_months') as string) || '', 10);
 
   const service = createServiceClient();
 
@@ -116,6 +118,8 @@ export async function updateCrmVenue(formData: FormData) {
     expected_plan: text('expected_plan'),
     owner_email: text('owner_email'),
     tables_count: Number.isFinite(tables) ? tables : null,
+    supports_count: Number.isFinite(supports) ? supports : null,
+    commitment_months: Number.isFinite(engagement) ? engagement : null,
     lost_reason: text('lost_reason'),
     roadshow_date: text('roadshow_date'),
     roadshow_label: text('roadshow_label'),
