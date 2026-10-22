@@ -92,6 +92,43 @@ export default function CGUEtablissements() {
               locaux.
             </li>
           </ul>
+
+          {/* Les supports physiques : sans eux le Service n'existe pas dans la
+              salle. La clause manquait alors que le contrat d'abonnement la
+              porte déjà — un écart entre les deux documents est exactement ce
+              qu'un client conteste le jour où un support est cassé. */}
+          <h3 className="mt-6 text-sm font-semibold text-bone">4.1 — Supports physiques</h3>
+          <p className="mt-2">
+            Les supports portant le code QR (plaques, chevalets, jetons, affichages) sont mis à disposition du
+            Client dans le cadre d'un prêt à usage. Ils demeurent la propriété d'OLIGART pendant toute la durée
+            du contrat, y compris lorsqu'ils sont personnalisés aux couleurs du Client.
+          </p>
+          <ul className="mt-2 list-disc space-y-1.5 pl-5">
+            <li>
+              Le Client maintient les supports installés, visibles et accessibles à sa clientèle pendant toute
+              la durée du contrat. Leur retrait durable, leur dissimulation ou leur mise hors d'usage constitue
+              un manquement aux présentes.
+            </li>
+            <li>
+              L'usure normale est à la charge d'OLIGART, qui remplace les supports concernés. La dégradation,
+              la casse, la perte et le vol sont à la charge du Client, qui règle le remplacement au tarif
+              unitaire en vigueur — notamment lorsqu'un support est brisé, plié, taché, brûlé, immergé,
+              recouvert, ou que son code QR est devenu illisible.
+            </li>
+            <li>
+              Par année contractuelle, OLIGART remplace gratuitement un nombre de supports égal à 10 % du
+              nombre installé, arrondi à l'unité supérieure. Au-delà, les remplacements sont facturés.
+            </li>
+            <li>
+              Le Client s'interdit de modifier, masquer, recouvrir, recopier, réimprimer, reproduire ou
+              rediriger un code QR, et de faire réaliser des supports par un tiers.
+            </li>
+            <li>
+              À la fin du contrat, quelle qu'en soit la cause, le Client restitue les supports dans un délai de
+              trente jours, aux frais d'OLIGART. Les supports non restitués passé ce délai sont facturés au
+              tarif unitaire en vigueur.
+            </li>
+          </ul>
         </section>
 
         <section>
