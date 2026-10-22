@@ -145,11 +145,18 @@ export function ProfileEditor({
         </div>
       )}
 
-      <div className="mt-10 flex justify-between text-xs text-bone-faint">
-        <Link href="/onboarding" className="underline">
-          {t.profile.editDetails}
-        </Link>
-        <button onClick={signOut} className="underline">
+      {/* Modifier son profil n'est pas une option de bas de page : c'est le
+          geste principal de cet ecran. Il etait reduit a un lien souligne de la
+          taille de « Se deconnecter », et passait inapercu. */}
+      <Link
+        href="/onboarding"
+        className="mt-10 flex min-h-[52px] w-full items-center justify-center rounded-full border border-brass/50 px-6 text-sm font-medium text-brass transition-colors hover:bg-brass/10"
+      >
+        {t.profile.editDetails}
+      </Link>
+
+      <div className="mt-6 text-center">
+        <button onClick={signOut} className="text-xs text-bone-faint underline">
           {t.profile.signOut}
         </button>
       </div>
