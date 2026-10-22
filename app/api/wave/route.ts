@@ -35,20 +35,27 @@ export async function POST(request: Request) {
         const { data: other } = await service.from('profiles').select('first_name').eq('id', toUserId).maybeSingle();
         await Promise.all([
           sendPushToUser(service, toUserId, {
-            title: 'New match! 🎉',
-            body: `You matched with ${senderName}.`,
+            title: 'Vous avez un match 🎉',
+            body: `${senderName} et vous, c'est réciproque.`,
             url: `/chat/${matchId}`,
           }),
           sendPushToUser(service, user.id, {
-            title: 'New match! 🎉',
-            body: `You matched with ${other?.first_name ?? 'someone'}.`,
+            title: 'Vous avez un match 🎉',
+            body: `${other?.first_name ?? 'Quelqu\u2019un'} et vous, c'est réciproque.`,
             url: `/chat/${matchId}`,
           }),
         ]);
       } else {
+        // Titre = le nom du lieu : c'est ce que la personne reconnait sur son
+        // ecran verrouille, et la plateforme n'a pas a s'y nommer.
+        const { data: lieu } = await service
+          .from('venues')
+          .select('name')
+          .eq('id', venueId)
+          .maybeSingle();
         await sendPushToUser(service, toUserId, {
-          title: 'Lucky',
-          body: `${senderName} waved at you 👋`,
+          title: lieu?.name ?? 'Un signe',
+          body: `${senderName} vous a fait signe 👋`,
           url: '/matches',
         });
       }
