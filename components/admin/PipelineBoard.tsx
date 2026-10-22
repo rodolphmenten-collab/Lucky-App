@@ -472,6 +472,18 @@ export function PipelineBoard({
                       <Link href={`/admin/crm/${c.id}`} className="text-[11px] text-brass underline">
                         Ouvrir
                       </Link>
+                      {/* Un lieu devenu client se gere ailleurs que dans le
+                          suivi commercial : carte, abonnement, QR, position.
+                          Le raccourci evite de passer par la fiche puis de
+                          chercher l'onglet. */}
+                      {c.venueId && (
+                        <Link
+                          href={`/admin/crm/${c.id}?onglet=informations`}
+                          className="rounded-full border border-brass/50 px-2.5 py-1 text-[10px] text-brass hover:bg-brass/10"
+                        >
+                          Établissement
+                        </Link>
+                      )}
                       {c.contactPhone && (
                         <a href={`tel:${c.contactPhone}`} className="text-[11px] text-bone-dim underline">
                           Appeler
