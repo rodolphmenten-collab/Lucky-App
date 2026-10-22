@@ -84,6 +84,8 @@ export interface VenueRow {
   subscription_status: string | null;
   trial_ends_at: string | null;
   created_at: string;
+  /** Lieu créé pour essayer le parcours : exclu de tous les compteurs. */
+  is_test?: boolean | null;
 }
 
 export interface CrmRow {
@@ -93,6 +95,8 @@ export interface CrmRow {
   expected_plan: string | null;
   next_action_at: string | null;
   owner_email: string | null;
+  /** Lieu créé pour essayer le parcours : exclu de tous les compteurs. */
+  is_test?: boolean | null;
 }
 
 export interface FounderKpis {
@@ -136,7 +140,17 @@ const STAGE_WEIGHT: Record<Stage, number> = {
   perdu: 0,
 };
 
-export function computeFounderKpis(venues: VenueRow[], crm: CrmRow[], today = new Date()): FounderKpis {
+export function computeFounderKpis(
+  allVenues: VenueRow[],
+  allCrm: CrmRow[],
+  today = new Date()
+): FounderKpis {
+  // Les lieux de test sortent ici, une fois pour toutes : si on les filtrait
+  // compteur par compteur, il suffirait d'en oublier un pour qu'un faux lieu
+  // se retrouve dans le MRR annoncé à un investisseur.
+  const venues = allVenues.filter((v) => !v.is_test);
+  const crm = allCrm.filter((c) => !c.is_test);
+
   const paying = venues.filter((v) => v.subscription_status === 'active');
   const trialing = venues.filter((v) => v.subscription_status === 'trialing');
   const pastDue = venues.filter((v) => v.subscription_status === 'past_due' || v.subscription_status === 'unpaid');
