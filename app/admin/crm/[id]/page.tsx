@@ -17,6 +17,7 @@ import { VenuePanel } from '@/components/admin/VenuePanel';
 import { GpsPicker } from '@/components/admin/GpsPicker';
 import { BillingPanel } from '@/components/admin/BillingPanel';
 import { MenuEditor } from '@/app/dashboard/carte/MenuEditor';
+import { VENUE_TYPES } from '@/lib/venues';
 import { setStage, addNote, setNextAction, updateCrmVenue, updateVenueSettings } from '../../actions';
 
 export const dynamic = 'force-dynamic';
@@ -421,8 +422,32 @@ export default async function CrmVenuePage({
           </label>
           <Input name="name" label="Nom" defaultValue={c.name} required />
           <Input name="city" label="Ville" defaultValue={c.city} />
-          <Input name="type" label="Type (bar, restaurant, hotel)" defaultValue={c.type} />
-          <Input name="category" label="Catégorie (brasserie, café…)" defaultValue={c.category} />
+          <label className="block">
+            <span className="text-xs text-bone-faint">Type de lieu</span>
+            <select
+              name="type"
+              defaultValue={c.type ?? ''}
+              className="mt-1 min-h-[48px] w-full rounded-xl border hairline bg-ink-800 px-4 text-sm text-bone"
+            >
+              <option value="">Non renseigné</option>
+              {VENUE_TYPES.map((t) => (
+                <option key={t.value} value={t.value}>
+                  {t.label}
+                </option>
+              ))}
+              {/* Les fiches de prospection d'avant la liste fermée portent des
+                  types saisis à la main. On les garde plutôt que de les écraser
+                  silencieusement au premier enregistrement. */}
+              {c.type && !VENUE_TYPES.some((t) => t.value === c.type) && (
+                <option value={c.type}>{c.type} (ancienne saisie)</option>
+              )}
+            </select>
+          </label>
+          <Input
+            name="category"
+            label="Précision libre (brasserie de quartier, club privé…)"
+            defaultValue={c.category}
+          />
           <label className="block">
             <span className="text-xs text-bone-faint">Pays</span>
             <select
