@@ -67,6 +67,32 @@ export async function getTodayOrders(
   return (data ?? []) as TodayOrder[];
 }
 
+/**
+ * Le detail des bons sur une periode, pour la fiche admin.
+ *
+ * Le total « CA genere » ne se verifie pas : sans la liste des bons qui le
+ * composent, impossible de repondre a un patron qui conteste le chiffre, ni de
+ * voir qu'un bon est reste en attente parce que personne n'a appuye sur Servi.
+ */
+export async function getVenueOrders(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  service: any,
+  venueId: string,
+  days = 30
+): Promise<TodayOrder[]> {
+  const depuis = new Date(Date.now() - days * 24 * 3600 * 1000);
+
+  const { data } = await service
+    .from('lucky_orders')
+    .select('id, code, item_name, price_cents, discount_percent, net_price_cents, status, created_at')
+    .eq('venue_id', venueId)
+    .gte('created_at', depuis.toISOString())
+    .order('created_at', { ascending: false })
+    .limit(200);
+
+  return (data ?? []) as TodayOrder[];
+}
+
 export async function getAttributionStats(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   service: any,
