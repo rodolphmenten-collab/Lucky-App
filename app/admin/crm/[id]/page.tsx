@@ -236,6 +236,25 @@ export default async function CrmVenuePage({
             </button>
           </form>
         </section>
+
+        {/* Le contrat se prepare ici, dans le suivi commercial : c'est le geste
+            qui suit la demo. Il reprend les donnees de la fiche plutot que de
+            les faire retaper, la ou se glissaient les erreurs. */}
+        <section className="mt-4 flex flex-wrap items-center justify-between gap-4 rounded-2xl border hairline p-5">
+          <div>
+            <p className="font-mono text-xs uppercase tracking-[0.2em] text-brass">Contrat</p>
+            <p className="mt-2 text-sm leading-relaxed text-bone-dim">
+              Conditions particulières remplies avec les informations de la fiche,
+              prêtes à signer.
+            </p>
+          </div>
+          <Link
+            href={`/admin/crm/${c.id}/contrat`}
+            className="flex min-h-[48px] items-center rounded-full border border-brass/50 px-6 text-sm text-brass hover:bg-brass/10"
+          >
+            Générer le contrat
+          </Link>
+        </section>
           </>
         )}
 
@@ -592,6 +611,32 @@ export default async function CrmVenuePage({
             label="Précision libre (brasserie de quartier, club privé…)"
             defaultValue={c.category}
           />
+
+          {/* Identite de la personne morale qui signe. Sans elle, le contrat
+              n'est pas signable — c'est ce qu'on retapait a la main. */}
+          <p className="col-span-full mt-4 font-mono text-xs uppercase tracking-[0.2em] text-brass">
+            Pour le contrat
+          </p>
+          <Input name="legal_name" label="Raison sociale" defaultValue={c.legal_name} />
+          <Input name="legal_form" label="Forme sociale (SARL, SAS, EI…)" defaultValue={c.legal_form} />
+          <Input name="siren" label="SIREN" defaultValue={c.siren} />
+          <Input name="rcs_city" label="Ville du RCS" defaultValue={c.rcs_city} />
+          <Input name="legal_address" label="Siège social" defaultValue={c.legal_address} />
+          <Input name="address" label="Adresse de l’établissement" defaultValue={c.address} />
+          <Input name="signer_name" label="Nom du signataire" defaultValue={c.signer_name} />
+          <Input name="signer_role" label="Qualité du signataire" defaultValue={c.signer_role} />
+          <label className="col-span-full flex items-center gap-3 rounded-xl border hairline bg-ink-800 px-4 py-3">
+            <input
+              type="checkbox"
+              name="supports_custom"
+              defaultChecked={!!c.supports_custom}
+              className="h-4 w-4 accent-brass"
+            />
+            <span className="text-sm text-bone">
+              Supports personnalisés
+              <span className="ml-2 text-xs text-bone-faint">logo du lieu imprimé sur les supports</span>
+            </span>
+          </label>
           <label className="block">
             <span className="text-xs text-bone-faint">Pays</span>
             <select
