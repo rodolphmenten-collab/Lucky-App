@@ -32,10 +32,13 @@ function LoginForm() {
     e.preventDefault();
     setStatus('sending');
     setErrorMsg('');
+    // `next` vaut /venue/<slug> quand on arrive par un QR : c'est ce qui permet
+    // d'envoyer le code au nom du lieu plutot qu'au nom de la plateforme.
+    const venueSlug = next.startsWith('/venue/') ? next.split('/')[2]?.split('?')[0] : undefined;
     const res = await fetch('/api/send-code', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email }),
+      body: JSON.stringify({ email, venueSlug }),
     });
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
