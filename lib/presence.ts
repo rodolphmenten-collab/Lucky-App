@@ -34,13 +34,22 @@ export const HEARTBEAT_INTERVAL_SECONDS = 90;
 // Default auto-checkout windows by venue type (minutes). Configurable per-venue in
 // venues.checkin_duration_minutes — these are only the seed/default values.
 export const DEFAULT_CHECKIN_DURATION_MINUTES: Record<VenueType, number> = {
+  cafe: 120, // on y reste rarement plus de deux heures
   restaurant: 180,
+  brasserie: 180,
   bar: 240,
+  pub: 240,
   rooftop: 240,
+  spa: 240,
+  other: 240, // valeur neutre : l'admin ajuste par lieu
+  nightclub: 300, // une nuit, pas une journée
+  event: 360,
+  casino: 360,
   beach_club: 480,
   coworking: 720,
+  camping: 720,
+  resort: 720,
   hotel: 180, // "here_now" mode only — see CheckInMode.staying for multi-day guests
-  event: 360,
 };
 
 interface DerivePresenceInput {

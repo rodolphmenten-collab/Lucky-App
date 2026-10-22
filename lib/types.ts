@@ -7,12 +7,21 @@ export type Intention = 'dating' | 'business' | 'social' | 'looking';
 
 export type VenueType =
   | 'hotel'
+  | 'resort'
   | 'restaurant'
+  | 'brasserie'
+  | 'cafe'
   | 'bar'
+  | 'pub'
   | 'rooftop'
+  | 'nightclub'
   | 'beach_club'
+  | 'casino'
   | 'coworking'
-  | 'event';
+  | 'spa'
+  | 'camping'
+  | 'event'
+  | 'other';
 
 export type Plan = 'starter' | 'premium' | 'enterprise';
 

@@ -11,16 +11,59 @@ export function slugify(name: string): string {
     .slice(0, 60);
 }
 
+/**
+ * Les types de lieux, en un seul endroit.
+ *
+ * Cette liste alimente le formulaire de création, la fiche CRM et le
+ * formulaire public : trois listes séparées finissaient toujours par diverger,
+ * et un type présent dans l'une mais absente de l'enum retombait sur 'bar'
+ * sans rien signaler. Toute valeur ajoutée ici doit exister dans l'enum
+ * `venue_type` en base (migration 0028).
+ */
+export const VENUE_TYPES: { value: VenueType; label: string }[] = [
+  { value: 'hotel', label: 'Hôtel' },
+  { value: 'resort', label: 'Resort / village' },
+  { value: 'restaurant', label: 'Restaurant' },
+  { value: 'brasserie', label: 'Brasserie' },
+  { value: 'cafe', label: 'Café' },
+  { value: 'bar', label: 'Bar' },
+  { value: 'pub', label: 'Pub' },
+  { value: 'rooftop', label: 'Rooftop' },
+  { value: 'nightclub', label: 'Discothèque / club' },
+  { value: 'beach_club', label: 'Beach club' },
+  { value: 'casino', label: 'Casino' },
+  { value: 'coworking', label: 'Coworking' },
+  { value: 'spa', label: 'Spa / thalasso' },
+  { value: 'camping', label: 'Camping / village vacances' },
+  { value: 'event', label: 'Événement' },
+  { value: 'other', label: 'Autre' },
+];
+
+export function venueTypeLabel(type?: string | null): string {
+  if (!type) return 'Non renseigné';
+  return VENUE_TYPES.find((t) => t.value === type)?.label ?? type;
+}
+
+/**
+ * Tolérant à ce qui arrive du CRM, où le type a longtemps été saisi à la main :
+ * on accepte la clé, le libellé français, et les variantes d'espacement.
+ */
 export const VENUE_TYPE_MAP: Record<string, VenueType> = {
-  hotel: 'hotel',
-  restaurant: 'restaurant',
-  bar: 'bar',
-  rooftop: 'rooftop',
+  ...Object.fromEntries(VENUE_TYPES.map((t) => [t.value, t.value])),
+  ...Object.fromEntries(VENUE_TYPES.map((t) => [t.label.toLowerCase(), t.value])),
   'beach club': 'beach_club',
-  beach_club: 'beach_club',
-  coworking: 'coworking',
-  event: 'event',
-};
+  'boite de nuit': 'nightclub',
+  'boîte de nuit': 'nightclub',
+  discotheque: 'nightclub',
+  'discothèque': 'nightclub',
+  club: 'nightclub',
+  'club de plage': 'beach_club',
+  hôtel: 'hotel',
+  café: 'cafe',
+  'evenement': 'event',
+  'événement': 'event',
+  thalasso: 'spa',
+} as Record<string, VenueType>;
 
 /**
  * Creates a venue with a guaranteed-unique slug, using placeholder coordinates
