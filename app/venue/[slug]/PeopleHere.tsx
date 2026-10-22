@@ -239,7 +239,7 @@ export function PeopleHere({
         </div>
       )}
 
-      <IOSInstallPrompt />
+      <IOSInstallPrompt venueName={venueName} />
 
       <div className="mb-4 flex items-center justify-between gap-3">
         <EnableNotificationsButton />

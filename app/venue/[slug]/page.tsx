@@ -4,6 +4,14 @@ import { JoinRoom } from './JoinRoom';
 import { PeopleHere } from './PeopleHere';
 import { PeopleCountLine } from './PeopleCountLine';
 
+/**
+ * Chaque lieu sert son propre manifeste : l'application installee depuis cette
+ * page porte le nom du lieu, pas celui de la plateforme.
+ */
+export async function generateMetadata({ params }: { params: { slug: string } }) {
+  return { manifest: `/venue/${params.slug}/manifest.webmanifest` };
+}
+
 export default async function VenuePage({ params }: { params: { slug: string } }) {
   const supabase = createClient();
 
@@ -53,10 +61,19 @@ export default async function VenuePage({ params }: { params: { slug: string } }
     <main className="min-h-screen">
       <header className="relative flex h-64 items-end overflow-hidden border-b hairline">
         {venue.cover_photo_url && (
+          // La photo etait a 40 % d'opacite sous un degrade couvrant toute la
+          // hauteur : on ne distinguait plus le lieu. Elle est desormais pleine,
+          // avec un voile uniquement en bas, la ou le texte doit rester lisible.
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={venue.cover_photo_url} alt="" className="absolute inset-0 h-full w-full object-cover opacity-40" />
+          <img src={venue.cover_photo_url} alt="" className="absolute inset-0 h-full w-full object-cover" />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-ink-900 via-ink-900/60 to-transparent" />
+        <div
+          className={
+            venue.cover_photo_url
+              ? 'absolute inset-0 bg-gradient-to-t from-ink-900 via-ink-900/55 to-ink-900/10'
+              : 'absolute inset-0 bg-gradient-to-t from-ink-900 via-ink-900/60 to-transparent'
+          }
+        />
         <div className="relative w-full px-6 pb-6">
           <p className="font-mono text-xs uppercase tracking-[0.3em] text-brass">{venue.city}</p>
           <h1 className="mt-2 font-display text-4xl italic text-bone">{venue.name}</h1>
