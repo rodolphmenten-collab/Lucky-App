@@ -131,6 +131,7 @@ export default async function AdminPage() {
       nextActionAt: c.next_action_at ?? null,
       subscriptionStatus: v?.subscription_status ?? null,
       isGroup: !!c.is_group,
+      isTest: !!c.is_test,
       groupName: c.group_id ? (nomParGroupe.get(c.group_id) ?? null) : null,
     };
   });
