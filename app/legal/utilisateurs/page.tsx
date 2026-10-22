@@ -132,8 +132,11 @@ export default function CGUUtilisateurs() {
         <section>
           <h2 className="text-base font-semibold text-bone">Article 8 — Données personnelles</h2>
           <p className="mt-2">
-            Le traitement des données personnelles de l'Utilisateur est décrit dans la Politique de
-            Confidentialité de Lucky. En résumé, les coordonnées de localisation exactes, le contenu des
+            Le traitement des données personnelles de l'Utilisateur est décrit dans la{' '}
+            <a href="/legal/confidentialite" className="text-brass hover:underline">
+              Politique de Confidentialité
+            </a>{' '}
+            de Lucky. En résumé, les coordonnées de localisation exactes, le contenu des
             échanges privés et les données de blocage entre Utilisateurs ne sont jamais communiqués à
             l'établissement partenaire, qui n'a accès qu'à des statistiques agrégées et anonymisées.
           </p>
