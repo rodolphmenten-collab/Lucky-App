@@ -235,7 +235,7 @@ export default function CGUEtablissements() {
           <h2 className="text-base font-semibold text-bone">Article 10 — Protection des données personnelles</h2>
           <p className="mt-2">
             Le traitement des données personnelles des utilisateurs et des représentants du Client dans le cadre
-            du Service est décrit dans la Politique de Confidentialité de Lucky, accessible sur demande. Le
+            du Service est décrit dans la <a href="/legal/confidentialite" className="text-brass hover:underline">Politique de Confidentialité</a> de Lucky. Le
             tableau de bord fourni au Client n'expose que des données statistiques agrégées et anonymisées ; en
             aucun cas les coordonnées exactes, le contenu des échanges, ou les données de blocage entre
             utilisateurs ne sont accessibles au Client.
