@@ -11,7 +11,7 @@ import { INTENTION_META } from '@/lib/intentions';
 import { INTEREST_KEYS, INTEREST_LABELS, type InterestKey } from '@/lib/interests';
 import type { Intention, Profile } from '@/lib/types';
 
-const ALL_INTENTIONS: Intention[] = ['dating', 'business', 'social', 'looking'];
+const ALL_INTENTIONS: Intention[] = ['dating', 'business', 'social', 'friends', 'looking'];
 
 export function OnboardingForm({
   userId,
