@@ -160,6 +160,20 @@ export function ProfileEditor({
           {t.profile.signOut}
         </button>
       </div>
+
+      <div className="mt-10 border-t hairline pt-5 text-center">
+        <p className="flex flex-wrap justify-center gap-x-3 gap-y-1 text-[11px] text-bone-faint">
+          <Link href="/legal/utilisateurs" className="underline hover:text-brass">
+            {t.join.termsLink}
+          </Link>
+          <Link href="/legal/confidentialite" className="underline hover:text-brass">
+            {t.join.privacyLink}
+          </Link>
+        </p>
+        <p className="mt-3 font-mono text-[10px] uppercase tracking-[0.2em] text-bone-faint">
+          {t.join.poweredBy}
+        </p>
+      </div>
     </div>
   );
 }
