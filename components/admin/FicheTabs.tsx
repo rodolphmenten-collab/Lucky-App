@@ -21,13 +21,21 @@ export type OngletFiche =
   | 'position'
   | 'qr';
 
-const ONGLETS: { cle: OngletFiche; label: string; exigeLieu: boolean }[] = [
-  { cle: 'suivi', label: 'Suivi commercial', exigeLieu: false },
-  { cle: 'informations', label: 'Informations & contacts', exigeLieu: false },
-  { cle: 'carte', label: 'Carte & avantages', exigeLieu: true },
-  { cle: 'abonnement', label: 'Abonnement', exigeLieu: true },
-  { cle: 'position', label: 'Position & présence', exigeLieu: true },
-  { cle: 'qr', label: 'QR code', exigeLieu: true },
+/**
+ * Les six onglets s'affichent pour tous les lieux, prospects compris.
+ *
+ * Ils etaient d'abord masques tant que le lieu n'avait pas d'etablissement
+ * cree : deux fiches se lisaient donc differemment selon l'etape, et on ne
+ * savait plus ou chercher. Un onglet sans contenu dit desormais ce qui manque
+ * et comment l'obtenir — c'est plus utile qu'un onglet absent.
+ */
+const ONGLETS: { cle: OngletFiche; label: string }[] = [
+  { cle: 'suivi', label: 'Suivi commercial' },
+  { cle: 'informations', label: 'Informations & contacts' },
+  { cle: 'carte', label: 'Carte & avantages' },
+  { cle: 'abonnement', label: 'Abonnement' },
+  { cle: 'position', label: 'Position & présence' },
+  { cle: 'qr', label: 'QR code' },
 ];
 
 export function ongletDepuisUrl(valeur?: string): OngletFiche {
@@ -35,18 +43,10 @@ export function ongletDepuisUrl(valeur?: string): OngletFiche {
   return (connus.includes(valeur ?? '') ? valeur : 'suivi') as OngletFiche;
 }
 
-export function FicheTabs({
-  crmId,
-  actif,
-  aUnLieu,
-}: {
-  crmId: string;
-  actif: OngletFiche;
-  aUnLieu: boolean;
-}) {
+export function FicheTabs({ crmId, actif }: { crmId: string; actif: OngletFiche }) {
   return (
     <nav className="mt-6 flex flex-wrap gap-2 border-b hairline pb-4">
-      {ONGLETS.filter((o) => aUnLieu || !o.exigeLieu).map((o) => (
+      {ONGLETS.map((o) => (
         <Link
           key={o.cle}
           href={`/admin/crm/${crmId}?onglet=${o.cle}`}
