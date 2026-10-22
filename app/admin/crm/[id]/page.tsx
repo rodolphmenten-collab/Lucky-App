@@ -18,6 +18,9 @@ import { GpsPicker } from '@/components/admin/GpsPicker';
 import { BillingPanel } from '@/components/admin/BillingPanel';
 import { MenuEditor } from '@/app/dashboard/carte/MenuEditor';
 import { VENUE_TYPES } from '@/lib/venues';
+import { FicheTabs, ongletDepuisUrl } from '@/components/admin/FicheTabs';
+import { CoverPhotoPanel } from '@/components/admin/CoverPhotoPanel';
+import { getVenueOrders } from '@/lib/attribution';
 import { setStage, addNote, setNextAction, updateCrmVenue, updateVenueSettings } from '../../actions';
 
 export const dynamic = 'force-dynamic';
@@ -27,7 +30,7 @@ export default async function CrmVenuePage({
   searchParams,
 }: {
   params: { id: string };
-  searchParams?: { erreur?: string; ignore?: string };
+  searchParams?: { erreur?: string; ignore?: string; onglet?: string };
 }) {
   const supabase = createClient();
   const {
@@ -113,6 +116,13 @@ export default async function CrmVenuePage({
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://lucky-app.io';
 
+  const onglet = ongletDepuisUrl(searchParams?.onglet);
+
+  // Le detail des consommations n'est charge que sur l'onglet qui l'affiche :
+  // inutile d'interroger la base pour un ecran qu'on ne regarde pas.
+  const commandes =
+    venue && onglet === 'carte' ? await getVenueOrders(service, venue.id, 30) : [];
+
   // Un etablissement cree depuis le pipeline part a 0,0. Si la fiche de
   // prospection a de vraies coordonnees, on les propose plutot que de laisser
   // le patron chercher : c'est la panne la plus silencieuse du produit.
@@ -160,6 +170,8 @@ export default async function CrmVenuePage({
 
         <StagePicker crmId={c.id} current={c.stage} action={setStage} />
 
+        <FicheTabs crmId={c.id} actif={onglet} aUnLieu={!!venue} />
+
         {/* Client actif : on montre ce qu'il paie et ce qu'il gagne, côte à côte. */}
         {venue && (
           <section className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
@@ -178,11 +190,13 @@ export default async function CrmVenuePage({
             <Tile
               label="Fiche établissement"
               value="Ouvrir"
-              href={`/admin/venues/${venue.id}`}
+              href={`/admin/crm/${c.id}?onglet=informations`}
             />
           </section>
         )}
 
+{onglet === 'suivi' && (
+          <>
         {/* ---------------------------------------------------------------
             Prochaine action. Juste sous les étapes : c'est ce qu'on remplit
             en sortant du rendez-vous, avant d'oublier.
@@ -211,7 +225,12 @@ export default async function CrmVenuePage({
             </button>
           </form>
         </section>
+          </>
+        )}
 
+
+{onglet === 'suivi' && (
+          <>
         {/* ---------------------------------------------------------------
             Les lieux du groupe. Un groupe n'a ni QR ni abonnement : ce qu'on
             veut voir ici, c'est son poids — combien de lieux, et combien ils
@@ -258,6 +277,9 @@ export default async function CrmVenuePage({
             </div>
           </>
         )}
+          </>
+        )}
+
 
         {/* ---------------------------------------------------------------
             Tout ce qui n'existe qu'une fois le lieu devenu client : le QR,
@@ -266,13 +288,14 @@ export default async function CrmVenuePage({
         --------------------------------------------------------------- */}
         {venue && (
           <>
-            <h2 className="mt-10 font-display text-xl italic text-bone">Établissement</h2>
+            {onglet === 'qr' && (
+              <div className="mt-6 rounded-2xl border hairline p-5">
+                <VenuePanel slug={venue.slug} siteUrl={siteUrl} />
+              </div>
+            )}
 
-            <div className="mt-4 rounded-2xl border hairline p-5">
-              <VenuePanel slug={venue.slug} siteUrl={siteUrl} />
-            </div>
-
-            <form action={updateVenueSettings} className="mt-4 rounded-2xl border hairline p-5">
+            {onglet === 'position' && (
+            <form action={updateVenueSettings} className="mt-6 rounded-2xl border hairline p-5">
               <input type="hidden" name="venueId" value={venue.id} />
               <input type="hidden" name="crmId" value={c.id} />
 
@@ -327,8 +350,10 @@ export default async function CrmVenuePage({
                 Enregistrer les réglages
               </button>
             </form>
+            )}
 
-            <div id="abonnement" className="mt-4 rounded-2xl border hairline p-5">
+            {onglet === 'abonnement' && (
+            <div id="abonnement" className="mt-6 rounded-2xl border hairline p-5">
               <BillingPanel
                 venueId={venue.id}
                 currentPlan={venue.plan ?? 'basique'}
@@ -341,25 +366,89 @@ export default async function CrmVenuePage({
                 checkoutSentAt={venue.checkout_sent_at ?? null}
               />
             </div>
+            )}
 
-            {/* La carte du lieu et son avantage. C'est ce qui chiffre le CA
-                généré : sans prix saisis, une rencontre ne vaut rien à
-                l'écran. Jusqu'ici il fallait se connecter à la place du lieu
-                pour y accéder, ce qui en faisait une étape oubliée. */}
-            <MenuEditor
-              embedded
-              venue={{
-                id: venue.id,
-                name: venue.name,
-                perk_label: venue.perk_label ?? null,
-                average_ticket_cents: venue.average_ticket_cents ?? null,
-                lucky_discount_percent: venue.lucky_discount_percent ?? null,
-              }}
-              initialItems={menuItems}
-            />
+            {onglet === 'carte' && (
+              <>
+                {/* La carte du lieu et son avantage. C'est ce qui chiffre le CA
+                    généré : sans prix saisis, une rencontre ne vaut rien à
+                    l'écran. Jusqu'ici il fallait se connecter à la place du lieu
+                    pour y accéder, ce qui en faisait une étape oubliée. */}
+                <MenuEditor
+                  embedded
+                  venue={{
+                    id: venue.id,
+                    name: venue.name,
+                    perk_label: venue.perk_label ?? null,
+                    average_ticket_cents: venue.average_ticket_cents ?? null,
+                    lucky_discount_percent: venue.lucky_discount_percent ?? null,
+                  }}
+                  initialItems={menuItems}
+                />
+
+                {/* Le detail derriere le total. Un chiffre seul ne se verifie
+                    pas : face a un patron qui le conteste, il faut pouvoir
+                    montrer ligne a ligne ce qui le compose — et reperer les
+                    bons restes en attente, qui ne comptent pas. */}
+                <h3 className="mt-10 font-display text-lg italic text-bone">
+                  Consommations tracées · 30 jours
+                </h3>
+                <p className="mt-1 text-xs text-bone-dim">
+                  {commandes.length} bon{commandes.length > 1 ? 's' : ''} émis ·{' '}
+                  {commandes.filter((o) => o.status === 'served').length} servis ·{' '}
+                  {commandes.filter((o) => o.status === 'pending').length} en attente
+                </p>
+
+                <div className="mt-3 divide-y hairline overflow-hidden rounded-2xl border hairline">
+                  {commandes.map((o) => (
+                    <div key={o.id} className="flex items-center justify-between gap-3 px-4 py-3">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm text-bone">{o.item_name}</p>
+                        <p className="font-mono text-[11px] text-bone-faint">
+                          {new Date(o.created_at).toLocaleString('fr-FR', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}{' '}
+                          · {o.code}
+                        </p>
+                      </div>
+                      <div className="shrink-0 text-right">
+                        <p className="font-mono text-sm text-bone">
+                          {formatEurosPrecise(o.net_price_cents ?? o.price_cents)}
+                        </p>
+                        <p
+                          className={`font-mono text-[10px] uppercase tracking-[0.12em] ${
+                            o.status === 'served'
+                              ? 'text-signal-live'
+                              : o.status === 'pending'
+                                ? 'text-brass'
+                                : 'text-bone-faint'
+                          }`}
+                        >
+                          {o.status === 'served'
+                            ? 'servi'
+                            : o.status === 'pending'
+                              ? 'en attente'
+                              : 'annulé'}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                  {commandes.length === 0 && (
+                    <p className="px-5 py-8 text-center text-sm text-bone-faint">
+                      Aucune consommation tracée sur les trente derniers jours.
+                    </p>
+                  )}
+                </div>
+              </>
+            )}
           </>
         )}
 
+{onglet === 'suivi' && (
+          <>
         {/* ---------------------------------------------------------------
             Le journal.
         --------------------------------------------------------------- */}
@@ -397,7 +486,12 @@ export default async function CrmVenuePage({
             </p>
           )}
         </div>
+          </>
+        )}
 
+
+{onglet === 'informations' && (
+          <>
         {/* ---------------------------------------------------------------
             La fiche complète, en bas : on la remplit à tête reposée.
         --------------------------------------------------------------- */}
@@ -596,6 +690,16 @@ export default async function CrmVenuePage({
             </Link>{' '}
             — il faut ses coordonnées GPS pour que la vérification de présence fonctionne.
           </p>
+        )}
+
+            {/* La photo d'ambiance se pose ici, avec le reste de l'identite du
+                lieu : c'est la premiere chose que voit quelqu'un qui scanne. */}
+            {venue && (
+              <div className="mt-8 rounded-2xl border hairline p-5">
+                <CoverPhotoPanel venueId={venue.id} currentUrl={venue.cover_photo_url ?? null} />
+              </div>
+            )}
+          </>
         )}
       </div>
     </main>
