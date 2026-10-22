@@ -285,13 +285,20 @@ export function MeetupPanel({
 
             {order.status === 'pending' && (
               <div className="mt-3 flex gap-2">
-                <button
-                  onClick={() => resolveOrder(order, 'served')}
-                  disabled={busy}
-                  className="flex-1 rounded-full bg-bone px-4 py-2 text-xs font-medium text-ink hover:bg-brass-bright disabled:opacity-50"
-                >
-                  {copy.markReceived}
-                </button>
+                {/* Seul celui qui offre confirme : il est au comptoir, il voit
+                    le verre partir. Celui qui reçoit peut seulement annuler. */}
+                {mine && (
+                  <button
+                    onClick={() => resolveOrder(order, 'served')}
+                    disabled={busy}
+                    className="flex-1 rounded-full bg-bone px-4 py-2 text-xs font-medium text-ink hover:bg-brass-bright disabled:opacity-50"
+                  >
+                    {copy.markReceived}
+                  </button>
+                )}
+                {!mine && (
+                  <p className="flex-1 self-center text-xs text-bone-faint">{copy.awaitingGiver}</p>
+                )}
                 <button
                   onClick={() => resolveOrder(order, 'cancel')}
                   disabled={busy}
@@ -379,15 +386,30 @@ export function MeetupPanel({
 
               <p className="mt-6 text-xs leading-relaxed text-bone-faint">{copy.voucherHint}</p>
 
-              {/* Sans ce tap, le bon reste « en attente » et le CA n'est jamais
-                  certifié côté lieu. Mais ça, c'est notre problème, pas celui
-                  du client : on lui donne la raison qui le concerne, lui — la
-                  personne qui a offert saura que le verre est bien arrivé. La
-                  remise, elle, est appliquée par le bar et ne dépend pas de ce
-                  geste ; le promettre serait un mensonge visible au comptoir. */}
-              <p className="mt-5 rounded-2xl border border-brass/30 bg-brass/5 px-4 py-3 text-xs leading-relaxed text-brass">
-                {copy.voucherConfirm}
-              </p>
+              {/* Le geste se fait ici, sur le bon, pas dans la liste en
+                  dessous : celui qui offre a cet écran sous les yeux au
+                  comptoir. L'enterrer deux écrans plus loin, c'est le perdre —
+                  et sans lui le CA du lieu n'est jamais certifié. */}
+              {voucher.from_user === currentUserId ? (
+                <>
+                  <p className="mt-5 rounded-2xl border border-brass/30 bg-brass/5 px-4 py-3 text-xs leading-relaxed text-brass">
+                    {copy.voucherConfirm}
+                  </p>
+                  {voucher.status === 'pending' && (
+                    <button
+                      onClick={() => resolveOrder(voucher, 'served')}
+                      disabled={busy}
+                      className="mt-4 w-full rounded-full bg-bone px-5 py-3 text-sm font-medium text-ink hover:bg-brass-bright disabled:opacity-50"
+                    >
+                      {copy.markReceived}
+                    </button>
+                  )}
+                </>
+              ) : (
+                <p className="mt-5 rounded-2xl border hairline px-4 py-3 text-xs leading-relaxed text-bone-faint">
+                  {copy.awaitingGiver}
+                </p>
+              )}
 
               <button
                 onClick={() => setVoucher(null)}
