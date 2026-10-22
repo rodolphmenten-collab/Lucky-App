@@ -170,7 +170,7 @@ export default async function CrmVenuePage({
 
         <StagePicker crmId={c.id} current={c.stage} action={setStage} />
 
-        <FicheTabs crmId={c.id} actif={onglet} aUnLieu={!!venue} />
+        <FicheTabs crmId={c.id} actif={onglet} />
 
         {/* Client actif : on montre ce qu'il paie et ce qu'il gagne, côte à côte. */}
         {venue && (
@@ -286,6 +286,32 @@ export default async function CrmVenuePage({
             les reglages de presence, l'abonnement. Une seule fiche par lieu,
             du premier cafe jusqu'au prelevement.
         --------------------------------------------------------------- */}
+        {/* Onglets qui dependent d'un etablissement cree. Sans lui, on ne cache
+            pas l'onglet : on explique ce qui manque et on donne le geste
+            suivant, plutot que de laisser l'utilisateur chercher. */}
+        {!venue && ['carte', 'abonnement', 'position', 'qr'].includes(onglet) && (
+          <div className="mt-6 rounded-2xl border hairline p-8 text-center">
+            <p className="font-display text-xl italic text-bone">
+              Pas encore d&rsquo;établissement
+            </p>
+            <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-bone-dim">
+              {onglet === 'carte' && 'La carte et la remise se renseignent une fois le lieu créé dans Lucky.'}
+              {onglet === 'abonnement' && 'L’abonnement et le lien de paiement s’activent une fois le lieu créé dans Lucky.'}
+              {onglet === 'position' && 'Les coordonnées GPS et le rayon de présence se règlent une fois le lieu créé dans Lucky.'}
+              {onglet === 'qr' && 'Le QR code est généré à la création du lieu dans Lucky.'}
+            </p>
+            <Link
+              href={`/admin/venues/new?crm=${c.id}`}
+              className="mt-6 inline-flex min-h-[48px] items-center rounded-full border border-brass/50 px-6 text-sm text-brass hover:bg-brass/10"
+            >
+              Créer l&rsquo;établissement
+            </Link>
+            <p className="mt-4 text-xs text-bone-faint">
+              Il faut ses coordonnées GPS pour que la vérification de présence fonctionne.
+            </p>
+          </div>
+        )}
+
         {venue && (
           <>
             {onglet === 'qr' && (
