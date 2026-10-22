@@ -145,9 +145,16 @@ export function JoinRoom({
             className="mt-0.5 h-4 w-4 shrink-0 rounded border-white/30 bg-transparent accent-brass"
           />
           <span>
+            {/* La politique de confidentialite manquait ici. C'est pourtant elle
+                qui dit qui traite les donnees et comment : sans son lien au
+                moment ou la personne coche, le consentement n'est pas eclaire. */}
             {t.join.termsPrefix}{' '}
             <Link href="/legal/utilisateurs" target="_blank" className="underline hover:text-brass">
               {t.join.termsLink}
+            </Link>{' '}
+            {t.join.termsAnd}{' '}
+            <Link href="/legal/confidentialite" target="_blank" className="underline hover:text-brass">
+              {t.join.privacyLink}
             </Link>
           </span>
         </label>
@@ -163,6 +170,14 @@ export function JoinRoom({
       {showLocationHelp && (
         <LocationPermissionHelp onRetry={requestLocation} onDismiss={() => setShowLocationHelp(false)} />
       )}
+
+      {/* Mention discrete, au pied de l'ecran de consentement et nulle part
+          ailleurs dans le parcours. Elle ne vend pas la plateforme : elle dit
+          qui traite les donnees, ce que le RGPD exige de toute facon, et evite
+          qu'un e-mail venu d'ailleurs surprenne la personne. */}
+      <p className="mt-8 font-mono text-[10px] uppercase tracking-[0.2em] text-bone-faint">
+        {t.join.poweredBy}
+      </p>
     </div>
   );
 }
