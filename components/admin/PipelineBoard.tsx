@@ -47,6 +47,8 @@ export interface BoardCard {
   category: string | null;
   isGroup: boolean;
   groupName: string | null;
+  /** Lieu de test : visible dans le pipe, absent de tous les compteurs. */
+  isTest: boolean;
   ownerEmail: string | null;
   expectedPlan: string | null;
   stage: string;
@@ -429,6 +431,11 @@ export function PipelineBoard({
                       <p className="text-sm font-medium leading-snug text-bone">
                         {c.isGroup && <span className="mr-1.5 text-brass">◆</span>}
                         {c.name}
+                        {c.isTest && (
+                          <span className="ml-1.5 rounded-full border border-white/20 px-1.5 py-px align-middle font-mono text-[9px] uppercase tracking-wider text-bone-faint">
+                            test
+                          </span>
+                        )}
                       </p>
                       {c.groupName && (
                         <p className="mt-0.5 text-[10px] text-brass/80">{c.groupName}</p>
