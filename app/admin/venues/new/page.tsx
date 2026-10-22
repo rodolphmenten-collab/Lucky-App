@@ -2,18 +2,8 @@ import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { isPlatformAdminEmail } from '@/lib/admin';
-import { createVenueRecord } from '@/lib/venues';
-import type { VenueType } from '@/lib/types';
+import { createVenueRecord, VENUE_TYPES } from '@/lib/venues';
 
-const VENUE_TYPES: { value: VenueType; label: string }[] = [
-  { value: 'hotel', label: 'Hôtel' },
-  { value: 'restaurant', label: 'Restaurant' },
-  { value: 'bar', label: 'Bar' },
-  { value: 'rooftop', label: 'Rooftop' },
-  { value: 'beach_club', label: 'Beach club' },
-  { value: 'coworking', label: 'Coworking' },
-  { value: 'event', label: 'Événement' },
-];
 
 async function createVenue(formData: FormData) {
   'use server';
