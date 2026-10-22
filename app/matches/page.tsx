@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { blockedUserIds } from '@/lib/blocks';
 import { MatchesView } from './MatchesView';
 
 export default async function MatchesPage() {
@@ -35,13 +36,22 @@ export default async function MatchesPage() {
     .eq('to_user', user.id)
     .order('created_at', { ascending: false });
 
-  const pendingWaves = (incomingWaves ?? []).filter((w: any) => !matchedPartnerIds.has(w.from_user));
+  // Un blocage doit effacer la personne partout, pas seulement de la salle :
+  // un match deja noue restait visible et joignable, ce qui vidait le blocage
+  // de son sens dans le cas qui compte — quelqu'un de deplace apres le match.
+  const bloques = await blockedUserIds(user.id);
 
-  const matchesWithOtherId = (matches ?? []).map((m: any) => ({
-    id: m.id,
-    otherId: m.user_a === user.id ? m.user_b : m.user_a,
-    venues: m.venues,
-  }));
+  const pendingWaves = (incomingWaves ?? []).filter(
+    (w: any) => !matchedPartnerIds.has(w.from_user) && !bloques.has(w.from_user)
+  );
+
+  const matchesWithOtherId = (matches ?? [])
+    .map((m: any) => ({
+      id: m.id,
+      otherId: m.user_a === user.id ? m.user_b : m.user_a,
+      venues: m.venues,
+    }))
+    .filter((m) => !bloques.has(m.otherId));
 
   const otherIds = [...matchesWithOtherId.map((m) => m.otherId), ...pendingWaves.map((w: any) => w.from_user)];
   const { data: profiles } = otherIds.length

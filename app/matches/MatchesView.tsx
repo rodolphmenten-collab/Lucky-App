@@ -36,7 +36,14 @@ export function MatchesView({
     <main className="mx-auto min-h-screen max-w-lg px-6 py-16">
       <div className="flex items-start justify-between">
         <div>
-          <p className="font-mono text-xs uppercase tracking-[0.3em] text-brass">Lucky</p>
+          {/* Marque blanche : l'en-tete porte le nom du lieu ou l'on se trouve,
+              jamais celui de la plateforme. Hors d'un lieu, il n'y a rien a
+              afficher — mieux vaut un blanc qu'une marque. */}
+          {activeVenue?.name && (
+            <p className="font-mono text-xs uppercase tracking-[0.3em] text-brass">
+              {activeVenue.name}
+            </p>
+          )}
           <h1 className="mt-4 font-display text-3xl italic text-bone">{t.matches.title}</h1>
         </div>
         <ConsumerLanguageSwitcher />
