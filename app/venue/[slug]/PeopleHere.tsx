@@ -13,7 +13,7 @@ import { EnableNotificationsButton } from '@/components/EnableNotificationsButto
 import { IOSInstallPrompt } from '@/components/IOSInstallPrompt';
 import type { Intention } from '@/lib/types';
 
-const FILTER_VALUES: (Intention | 'all')[] = ['all', 'dating', 'business', 'social'];
+const FILTER_VALUES: (Intention | 'all')[] = ['all', 'dating', 'business', 'social', 'friends'];
 
 // How often we quietly re-check GPS in the background to catch someone who has
 // physically left without telling the app. Not so frequent that it drains battery
