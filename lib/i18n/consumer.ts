@@ -12,7 +12,7 @@ export function detectBrowserLang(): ConsumerLang {
 
 export const consumerCopy: Record<ConsumerLang, any> = {
   en: {
-    intentions: { dating: 'Dating', business: 'Business', social: 'Social', looking: 'Just looking' },
+    intentions: { dating: 'Dating', business: 'Business', social: 'Social', friends: 'With friends', looking: 'Just looking' },
     filters: { everyone: 'Everyone' },
     login: {
       eyebrow: 'Sign in',
@@ -177,7 +177,7 @@ export const consumerCopy: Record<ConsumerLang, any> = {
     },
   },
   fr: {
-    intentions: { dating: 'Dating', business: 'Business', social: 'Social', looking: 'Juste curieux' },
+    intentions: { dating: 'Dating', business: 'Business', social: 'Social', friends: 'Avec des amis', looking: 'Juste curieux' },
     filters: { everyone: 'Tout le monde' },
     login: {
       eyebrow: 'Connexion',
@@ -342,7 +342,7 @@ export const consumerCopy: Record<ConsumerLang, any> = {
     },
   },
   es: {
-    intentions: { dating: 'Citas', business: 'Negocios', social: 'Social', looking: 'Solo mirando' },
+    intentions: { dating: 'Citas', business: 'Negocios', social: 'Social', friends: 'Con amigos', looking: 'Solo mirando' },
     filters: { everyone: 'Todos' },
     login: {
       eyebrow: 'Iniciar sesión',
