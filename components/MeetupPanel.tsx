@@ -380,8 +380,11 @@ export function MeetupPanel({
               <p className="mt-6 text-xs leading-relaxed text-bone-faint">{copy.voucherHint}</p>
 
               {/* Sans ce tap, le bon reste « en attente » et le CA n'est jamais
-                  certifié côté lieu : c'est le seul geste qu'on demande au
-                  client, il mérite d'être visible sur le bon lui-même. */}
+                  certifié côté lieu. Mais ça, c'est notre problème, pas celui
+                  du client : on lui donne la raison qui le concerne, lui — la
+                  personne qui a offert saura que le verre est bien arrivé. La
+                  remise, elle, est appliquée par le bar et ne dépend pas de ce
+                  geste ; le promettre serait un mensonge visible au comptoir. */}
               <p className="mt-5 rounded-2xl border border-brass/30 bg-brass/5 px-4 py-3 text-xs leading-relaxed text-brass">
                 {copy.voucherConfirm}
               </p>
