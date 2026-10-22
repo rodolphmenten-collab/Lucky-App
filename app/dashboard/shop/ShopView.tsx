@@ -20,20 +20,41 @@ interface Order {
   status: string;
 }
 
-export function ShopView({ venue, orders }: { venue: VenueLite; orders: Order[] }) {
+/**
+ * `embedded` : la boutique sert aussi depuis la fiche admin d'un lieu, a cote
+ * de son QR. Commander les supports est le prolongement direct du QR — les
+ * separer obligeait a se connecter a la place du lieu pour passer commande.
+ */
+export function ShopView({
+  venue,
+  orders,
+  embedded = false,
+}: {
+  venue: VenueLite;
+  orders: Order[];
+  embedded?: boolean;
+}) {
   const [selected, setSelected] = useState<ShopProduct | null>(null);
   const [category, setCategory] = useState<ShopProduct['category'] | 'all'>('all');
   const [orderList, setOrderList] = useState(orders);
   const filteredProducts = category === 'all' ? SHOP_PRODUCTS : SHOP_PRODUCTS.filter((p) => p.category === category);
 
+  const Shell = embedded ? 'section' : 'main';
+
   return (
-    <main className="min-h-screen px-6 py-12">
-      <div className="mx-auto max-w-4xl">
-        <Link href="/dashboard" className="text-xs text-bone-faint hover:text-bone-dim">
-          &larr; Retour au dashboard
-        </Link>
-        <p className="mt-4 font-mono text-xs uppercase tracking-[0.3em] text-brass">Boutique</p>
-        <h1 className="mt-2 font-display text-3xl italic text-bone">Supports physiques pour {venue.name}</h1>
+    <Shell className={embedded ? '' : 'min-h-screen px-6 py-12'}>
+      <div className={embedded ? '' : 'mx-auto max-w-4xl'}>
+        {!embedded && (
+          <Link href="/dashboard" className="text-xs text-bone-faint hover:text-bone-dim">
+            &larr; Retour au dashboard
+          </Link>
+        )}
+        <p className={`font-mono text-xs uppercase tracking-[0.3em] text-brass ${embedded ? '' : 'mt-4'}`}>
+          Boutique
+        </p>
+        <h1 className={`mt-2 font-display italic text-bone ${embedded ? 'text-xl' : 'text-3xl'}`}>
+          Supports physiques pour {venue.name}
+        </h1>
         <p className="mt-2 text-sm text-bone-dim">
           Des supports QR code prêts à poser sur vos tables ou vos murs. Commandez directement
           depuis votre tableau de bord.
@@ -114,7 +135,7 @@ export function ShopView({ venue, orders }: { venue: VenueLite; orders: Order[] 
           }}
         />
       )}
-    </main>
+    </Shell>
   );
 }
 
