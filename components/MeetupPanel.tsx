@@ -223,19 +223,16 @@ export function MeetupPanel({
         <div className="rounded-2xl border border-brass/40 bg-brass/5 px-5 py-4 text-center">
           <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-brass">{copy.codeLabel}</p>
           <p className="mt-1 font-display text-3xl tracking-[0.2em] text-bone">{meetup.code}</p>
-          {discountPercent > 0 && (
-            <p className="mt-2 text-xs text-bone-dim">
-              {copy.perkPrefix} <span className="text-brass">{copy.discountLine(discountPercent)}</span>
-            </p>
-          )}
+          {/* La remise s'annonce ici, en clair, parce que le bouton qui permet
+              d'en profiter est juste dessous. Le cadre ne nomme aucune marque :
+              pour la personne, l'avantage vient du lieu. */}
+          <p className="mt-3 text-xs leading-relaxed text-bone-dim">
+            {discountPercent > 0 ? copy.matchCheer(discountPercent) : copy.matchCheerNoDiscount}
+          </p>
           {perkLabel && (
             <p className="mt-1 text-xs text-bone-dim">
-              {discountPercent > 0 ? copy.andAlso : copy.perkPrefix}{' '}
-              <span className="text-brass">{perkLabel}</span>
+              {copy.andAlso} <span className="text-brass">{perkLabel}</span>
             </p>
-          )}
-          {discountPercent === 0 && !perkLabel && (
-            <p className="mt-2 text-xs text-bone-faint">{copy.showAtBar}</p>
           )}
         </div>
       )}
@@ -379,7 +376,7 @@ export function MeetupPanel({
                 {voucher.discount_percent > 0 && (
                   <p className="mt-1 text-[11px] text-bone-dim">
                     {copy.insteadOf} <span className="line-through">{formatPrice(voucher.price_cents)}</span> ·
-                    <span className="text-brass"> -{voucher.discount_percent}% Lucky</span>
+                    <span className="text-brass"> -{voucher.discount_percent}%</span>
                   </p>
                 )}
               </div>
@@ -392,7 +389,7 @@ export function MeetupPanel({
                   et sans lui le CA du lieu n'est jamais certifié. */}
               {voucher.from_user === currentUserId ? (
                 <>
-                  <p className="mt-5 rounded-2xl border border-brass/30 bg-brass/5 px-4 py-3 text-xs leading-relaxed text-brass">
+                  <p className="mt-5 text-center text-sm font-medium text-brass">
                     {copy.voucherConfirm}
                   </p>
                   {voucher.status === 'pending' && (

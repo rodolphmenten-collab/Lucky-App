@@ -34,25 +34,39 @@ export function RoomNav() {
         .select('id, user_a, user_b')
         .or(`user_a.eq.${user.id},user_b.eq.${user.id}`);
 
-      // Unread messages: count how many DIFFERENT conversations have a most-recent
-      // message that isn't yours — a lightweight "unread" proxy without a full
-      // read-receipts system. The badge shows that count, not just a dot.
+      // Messages non lus : conversations dont le dernier message n'est pas de
+      // soi ET est posterieur a la derniere ouverture du fil. L'ancienne
+      // version ignorait la lecture : le badge ne retombait qu'en repondant.
       if (matches && matches.length > 0) {
-        const { data: messages } = await supabase
-          .from('messages')
-          .select('match_id, sender_id, created_at')
-          .in(
-            'match_id',
-            matches.map((m) => m.id)
-          )
-          .order('created_at', { ascending: false });
+        const identifiants = matches.map((m) => m.id);
+        const [{ data: messages }, { data: lectures }] = await Promise.all([
+          supabase
+            .from('messages')
+            .select('match_id, sender_id, created_at')
+            .in('match_id', identifiants)
+            .order('created_at', { ascending: false }),
+          supabase
+            .from('match_reads')
+            .select('match_id, last_read_at')
+            .eq('user_id', user.id)
+            .in('match_id', identifiants),
+        ]);
 
         if (messages) {
-          const latestByMatch = new Map<string, { sender_id: string }>();
+          const luJusqua = new Map<string, string>(
+            (lectures ?? []).map((l: any) => [l.match_id, l.last_read_at])
+          );
+          const dernierParFil = new Map<string, { sender_id: string; created_at: string }>();
           for (const m of messages) {
-            if (!latestByMatch.has(m.match_id)) latestByMatch.set(m.match_id, m);
+            if (!dernierParFil.has(m.match_id)) dernierParFil.set(m.match_id, m);
           }
-          const count = Array.from(latestByMatch.values()).filter((m) => m.sender_id !== user.id).length;
+
+          let count = 0;
+          for (const [matchId, dernier] of dernierParFil) {
+            if (dernier.sender_id === user.id) continue;
+            const lu = luJusqua.get(matchId);
+            if (!lu || new Date(dernier.created_at) > new Date(lu)) count += 1;
+          }
           if (!cancelled) setUnreadCount(count);
         }
       }
@@ -72,6 +86,15 @@ export function RoomNav() {
     checkActivity();
     const interval = setInterval(checkActivity, 20_000);
 
+    // Revenir sur l'onglet doit rafraichir tout de suite : on sort souvent du
+    // fil de discussion par le bouton retour, et attendre vingt secondes avec
+    // un badge perime donne l'impression que rien n'a ete lu.
+    const auRetour = () => {
+      if (document.visibilityState === 'visible') checkActivity();
+    };
+    document.addEventListener('visibilitychange', auRetour);
+    window.addEventListener('focus', auRetour);
+
     // Real-time: refresh the badge the instant a wave or message arrives,
     // instead of waiting up to 20s for the next poll.
     const channel = supabase
@@ -83,6 +106,8 @@ export function RoomNav() {
     return () => {
       cancelled = true;
       clearInterval(interval);
+      document.removeEventListener('visibilitychange', auRetour);
+      window.removeEventListener('focus', auRetour);
       supabase.removeChannel(channel);
     };
   }, []);

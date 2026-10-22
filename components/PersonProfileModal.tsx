@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import { INTENTION_META } from '@/lib/intentions';
 import { INTEREST_LABELS, type InterestKey } from '@/lib/interests';
 import { useLanguage } from '@/components/LanguageProvider';
+import { ReportProfile } from '@/components/ReportProfile';
 import type { Intention } from '@/lib/types';
 
 export interface ProfileModalPerson {
@@ -143,6 +144,8 @@ export function PersonProfileModal({
                     : t.room.wave}
             </button>
           )}
+
+          <ReportProfile userId={person.user_id} onDone={onClose} />
         </div>
       </div>
     </div>,

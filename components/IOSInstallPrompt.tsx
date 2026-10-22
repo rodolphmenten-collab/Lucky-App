@@ -18,7 +18,7 @@ function isStandalone() {
   );
 }
 
-export function IOSInstallPrompt() {
+export function IOSInstallPrompt({ venueName }: { venueName: string }) {
   const { t } = useLanguage();
   const [visible, setVisible] = useState(false);
 
@@ -41,7 +41,7 @@ export function IOSInstallPrompt() {
       <span className="text-lg">🔔</span>
       <div className="flex-1">
         <p className="text-xs font-medium text-bone">{t.join.iosInstallTitle}</p>
-        <p className="mt-1 text-[11px] leading-relaxed text-bone-dim">{t.join.iosInstallBody}</p>
+        <p className="mt-1 text-[11px] leading-relaxed text-bone-dim">{t.join.iosInstallBody(venueName)}</p>
         <button onClick={dismiss} className="mt-2 text-[11px] text-bone-faint underline">
           {t.join.iosInstallDismiss}
         </button>
