@@ -58,6 +58,13 @@ export async function POST(request: Request) {
           <h1 style="color:#0B0A08; font-size:24px;">Votre code</h1>
           <p style="font-size:32px; font-weight:600; letter-spacing:8px; color:#0B0A08;">${code}</p>
           <p style="color:#666; font-size:13px;">Ce code expire rapidement et ne sert qu'une fois.</p>
+          <!-- Sans cette ligne, un e-mail arrivant au nom du lieu depuis un
+               domaine inconnu ressemble a une tentative d'hameconnage. Elle
+               coute une ligne grise et evite le doute. -->
+          <p style="color:#999; font-size:11px; margin-top:28px; border-top:1px solid #eee; padding-top:14px;">
+            Propulsé par Lucky ·
+            <a href="https://lucky-app.io/legal/confidentialite" style="color:#999;">Politique de confidentialité</a>
+          </p>
         </div>
       `,
     }),
