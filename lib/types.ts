@@ -3,7 +3,7 @@
 // dependency on a live Supabase project. Swap for `supabase gen types` once you have
 // a project running, and this file becomes redundant.
 
-export type Intention = 'dating' | 'business' | 'social' | 'looking';
+export type Intention = 'dating' | 'business' | 'social' | 'looking' | 'friends';
 
 export type VenueType =
   | 'hotel'

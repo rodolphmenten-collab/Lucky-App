@@ -16,6 +16,11 @@ export const INTENTION_META: Record<Intention, { label: string; symbol: string; 
     symbol: '●',
     classes: 'border-emerald-500/50 bg-emerald-500/15 text-emerald-300',
   },
+  friends: {
+    label: 'With friends',
+    symbol: '◇',
+    classes: 'border-violet-400/50 bg-violet-500/15 text-violet-300',
+  },
   looking: {
     label: 'Just looking',
     symbol: '○',
