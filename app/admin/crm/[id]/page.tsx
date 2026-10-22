@@ -15,6 +15,7 @@ import {
 import { StagePicker } from '@/components/admin/StagePicker';
 import { VenuePanel } from '@/components/admin/VenuePanel';
 import { BillingPanel } from '@/components/admin/BillingPanel';
+import { MenuEditor } from '@/app/dashboard/carte/MenuEditor';
 import { setStage, addNote, setNextAction, updateCrmVenue, updateVenueSettings } from '../../actions';
 
 export const dynamic = 'force-dynamic';
@@ -52,10 +53,12 @@ export default async function CrmVenuePage({
       .order('created_at', { ascending: false }),
     c.venue_id
       ? service
+          // select('*') et pas une liste de colonnes : une colonne ajoutée par
+          // migration et oubliée ici revenait `undefined` sans erreur — c'est
+          // ce qui est arrivé à `commitment_months`, affiché vide alors qu'il
+          // était en base.
           .from('venues')
-          .select(
-            'id, slug, plan, subscription_status, trial_ends_at, current_period_end, checkout_sent_at, contact_email, latitude, longitude, verification_radius_m, checkin_duration_minutes, average_ticket_cents'
-          )
+          .select('*')
           .eq('id', c.venue_id)
           .maybeSingle()
       : Promise.resolve({ data: null }),
@@ -79,6 +82,17 @@ export default async function CrmVenuePage({
       0
     );
   }
+
+  // La carte du lieu, pour l'éditer sans se connecter à sa place.
+  const { data: menuRows } = c.venue_id
+    ? await service
+        .from('venue_menu_items')
+        .select('id, name, price_cents, category, sort_order')
+        .eq('venue_id', c.venue_id)
+        .eq('active', true)
+        .order('sort_order', { ascending: true })
+    : { data: [] as any[] };
+  const menuItems = (menuRows ?? []) as { id: string; name: string; price_cents: number; category: string }[];
 
   const trialDays = venue?.trial_ends_at ? daysUntil(venue.trial_ends_at) : null;
 
@@ -326,6 +340,22 @@ export default async function CrmVenuePage({
                 checkoutSentAt={venue.checkout_sent_at ?? null}
               />
             </div>
+
+            {/* La carte du lieu et son avantage. C'est ce qui chiffre le CA
+                généré : sans prix saisis, une rencontre ne vaut rien à
+                l'écran. Jusqu'ici il fallait se connecter à la place du lieu
+                pour y accéder, ce qui en faisait une étape oubliée. */}
+            <MenuEditor
+              embedded
+              venue={{
+                id: venue.id,
+                name: venue.name,
+                perk_label: venue.perk_label ?? null,
+                average_ticket_cents: venue.average_ticket_cents ?? null,
+                lucky_discount_percent: venue.lucky_discount_percent ?? null,
+              }}
+              initialItems={menuItems}
+            />
           </>
         )}
 
@@ -373,6 +403,22 @@ export default async function CrmVenuePage({
         <h2 className="mt-12 font-display text-xl italic text-bone">Fiche</h2>
         <form action={updateCrmVenue} className="mt-4 grid gap-3 sm:grid-cols-2">
           <input type="hidden" name="crmId" value={c.id} />
+          {/* Un lieu de test se comporte comme un vrai — sinon le test ne
+              prouve rien — mais il sort de tous les compteurs. */}
+          <label className="col-span-full flex items-center gap-3 rounded-xl border hairline bg-ink-800 px-4 py-3">
+            <input
+              type="checkbox"
+              name="is_test"
+              defaultChecked={!!c.is_test}
+              className="h-4 w-4 accent-brass"
+            />
+            <span className="text-sm text-bone">
+              Lieu de test
+              <span className="ml-2 text-xs text-bone-faint">
+                exclu du MRR, des essais et du pipeline
+              </span>
+            </span>
+          </label>
           <Input name="name" label="Nom" defaultValue={c.name} required />
           <Input name="city" label="Ville" defaultValue={c.city} />
           <Input name="type" label="Type (bar, restaurant, hotel)" defaultValue={c.type} />
