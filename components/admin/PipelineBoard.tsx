@@ -469,16 +469,23 @@ export function PipelineBoard({
                     </div>
 
                     <div className="mt-2 flex items-center justify-between gap-2 border-t hairline pt-2">
-                      {/* Un seul bouton : « Ouvrir » et « Établissement »
-                          menaient au meme endroit, a un onglet pres. Deux
-                          libelles pour une meme destination se lisent comme
-                          deux actions differentes. */}
-                      <Link
-                        href={`/admin/crm/${c.id}`}
-                        className="rounded-full border border-brass/50 px-3 py-1 text-[10px] text-brass hover:bg-brass/10"
-                      >
-                        Ouvrir l&rsquo;établissement
-                      </Link>
+                      {/* Le libelle dit ce qui va se passer : un prospect n'a
+                          pas d'etablissement a ouvrir, il en a un a creer. */}
+                      {c.venueId ? (
+                        <Link
+                          href={`/admin/crm/${c.id}`}
+                          className="rounded-full border border-brass/50 px-3 py-1 text-[10px] text-brass hover:bg-brass/10"
+                        >
+                          Ouvrir l&rsquo;établissement
+                        </Link>
+                      ) : (
+                        <Link
+                          href={`/admin/venues/new?crm=${c.id}`}
+                          className="rounded-full border hairline px-3 py-1 text-[10px] text-bone-dim hover:border-brass hover:text-brass"
+                        >
+                          Créer l&rsquo;établissement
+                        </Link>
+                      )}
                       {c.contactPhone && (
                         <a href={`tel:${c.contactPhone}`} className="text-[11px] text-bone-dim underline">
                           Appeler
