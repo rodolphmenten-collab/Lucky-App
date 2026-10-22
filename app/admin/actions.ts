@@ -125,6 +125,15 @@ export async function updateCrmVenue(formData: FormData) {
     roadshow_label: text('roadshow_label'),
     is_group: formData.get('is_group') === 'on',
     is_test: formData.get('is_test') === 'on',
+    // Identite de la personne morale, reprise telle quelle dans le contrat.
+    legal_name: text('legal_name'),
+    legal_form: text('legal_form'),
+    siren: text('siren'),
+    rcs_city: text('rcs_city'),
+    legal_address: text('legal_address'),
+    signer_name: text('signer_name'),
+    signer_role: text('signer_role'),
+    supports_custom: formData.get('supports_custom') === 'on',
     group_id: ((formData.get('group_id') as string) || '') || null,
   };
 
