@@ -1,5 +1,6 @@
 import { redirect, notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { isBlockedBetween } from '@/lib/blocks';
 import { ChatThread } from './ChatThread';
 
 export default async function ChatPage({
@@ -24,6 +25,11 @@ export default async function ChatPage({
   if (!match || (match.user_a !== user.id && match.user_b !== user.id)) notFound();
 
   const otherId = match.user_a === user.id ? match.user_b : match.user_a;
+
+  // La conversation disparait des deux cotes des qu'un blocage existe : un lien
+  // direct, un signet ou une notification deja recue ne doivent pas la rouvrir.
+  if (await isBlockedBetween(user.id, otherId)) redirect('/matches');
+
   const { data: other } = await supabase
     .from('profiles')
     .select('id, first_name, photo_url, photos, age, city, job, bio, intentions, interests')

@@ -142,6 +142,17 @@ export function ChatThread({
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  // Marquage de lecture. Il se declenche a l'ouverture et a chaque message
+  // recu pendant que le fil est ouvert : lu au moment ou il s'affiche.
+  // Sans ca, le compteur de l'onglet Messages ne retombait qu'en repondant.
+  useEffect(() => {
+    void fetch('/api/match-read', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ matchId }),
+    }).catch(() => {});
+  }, [matchId, messages.length]);
+
   async function sendMessage(e: React.FormEvent) {
     e.preventDefault();
     if (!draft.trim()) return;
