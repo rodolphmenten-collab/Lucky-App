@@ -14,6 +14,7 @@ import {
 } from '@/lib/crm';
 import { StagePicker } from '@/components/admin/StagePicker';
 import { VenuePanel } from '@/components/admin/VenuePanel';
+import { GpsPicker } from '@/components/admin/GpsPicker';
 import { BillingPanel } from '@/components/admin/BillingPanel';
 import { MenuEditor } from '@/app/dashboard/carte/MenuEditor';
 import { setStage, addNote, setNextAction, updateCrmVenue, updateVenueSettings } from '../../actions';
@@ -289,8 +290,7 @@ export default async function CrmVenuePage({
               )}
 
               <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                <Input name="latitude" label="Latitude" type="number" defaultValue={latValue} />
-                <Input name="longitude" label="Longitude" type="number" defaultValue={lonValue} />
+                <GpsPicker defaultLat={String(latValue ?? '')} defaultLon={String(lonValue ?? '')} />
                 <Input
                   name="radius"
                   label="Rayon de vérification (m)"
