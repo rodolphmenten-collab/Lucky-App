@@ -26,7 +26,11 @@ function toCents(euros: string): number {
 export function MenuEditor({
   venue,
   initialItems,
+  embedded = false,
 }: {
+  /** Monté dans la fiche admin : on retire l'habillage de page (titre, retour
+   *  au dashboard, pleine hauteur) et on ne garde que le formulaire. */
+  embedded?: boolean;
   venue: {
     id: string;
     name: string;
@@ -112,15 +116,21 @@ export function MenuEditor({
     }
   }
 
-  return (
-    <main className="min-h-screen px-6 py-12">
-      <div className="mx-auto max-w-2xl">
-        <Link href="/dashboard" className="text-xs text-bone-faint hover:text-bone">
-          &larr; Dashboard
-        </Link>
+  const Shell = embedded ? 'section' : 'main';
 
-        <p className="mt-6 font-mono text-xs uppercase tracking-[0.3em] text-brass">Carte &amp; avantage</p>
-        <h1 className="mt-2 font-display text-3xl italic text-bone">{venue.name}</h1>
+  return (
+    <Shell className={embedded ? 'mt-10' : 'min-h-screen px-6 py-12'}>
+      <div className={embedded ? '' : 'mx-auto max-w-2xl'}>
+        {!embedded && (
+          <Link href="/dashboard" className="text-xs text-bone-faint hover:text-bone">
+            &larr; Dashboard
+          </Link>
+        )}
+
+        <p className={`font-mono text-xs uppercase tracking-[0.3em] text-brass ${embedded ? '' : 'mt-6'}`}>
+          Carte &amp; avantage
+        </p>
+        {!embedded && <h1 className="mt-2 font-display text-3xl italic text-bone">{venue.name}</h1>}
         <p className="mt-3 text-sm leading-relaxed text-bone-dim">
           Ce que vous saisissez ici est ce que vos clients peuvent s’offrir depuis Lucky. C’est aussi
           ce qui permet de chiffrer le CA généré sans que votre équipe ait quoi que ce soit à taper :
@@ -269,6 +279,6 @@ export function MenuEditor({
           {saved && <span className="text-xs text-brass">Enregistré.</span>}
         </div>
       </div>
-    </main>
+    </Shell>
   );
 }
