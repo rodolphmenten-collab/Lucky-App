@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { sendPushToUser } from '@/lib/push';
+import { isBlockedBetween } from '@/lib/blocks';
 
 export async function POST(request: Request) {
   const supabase = createClient();
@@ -22,6 +23,13 @@ export async function POST(request: Request) {
 
   if (!match || (match.user_a !== user.id && match.user_b !== user.id)) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  }
+
+  // Controle serveur : le blocage doit tenir meme si l'ecran d'en face n'a pas
+  // ete rafraichi, ou si la requete ne vient pas de l'application.
+  const autre = match.user_a === user.id ? match.user_b : match.user_a;
+  if (await isBlockedBetween(user.id, autre)) {
+    return NextResponse.json({ error: 'Cette conversation est close.' }, { status: 403 });
   }
 
   const { data: message, error } = await supabase
