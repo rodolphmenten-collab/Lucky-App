@@ -20,6 +20,7 @@ import { MenuEditor } from '@/app/dashboard/carte/MenuEditor';
 import { VENUE_TYPES } from '@/lib/venues';
 import { FicheTabs, ongletDepuisUrl } from '@/components/admin/FicheTabs';
 import { CoverPhotoPanel } from '@/components/admin/CoverPhotoPanel';
+import { ShopView } from '@/app/dashboard/shop/ShopView';
 import { getVenueOrders } from '@/lib/attribution';
 import { setStage, addNote, setNextAction, updateCrmVenue, updateVenueSettings } from '../../actions';
 
@@ -122,6 +123,16 @@ export default async function CrmVenuePage({
   // inutile d'interroger la base pour un ecran qu'on ne regarde pas.
   const commandes =
     venue && onglet === 'carte' ? await getVenueOrders(service, venue.id, 30) : [];
+
+  // Commandes de supports physiques, pour la boutique de l'onglet QR.
+  const { data: commandesSupports } =
+    venue && onglet === 'qr'
+      ? await service
+          .from('venue_orders')
+          .select('*')
+          .eq('venue_id', venue.id)
+          .order('created_at', { ascending: false })
+      : { data: [] };
 
   // Un etablissement cree depuis le pipeline part a 0,0. Si la fiche de
   // prospection a de vraies coordonnees, on les propose plutot que de laisser
@@ -315,9 +326,22 @@ export default async function CrmVenuePage({
         {venue && (
           <>
             {onglet === 'qr' && (
-              <div className="mt-6 rounded-2xl border hairline p-5">
-                <VenuePanel slug={venue.slug} siteUrl={siteUrl} />
-              </div>
+              <>
+                <div className="mt-6 rounded-2xl border hairline p-5">
+                  <VenuePanel slug={venue.slug} siteUrl={siteUrl} />
+                </div>
+
+                {/* Commander les supports est le prolongement direct du QR.
+                    Il fallait jusqu'ici se connecter a la place du lieu pour
+                    passer commande, ce qui n'a aucun sens en rendez-vous. */}
+                <div className="mt-4 rounded-2xl border hairline p-5">
+                  <ShopView
+                    embedded
+                    venue={{ id: venue.id, name: venue.name, cover_photo_url: venue.cover_photo_url ?? null }}
+                    orders={(commandesSupports ?? []) as any}
+                  />
+                </div>
+              </>
             )}
 
             {onglet === 'position' && (
