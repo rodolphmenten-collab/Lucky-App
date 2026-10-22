@@ -2,8 +2,7 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/Button';
-
-const VENUE_TYPES = ['Hotel', 'Restaurant', 'Bar', 'Rooftop', 'Beach Club', 'Coworking', 'Event'];
+import { VENUE_TYPES } from '@/lib/venues';
 
 export function VenueLeadForm({ defaultPlan }: { defaultPlan?: string }) {
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
@@ -12,7 +11,7 @@ export function VenueLeadForm({ defaultPlan }: { defaultPlan?: string }) {
     contactEmail: '',
     venueName: '',
     venueCity: '',
-    venueType: 'Hotel',
+    venueType: 'hotel',
     planInterest: defaultPlan ?? 'essentiel',
     message: '',
   });
@@ -88,8 +87,8 @@ export function VenueLeadForm({ defaultPlan }: { defaultPlan?: string }) {
           className="w-full rounded-full border hairline bg-ink-900 px-5 py-3 text-sm text-bone"
         >
           {VENUE_TYPES.map((t) => (
-            <option key={t} value={t}>
-              {t}
+            <option key={t.value} value={t.value}>
+              {t.label}
             </option>
           ))}
         </select>
