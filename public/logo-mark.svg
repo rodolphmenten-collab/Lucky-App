@@ -3,9 +3,10 @@
   <circle cx="100" cy="100" r="70" fill="none" stroke="#C9A46A" stroke-width="1.5" opacity="0.4"/>
   <circle cx="100" cy="100" r="52" fill="none" stroke="#C9A46A" stroke-width="2.5" opacity="0.75"/>
   <g transform="translate(100,100)">
-    <path d="M0,0 Q -11,-10 0,-24 Q 11,-10 0,0 Z" fill="#E84FA0" transform="rotate(0)"/>
-    <path d="M0,0 Q -11,-10 0,-24 Q 11,-10 0,0 Z" fill="#4C7DB0" transform="rotate(90)"/>
-    <path d="M0,0 Q -11,-10 0,-24 Q 11,-10 0,0 Z" fill="#4CAF7D" transform="rotate(180)"/>
-    <path d="M0,0 Q -11,-10 0,-24 Q 11,-10 0,0 Z" fill="#C9A46A" transform="rotate(270)"/>
+    <path d="M0,0 Q -10,-10 0,-24 Q 10,-10 0,0 Z" fill="#E84FA0" transform="rotate(0)"/>
+    <path d="M0,0 Q -10,-10 0,-24 Q 10,-10 0,0 Z" fill="#4C7DB0" transform="rotate(72)"/>
+    <path d="M0,0 Q -10,-10 0,-24 Q 10,-10 0,0 Z" fill="#4CAF7D" transform="rotate(144)"/>
+    <path d="M0,0 Q -10,-10 0,-24 Q 10,-10 0,0 Z" fill="#8B6FC9" transform="rotate(216)"/>
+    <path d="M0,0 Q -10,-10 0,-24 Q 10,-10 0,0 Z" fill="#C9A46A" transform="rotate(288)"/>
   </g>
 </svg>
