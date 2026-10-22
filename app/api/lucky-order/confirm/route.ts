@@ -2,10 +2,17 @@ import { NextResponse } from 'next/server';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
 
 /**
- * « Reçu 🥂 » — la seule validation du circuit, et elle est faite par un client,
- * pas par le staff. C'est ce qui fait passer la commande en CA certifié.
+ * « Servi 🥂 » — la seule validation du circuit, et elle est faite par un
+ * client, pas par le staff. C'est ce qui fait passer la commande en CA
+ * certifié.
  *
- * Annulation possible tant que le bon n'a pas été servi (action: 'cancel').
+ * La confirmation revient à CELUI QUI OFFRE, pas à celui qui reçoit : c'est
+ * lui qui est au comptoir, qui présente le bon et qui voit le verre partir.
+ * Le receveur, lui, a souvent déjà rangé son téléphone — lui demander un tap,
+ * c'était laisser le CA du lieu dépendre de quelqu'un qui ne regarde pas.
+ *
+ * L'annulation reste ouverte aux deux : celui qui reçoit doit pouvoir refuser
+ * un verre qu'il n'a pas voulu.
  */
 export async function POST(request: Request) {
   const supabase = createClient();
@@ -31,6 +38,16 @@ export async function POST(request: Request) {
 
   if (order.status !== 'pending') {
     return NextResponse.json({ error: 'Ce bon a déjà été traité' }, { status: 400 });
+  }
+
+  // Confirmer que le verre a été servi n'appartient qu'à celui qui l'offre.
+  // Contrôle côté serveur et pas seulement à l'écran : un bouton caché se
+  // contourne, une règle ici, non.
+  if (action !== 'cancel' && order.from_user !== user.id) {
+    return NextResponse.json(
+      { error: 'Seule la personne qui offre peut confirmer que le verre a été servi.' },
+      { status: 403 }
+    );
   }
 
   if (action === 'cancel') {
