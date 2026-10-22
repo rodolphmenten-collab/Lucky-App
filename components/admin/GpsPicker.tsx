@@ -57,6 +57,23 @@ export function GpsPicker({
     );
   }
 
+  /**
+   * Google Maps copie les deux coordonnees d'un coup : "48.856614, 2.352221".
+   * Un champ `number` refuse ce texte et le collage ne donne rien, sans rien
+   * dire. On l'intercepte : si le presse-papier contient bien deux nombres,
+   * on les repartit nous-memes dans les deux champs.
+   */
+  function collerPaire(e: React.ClipboardEvent<HTMLInputElement>) {
+    const texte = e.clipboardData.getData('text').trim();
+    const paire = texte.match(/^(-?\d+(?:[.,]\d+)?)\s*[,;\s]\s*(-?\d+(?:[.,]\d+)?)$/);
+    if (!paire) return;
+    e.preventDefault();
+    setLat(paire[1].replace(',', '.'));
+    setLon(paire[2].replace(',', '.'));
+    setPrecision(null);
+    setErreur(null);
+  }
+
   return (
     <div className="sm:col-span-2">
       <div className="grid gap-3 sm:grid-cols-2">
@@ -68,6 +85,7 @@ export function GpsPicker({
             step="any"
             value={lat}
             onChange={(e) => setLat(e.target.value)}
+            onPaste={collerPaire}
             className="mt-1 min-h-[48px] w-full rounded-xl border hairline bg-transparent px-4 text-sm text-bone focus:border-brass focus:outline-none"
           />
         </label>
@@ -79,6 +97,7 @@ export function GpsPicker({
             step="any"
             value={lon}
             onChange={(e) => setLon(e.target.value)}
+            onPaste={collerPaire}
             className="mt-1 min-h-[48px] w-full rounded-xl border hairline bg-transparent px-4 text-sm text-bone focus:border-brass focus:outline-none"
           />
         </label>
@@ -96,6 +115,8 @@ export function GpsPicker({
       <p className="mt-2 text-xs leading-relaxed text-bone-faint">
         À utiliser sur place, depuis le téléphone. Les champs se remplissent seuls&nbsp;;
         il reste à enregistrer.
+        {' '}Sinon, saisis-les à la main&nbsp;: tu peux coller les deux coordonnées
+        Google Maps d&rsquo;un seul coup dans l&rsquo;un des deux champs.
       </p>
 
       {precision !== null && (
