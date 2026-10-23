@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { isPlatformAdminEmail } from '@/lib/admin';
-import { preparerContrat, manquantsLucky } from '@/lib/contrat';
+import { preparerContrat, manquantsLucky, LUCKY_SIGNATAIRES } from '@/lib/contrat';
 import { construireContratPdf } from '@/lib/contratPdf';
 import { envoyerPourSignature, ErreurSignature, signatureConfiguree } from '@/lib/yousign';
 
@@ -59,15 +59,27 @@ export async function POST(request: Request) {
 
   try {
     const pdf = await construireContratPdf(c);
-    const { prenom, nom } = couper(c.signer_name);
-    const envoi = await envoyerPourSignature(pdf, `Contrat Lucky — ${c.name}`, { prenom, nom, email });
+
+    // L'ordre compte : il doit suivre celui des cadres du PDF — le Lieu,
+    // puis les fondateurs dans l'ordre de lib/contrat.ts.
+    const signataires = [
+      { ...couper(c.signer_name), email },
+      ...LUCKY_SIGNATAIRES.map((s) => ({ ...couper(s.nom), email: s.email.trim() })),
+    ];
+
+    const envoi = await envoyerPourSignature(pdf, `Contrat Lucky — ${c.name}`, signataires);
 
     await service
       .from('crm_venues')
       .update({ contract_sent_at: new Date().toISOString() })
       .eq('id', id);
 
-    return NextResponse.json({ ok: true, email, bacASable: envoi.environnementBacASable });
+    return NextResponse.json({
+      ok: true,
+      email,
+      destinataires: signataires.map((s) => s.email),
+      bacASable: envoi.environnementBacASable,
+    });
   } catch (e) {
     const message =
       e instanceof ErreurSignature ? e.message : "L'envoi a échoué. Le contrat n'est pas parti.";
