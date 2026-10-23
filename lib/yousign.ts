@@ -57,8 +57,12 @@ export interface ResultatEnvoi {
 export async function envoyerPourSignature(
   pdf: Uint8Array,
   nomDocument: string,
-  signataire: Signataire
+  signataires: Signataire[]
 ): Promise<ResultatEnvoi> {
+  if (signataires.length === 0) {
+    throw new ErreurSignature('Aucun signataire : il n\'y a personne à qui envoyer le contrat.');
+  }
+
   // 1. la demande
   const demande = await appel('/signature_requests', {
     method: 'POST',
@@ -82,28 +86,27 @@ export async function envoyerPourSignature(
   });
 
   const ancres = Number(document.total_anchors ?? 0);
-  if (ancres < 1) {
+  if (ancres < signataires.length) {
     throw new ErreurSignature(
-      "Le PDF ne contient aucun champ de signature exploitable. L'envoi est annulé — " +
-      'mieux vaut ça qu\'un contrat que le lieu ne pourrait pas signer.'
+      `Le PDF ne porte que ${ancres} champ(s) de signature pour ${signataires.length} signataire(s). ` +
+      "L'envoi est annulé — mieux vaut ça qu'un contrat que l'un d'eux ne pourrait pas signer."
     );
   }
 
-  // 3. le signataire — l'ancre s1 lui est rattachée par son rang
-  await appel(`/signature_requests/${demande.id}/signers`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      info: {
-        first_name: signataire.prenom,
-        last_name: signataire.nom,
-        email: signataire.email,
-        locale: 'fr',
-      },
-      signature_level: 'electronic_signature',
-      signature_authentication_mode: 'no_otp',
-    }),
-  });
+  // 3. les signataires, dans l'ordre : l'ancre sN est rattachée au Nième.
+  // En série, pas en parallèle : Yousign numérote les ancres par ordre
+  // d'ajout, donc deux appels simultanés mélangeraient les champs.
+  for (const s of signataires) {
+    await appel(`/signature_requests/${demande.id}/signers`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        info: { first_name: s.prenom, last_name: s.nom, email: s.email, locale: 'fr' },
+        signature_level: 'electronic_signature',
+        signature_authentication_mode: 'no_otp',
+      }),
+    });
+  }
 
   // 4. activation : c'est elle qui envoie l'e-mail au signataire
   await appel(`/signature_requests/${demande.id}/activate`, { method: 'POST' });

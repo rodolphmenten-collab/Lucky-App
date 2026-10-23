@@ -1,5 +1,11 @@
 import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from 'pdf-lib';
-import { preparerContrat, LUCKY, type Contrat } from '@/lib/contrat';
+import {
+  preparerContrat,
+  LUCKY,
+  LUCKY_SIGNATAIRES,
+  representantsLucky,
+  type Contrat,
+} from '@/lib/contrat';
 
 /**
  * Les conditions particulières, en PDF.
@@ -99,7 +105,7 @@ export async function construireContratPdf(crm: any): Promise<Uint8Array> {
   ecrire(
     `${LUCKY.raisonSociale}, ${LUCKY.formeSociale}, au capital de ${LUCKY.capital} euros, ` +
     `immatriculée au RCS de ${LUCKY.rcsVille} sous le numéro ${LUCKY.siren}, dont le siège social ` +
-    `est ${LUCKY.siege}, représentée par ${LUCKY.representant} en qualité de ${LUCKY.qualite}, ` +
+    `est ${LUCKY.siege}, représentée par ${representantsLucky()}, ` +
     `ci-après « Lucky ».`
   );
   espace(10);
@@ -162,36 +168,44 @@ export async function construireContratPdf(crm: any): Promise<Uint8Array> {
   espace(30);
 
   // ---- signatures ----
+  // Trois cadres : le Lieu, puis les deux fondateurs. Chacun porte son ancre,
+  // et c'est l'ancre — pas une coordonnee calculee a la main — qui dit au
+  // prestataire ou poser le champ. Le jour ou la mise en page bouge, les
+  // champs suivent tout seuls.
+  const CADRES = [
+    { titre: 'Pour le Lieu', sous: 'Signature précédée de « lu et approuvé »' },
+    ...LUCKY_SIGNATAIRES.map((sg, i) => ({
+      titre: i === 0 ? 'Pour Lucky' : ' ',
+      sous: `${sg.nom}, ${sg.qualite}`,
+    })),
+  ];
+
+  const ECART = 18;
+  const largeurCadre = (LARGEUR - ECART * (CADRES.length - 1)) / CADRES.length;
   const yCadre = c.y - 90;
-  const largeurCadre = (LARGEUR - 30) / 2;
 
-  c.page.drawText('Pour le Lieu', { x: MARGE, y: c.y, size: 9.5, font: gras, color: NOIR });
-  c.page.drawText('Signature précédée de « lu et approuvé »', {
-    x: MARGE, y: c.y - 13, size: 7.5, font: normal, color: GRIS,
-  });
-  c.page.drawRectangle({
-    x: MARGE, y: yCadre, width: largeurCadre, height: 72,
-    borderColor: TRAIT, borderWidth: 0.8,
-  });
+  CADRES.forEach((cadre, i) => {
+    const x = MARGE + i * (largeurCadre + ECART);
 
-  // Ancre de signature : le prestataire lit ce marqueur dans le texte du PDF
-  // et place le champ exactement dessus. Ecrit en blanc sur blanc — invisible
-  // a la lecture et a l'impression, mais present dans le texte extrait.
-  // C'est plus sur que des coordonnees calculees a la main : le jour ou la
-  // mise en page bouge, le champ suit tout seul.
-  c.page.drawText('{{s1|signature|170|60}}', {
-    x: MARGE + 6, y: yCadre + 52, size: 7,
-    font: normal, color: rgb(1, 1, 1),
-  });
+    if (cadre.titre.trim()) {
+      c.page.drawText(cadre.titre, { x, y: c.y, size: 9.5, font: gras, color: NOIR });
+    }
+    for (const ligne of mots(cadre.sous, normal, 7.5, largeurCadre)) {
+      c.page.drawText(ligne, { x, y: c.y - 13, size: 7.5, font: normal, color: GRIS });
+      break; // une seule ligne : le cadre est etroit, le nom complet tient
+    }
 
-  const x2 = MARGE + largeurCadre + 30;
-  c.page.drawText('Pour Lucky', { x: x2, y: c.y, size: 9.5, font: gras, color: NOIR });
-  c.page.drawText(`${LUCKY.representant}, ${LUCKY.qualite}`, {
-    x: x2, y: c.y - 13, size: 7.5, font: normal, color: GRIS,
-  });
-  c.page.drawRectangle({
-    x: x2, y: yCadre, width: largeurCadre, height: 72,
-    borderColor: TRAIT, borderWidth: 0.8,
+    c.page.drawRectangle({
+      x, y: yCadre, width: largeurCadre, height: 72,
+      borderColor: TRAIT, borderWidth: 0.8,
+    });
+
+    // Blanc sur blanc : invisible a la lecture et a l'impression, present
+    // dans le texte extrait, qui est ce que lit le prestataire.
+    c.page.drawText(`{{s${i + 1}|signature|${Math.round(largeurCadre - 12)}|60}}`, {
+      x: x + 6, y: yCadre + 52, size: 7,
+      font: normal, color: rgb(1, 1, 1),
+    });
   });
 
   c.y = yCadre - 26;

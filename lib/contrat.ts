@@ -30,8 +30,38 @@ export const LUCKY = {
   siren: process.env.NEXT_PUBLIC_LUCKY_SIREN ?? '[SIREN]',
   siege: process.env.NEXT_PUBLIC_LUCKY_SIEGE ?? '[adresse]',
   representant: process.env.NEXT_PUBLIC_LUCKY_REPRESENTANT ?? 'Rodolph Menten',
-  qualite: process.env.NEXT_PUBLIC_LUCKY_QUALITE ?? 'Président',
+  qualite: process.env.NEXT_PUBLIC_LUCKY_QUALITE ?? '[qualité]',
 };
+
+export interface SignataireLucky {
+  nom: string;
+  qualite: string;
+  email: string;
+}
+
+/**
+ * Les deux fondateurs signent. L'adresse reste côté serveur : c'est elle qui
+ * reçoit la demande de signature, elle n'a rien à faire dans le navigateur.
+ */
+export const LUCKY_SIGNATAIRES: SignataireLucky[] = [
+  {
+    nom: process.env.NEXT_PUBLIC_LUCKY_SIGNATAIRE_1_NOM ?? 'Rodolph Menten',
+    qualite: process.env.NEXT_PUBLIC_LUCKY_SIGNATAIRE_1_QUALITE ?? '[qualité]',
+    email: process.env.LUCKY_SIGNATAIRE_1_EMAIL ?? '',
+  },
+  {
+    nom: process.env.NEXT_PUBLIC_LUCKY_SIGNATAIRE_2_NOM ?? 'Julien Dessertenne',
+    qualite: process.env.NEXT_PUBLIC_LUCKY_SIGNATAIRE_2_QUALITE ?? '[qualité]',
+    email: process.env.LUCKY_SIGNATAIRE_2_EMAIL ?? '',
+  },
+];
+
+/** « Rodolph Menten et Julien Dessertenne », pour la phrase des parties. */
+export function representantsLucky(): string {
+  const noms = LUCKY_SIGNATAIRES.map((s) => `${s.nom} (${s.qualite})`);
+  if (noms.length === 1) return noms[0];
+  return noms.slice(0, -1).join(', ') + ' et ' + noms[noms.length - 1];
+}
 
 export interface Contrat {
   lieu: {
@@ -134,5 +164,12 @@ export function manquantsLucky(): string[] {
   if (LUCKY.siege.startsWith('[')) m.push('le siège social de Lucky');
   if (LUCKY.rcsVille.startsWith('[')) m.push('la ville du RCS de Lucky');
   if (LUCKY.capital.startsWith('[')) m.push('le capital de Lucky');
+
+  // Les deux fondateurs signent : il faut la qualité de chacun pour la phrase
+  // des parties, et son adresse pour que la demande de signature lui parvienne.
+  for (const s of LUCKY_SIGNATAIRES) {
+    if (s.qualite.startsWith('[')) m.push(`la qualité de ${s.nom}`);
+    if (!s.email.trim()) m.push(`l'adresse e-mail de ${s.nom}`);
+  }
   return m;
 }
