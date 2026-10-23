@@ -118,3 +118,48 @@ export async function envoyerPourSignature(
 export function signatureConfiguree(): boolean {
   return Boolean(process.env.YOUSIGN_API_KEY);
 }
+
+export const BASE_BAC_A_SABLE = 'https://api-sandbox.yousign.app/v3';
+export const BASE_PRODUCTION = 'https://api.yousign.app/v3';
+
+export interface Diagnostic {
+  base: string;
+  environnement: 'bac a sable' | 'production' | 'inconnu';
+  utilisee: boolean;
+  reponse: string;
+}
+
+/**
+ * Essaie la clé sur les deux environnements et dit lequel répond.
+ *
+ * Une clé de bac à sable et une clé de production ne sont pas
+ * interchangeables : chacune renvoie 401 chez l'autre. Plutôt que de
+ * demander à quelqu'un de se souvenir d'où il l'a générée — et de découvrir
+ * l'erreur le jour d'un vrai contrat — on pose la question à Yousign.
+ *
+ * La clé ne sort jamais du serveur : seul le verdict est renvoyé.
+ */
+export async function diagnostiquer(): Promise<Diagnostic[]> {
+  const k = cle();
+  const bases = [BASE_BAC_A_SABLE, BASE_PRODUCTION];
+
+  return Promise.all(
+    bases.map(async (base) => {
+      const env =
+        base === BASE_BAC_A_SABLE ? ('bac a sable' as const) : ('production' as const);
+      try {
+        const res = await fetch(`${base}/signature_requests?limit=1`, {
+          headers: { Authorization: `Bearer ${k}` },
+        });
+        return {
+          base,
+          environnement: env,
+          utilisee: base === BASE,
+          reponse: res.ok ? 'la cle fonctionne' : `refusee (${res.status})`,
+        };
+      } catch {
+        return { base, environnement: env, utilisee: base === BASE, reponse: 'injoignable' };
+      }
+    })
+  );
+}
