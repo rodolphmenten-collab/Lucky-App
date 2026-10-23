@@ -2,7 +2,13 @@ import { redirect, notFound } from 'next/navigation';
 import Link from 'next/link';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { isPlatformAdminEmail } from '@/lib/admin';
-import { preparerContrat, manquantsLucky, LUCKY } from '@/lib/contrat';
+import {
+  preparerContrat,
+  manquantsLucky,
+  LUCKY,
+  LUCKY_SIGNATAIRES,
+  representantsLucky,
+} from '@/lib/contrat';
 import { signatureConfiguree } from '@/lib/yousign';
 import { BarreContrat } from './BarreContrat';
 
@@ -57,8 +63,8 @@ export default async function ContratPage({ params }: { params: { id: string } }
           <p className="mt-3">
             <span className="font-medium">{LUCKY.raisonSociale}</span>, {LUCKY.formeSociale}, au capital de{' '}
             {LUCKY.capital} euros, immatriculée au RCS de {LUCKY.rcsVille} sous le numéro {LUCKY.siren},
-            dont le siège social est {LUCKY.siege}, représentée par {LUCKY.representant} en qualité de{' '}
-            {LUCKY.qualite}, ci-après «&nbsp;Lucky&nbsp;».
+            dont le siège social est {LUCKY.siege}, représentée par {representantsLucky()}, ci-après
+            «&nbsp;Lucky&nbsp;».
           </p>
 
           <p className="mt-4">
@@ -114,7 +120,7 @@ export default async function ContratPage({ params }: { params: { id: string } }
             Fait à ______________________, le {k.dates.fait}, en deux exemplaires.
           </p>
 
-          <div className="mt-12 grid grid-cols-2 gap-12">
+          <div className="mt-12 grid grid-cols-3 gap-6">
             <div>
               <p className="text-[12px] font-medium">Pour le Lieu</p>
               <p className="mt-1 text-[11px] text-neutral-600">
@@ -122,13 +128,15 @@ export default async function ContratPage({ params }: { params: { id: string } }
               </p>
               <div className="mt-2 h-28 border border-neutral-300" />
             </div>
-            <div>
-              <p className="text-[12px] font-medium">Pour Lucky</p>
-              <p className="mt-1 text-[11px] text-neutral-600">
-                {LUCKY.representant}, {LUCKY.qualite}
-              </p>
-              <div className="mt-2 h-28 border border-neutral-300" />
-            </div>
+            {LUCKY_SIGNATAIRES.map((s, i) => (
+              <div key={s.nom}>
+                <p className="text-[12px] font-medium">{i === 0 ? 'Pour Lucky' : '\u00A0'}</p>
+                <p className="mt-1 text-[11px] text-neutral-600">
+                  {s.nom}, {s.qualite}
+                </p>
+                <div className="mt-2 h-28 border border-neutral-300" />
+              </div>
+            ))}
           </div>
 
           <p className="mt-10 border-t border-neutral-200 pt-4 text-[10.5px] leading-relaxed text-neutral-500">
