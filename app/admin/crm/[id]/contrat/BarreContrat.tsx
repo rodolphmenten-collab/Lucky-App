@@ -34,9 +34,40 @@ export function BarreContrat({
   const [etat, setEtat] = useState<'repos' | 'envoi' | 'parti'>(envoyeLe ? 'parti' : 'repos');
   const [erreur, setErreur] = useState<string | null>(null);
   const [bacASable, setBacASable] = useState(false);
+  const [diag, setDiag] = useState<string | null>(null);
 
   const complet = manquants.length === 0 && manquantsLucky.length === 0;
   const peutEnvoyer = signatureActive && complet && !!emailContact && etat === 'repos';
+
+  async function tester() {
+    setDiag('Test en cours…');
+    try {
+      const res = await fetch('/api/admin/contrat/test', { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok) {
+        setDiag(data.error ?? 'Le test a échoué.');
+        return;
+      }
+      const ok = data.resultats.filter((r: any) => r.reponse === 'la cle fonctionne');
+      if (ok.length === 0) {
+        setDiag(
+          "La clé n'est acceptée ni par le bac à sable ni par la production. " +
+            'Elle est probablement incomplète ou révoquée.'
+        );
+        return;
+      }
+      const bon = ok[0];
+      const utilise = data.resultats.find((r: any) => r.utilisee);
+      setDiag(
+        bon.utilisee
+          ? `Clé valide en ${bon.environnement}. C'est bien l'environnement utilisé — rien à changer.`
+          : `Clé valide en ${bon.environnement}, mais l'app envoie en ${utilise?.environnement}. ` +
+              `Ajouter la variable YOUSIGN_API_BASE = ${bon.base} sur Netlify, sinon l'envoi échouera.`
+      );
+    } catch {
+      setDiag("Le test a échoué : le serveur n'a pas répondu.");
+    }
+  }
 
   async function envoyer() {
     if (!confirm(`Envoyer le contrat à ${emailContact} pour signature ?`)) return;
@@ -85,6 +116,13 @@ export function BarreContrat({
           >
             Relire le PDF
           </a>
+          <button
+            onClick={tester}
+            disabled={!signatureActive}
+            className="min-h-[44px] rounded-full border hairline px-5 text-sm text-bone-dim hover:border-brass hover:text-brass disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Tester la clé Yousign
+          </button>
           <a
             href="https://yousign.app"
             target="_blank"
@@ -95,6 +133,12 @@ export function BarreContrat({
           </a>
         </div>
       </div>
+
+      {diag && (
+        <p className="mt-4 rounded-2xl border hairline bg-ink-800 p-4 text-sm leading-relaxed text-bone-dim">
+          {diag}
+        </p>
+      )}
 
       {erreur && (
         <p className="mt-4 rounded-2xl border border-signal-fading/50 bg-signal-fading/10 p-4 text-sm leading-relaxed text-bone">
