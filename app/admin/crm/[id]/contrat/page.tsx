@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { isPlatformAdminEmail } from '@/lib/admin';
 import { preparerContrat, manquantsLucky, LUCKY } from '@/lib/contrat';
+import { signatureConfiguree } from '@/lib/yousign';
 import { BarreContrat } from './BarreContrat';
 
 export const dynamic = 'force-dynamic';
@@ -34,7 +35,15 @@ export default async function ContratPage({ params }: { params: { id: string } }
   return (
     <main className="contrat-page min-h-screen bg-ink px-4 py-8 print:bg-white print:p-0">
       <div className="mx-auto max-w-[800px]">
-        <BarreContrat crmId={c.id} nomLieu={c.name} manquants={k.manquants} manquantsLucky={trousLucky} />
+        <BarreContrat
+          crmId={c.id}
+          nomLieu={c.name}
+          emailContact={c.contact_email ?? null}
+          manquants={k.manquants}
+          manquantsLucky={trousLucky}
+          envoyeLe={c.contract_sent_at ?? null}
+          signatureActive={signatureConfiguree()}
+        />
 
         {/* La feuille. Fond blanc et texte noir : un contrat se lit et s'imprime. */}
         <article className="rounded-lg bg-white px-12 py-14 text-[13px] leading-relaxed text-neutral-900 shadow-2xl print:rounded-none print:px-0 print:py-0 print:shadow-none">
