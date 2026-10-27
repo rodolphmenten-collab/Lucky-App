@@ -229,8 +229,17 @@ export async function updateVenueSettings(formData: FormData) {
   const crmId = formData.get('crmId') as string;
   if (!venueId) return;
 
+  // Number('') vaut 0, et 0 est fini : un champ laisse vide ecrivait donc une
+  // coordonnee a 0,0 — au large du golfe de Guinee — et la verification de
+  // presence cessait de fonctionner sans message d'erreur. On traite le vide
+  // comme « ne pas toucher », et on accepte la virgule decimale, qu'un clavier
+  // francais produit naturellement.
   const num = (k: string) => {
-    const v = Number(formData.get(k));
+    const brut = formData.get(k);
+    if (typeof brut !== 'string') return null;
+    const texte = brut.trim().replace(',', '.');
+    if (texte === '') return null;
+    const v = Number(texte);
     return Number.isFinite(v) ? v : null;
   };
 
