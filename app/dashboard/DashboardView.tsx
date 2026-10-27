@@ -103,6 +103,12 @@ export function DashboardView({
                 Carte &amp; avantage
               </Link>
               <Link
+                href={`/dashboard/abonnes?venue=${venue.id}`}
+                className="rounded-full border hairline px-4 py-2 text-xs tracking-wide text-bone-dim hover:border-brass hover:text-brass"
+              >
+                Abonnés
+              </Link>
+              <Link
                 href={`/dashboard/shop?venue=${venue.id}`}
                 className="rounded-full border hairline px-4 py-2 text-xs tracking-wide text-bone-dim hover:border-brass hover:text-brass"
               >
