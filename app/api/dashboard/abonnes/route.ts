@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createServiceClient } from '@/lib/supabase/server';
+import { isPlatformAdminEmail } from '@/lib/admin';
+import { getAdminViewingVenueId } from '@/lib/adminViewing';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,15 +20,23 @@ export async function GET(request: Request) {
   const venueId = new URL(request.url).searchParams.get('venue');
   if (!venueId) return NextResponse.json({ error: 'Lieu manquant' }, { status: 400 });
 
-  const { data: lien } = await supabase
-    .from('venue_admins')
-    .select('venue_id')
-    .eq('user_id', user.id)
-    .eq('venue_id', venueId)
-    .maybeSingle();
-  if (!lien) return NextResponse.json({ error: 'Non autorisé' }, { status: 403 });
+  // Deux chemins légitimes : le lieu lui-même, ou un administrateur de la
+  // plateforme en train de visualiser ce lieu précis.
+  const vuAdmin = getAdminViewingVenueId();
+  const enVisualisation = vuAdmin === venueId && (await isPlatformAdminEmail(user.email));
 
-  const { data: abonnes } = await supabase.rpc('venue_followers', { p_venue_id: venueId });
+  if (!enVisualisation) {
+    const { data: lien } = await supabase
+      .from('venue_admins')
+      .select('venue_id')
+      .eq('user_id', user.id)
+      .eq('venue_id', venueId)
+      .maybeSingle();
+    if (!lien) return NextResponse.json({ error: 'Non autorisé' }, { status: 403 });
+  }
+
+  const client = enVisualisation ? createServiceClient() : supabase;
+  const { data: abonnes } = await client.rpc('venue_followers', { p_venue_id: venueId });
 
   const lignes = [
     ['prenom', 'email', 'accord_donne_le'].join(','),
