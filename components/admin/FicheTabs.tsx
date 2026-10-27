@@ -15,6 +15,7 @@ import Link from 'next/link';
 
 export type OngletFiche =
   | 'suivi'
+  | 'performance'
   | 'informations'
   | 'carte'
   | 'abonnement'
@@ -22,7 +23,7 @@ export type OngletFiche =
   | 'qr';
 
 /**
- * Les six onglets s'affichent pour tous les lieux, prospects compris.
+ * Les sept onglets s'affichent pour tous les lieux, prospects compris.
  *
  * Ils etaient d'abord masques tant que le lieu n'avait pas d'etablissement
  * cree : deux fiches se lisaient donc differemment selon l'etape, et on ne
@@ -31,6 +32,9 @@ export type OngletFiche =
  */
 const ONGLETS: { cle: OngletFiche; label: string }[] = [
   { cle: 'suivi', label: 'Suivi commercial' },
+  // Ce que le lieu voit quand il se connecte : on le regarde ici plutot que
+  // de basculer en visualisation pour repondre a « et ca donne quoi ? ».
+  { cle: 'performance', label: 'Performance' },
   { cle: 'informations', label: 'Informations & contacts' },
   { cle: 'carte', label: 'Carte & avantages' },
   { cle: 'abonnement', label: 'Abonnement' },
