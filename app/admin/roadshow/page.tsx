@@ -161,6 +161,7 @@ export default async function RoadshowPage({
               setStageAction={setStage}
               addNoteAction={addNote}
               me={me}
+              jour={selected!}
             />
 
             <p className="mt-10 border-t hairline pt-4 text-xs leading-relaxed text-bone-faint">
