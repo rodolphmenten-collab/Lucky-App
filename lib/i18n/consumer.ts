@@ -87,6 +87,14 @@ export const consumerCopy: Record<ConsumerLang, any> = {
       termsAnd: 'and the',
       privacyLink: 'Privacy Policy',
       poweredBy: 'Powered by Lucky',
+    },
+    suivre: {
+      label: (venue: string) => `Keep me posted about ${venue}`,
+      aide: (venue: string) =>
+        `${venue} gets your email address and may write to you about its news. Optional, and you can stop at any time — right here.`,
+      actif: (venue: string) => `You're following ${venue}.`,
+      retirer: 'Stop following',
+      erreur: "That didn't save. Try again.",
       termsRequired: 'Please accept the Terms of Use to continue.',
       enableNotifications: 'Get notified about waves & messages',
       notificationsEnabled: 'Notifications on',
@@ -252,6 +260,14 @@ export const consumerCopy: Record<ConsumerLang, any> = {
       termsAnd: 'et la',
       privacyLink: 'Politique de Confidentialité',
       poweredBy: 'Propulsé par Lucky',
+    },
+    suivre: {
+      label: (venue: string) => `Je veux recevoir les actualités du ${venue}`,
+      aide: (venue: string) =>
+        `${venue} recevra votre adresse e-mail et pourra vous écrire à propos de ses actualités. C'est facultatif, et vous pouvez arrêter à tout moment, ici même.`,
+      actif: (venue: string) => `Vous suivez ${venue}.`,
+      retirer: 'Ne plus suivre',
+      erreur: "L'enregistrement a échoué. Réessayez.",
       termsRequired: "Merci d'accepter les Conditions d'Utilisation pour continuer.",
       enableNotifications: 'Être notifié des waves et messages',
       notificationsEnabled: 'Notifications activées',
@@ -417,6 +433,14 @@ export const consumerCopy: Record<ConsumerLang, any> = {
       termsAnd: 'y la',
       privacyLink: 'Política de Privacidad',
       poweredBy: 'Con tecnología de Lucky',
+    },
+    suivre: {
+      label: (venue: string) => `Quiero recibir las novedades de ${venue}`,
+      aide: (venue: string) =>
+        `${venue} recibirá tu correo electrónico y podrá escribirte sobre sus novedades. Es opcional y puedes dejar de recibirlas cuando quieras, aquí mismo.`,
+      actif: (venue: string) => `Sigues a ${venue}.`,
+      retirer: 'Dejar de seguir',
+      erreur: 'No se pudo guardar. Inténtalo de nuevo.',
       termsRequired: 'Acepta los Términos de Uso para continuar.',
       enableNotifications: 'Recibir avisos de saludos y mensajes',
       notificationsEnabled: 'Notificaciones activadas',
