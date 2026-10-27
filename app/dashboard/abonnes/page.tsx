@@ -101,7 +101,9 @@ export default async function AbonnesPage({
             <p className="mt-2 text-sm text-bone-dim">
               {lignes.length === 0
                 ? "Personne n'a encore accepté de recevoir vos actualités."
-                : `${lignes.length} personne${lignes.length > 1 ? 's' : ''} ont accepté de recevoir vos actualités.`}
+                : lignes.length === 1
+                  ? '1 personne a accepté de recevoir vos actualités.'
+                  : `${lignes.length} personnes ont accepté de recevoir vos actualités.`}
             </p>
           </div>
           {lignes.length > 0 && !enVisualisation && (
