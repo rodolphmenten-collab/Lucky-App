@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useRef, useState } from 'react';
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { ACTIVE_STAGES, STAGE_SHORT, stageLabel, type Stage } from '@/lib/crm';
 
@@ -36,6 +37,12 @@ export interface RoadshowStop {
 
 type Action = (formData: FormData) => void | Promise<void>;
 
+// Leaflet touche a `window` : il ne peut pas etre rendu cote serveur.
+const CarteRoadshow = dynamic(
+  () => import('./CarteRoadshow').then((m) => m.CarteRoadshow),
+  { ssr: false, loading: () => <div className="mt-4 h-[280px] animate-pulse rounded-2xl border hairline bg-ink-800" /> }
+);
+
 const STAGE_COLOR: Record<string, string> = {
   prospect: '#8A8478',
   contacte: '#5B93CC',
@@ -51,14 +58,18 @@ export function RoadshowDay({
   setStageAction,
   addNoteAction,
   me,
+  jour,
 }: {
   stops: RoadshowStop[];
   setStageAction: Action;
   addNoteAction: Action;
   me: string;
+  jour: string;
 }) {
   const [rows, setRows] = useState(stops);
   const [open, setOpen] = useState<string | null>(null);
+  const [geocodage, setGeocodage] = useState<'repos' | 'en cours' | 'fait'>('repos');
+  const [resultatGeo, setResultatGeo] = useState<string | null>(null);
   const cardRefs = useRef(new Map<string, HTMLElement>());
 
   const counts = useMemo(() => {
@@ -69,38 +80,21 @@ export function RoadshowDay({
 
   const geo = useMemo(() => rows.filter((r) => r.lat !== null && r.lon !== null), [rows]);
 
-  // Projection simple sur la boîte englobante. À l'échelle d'un quartier, la
-  // déformation est invisible ; on corrige quand même la longitude par le
-  // cosinus de la latitude, sinon Lille paraît étirée d'est en ouest.
-  const pins = useMemo(() => {
-    if (geo.length === 0) return [];
-    const lats = geo.map((g) => g.lat as number);
-    const lons = geo.map((g) => g.lon as number);
-    const midLat = (Math.min(...lats) + Math.max(...lats)) / 2;
-    const k = Math.cos((midLat * Math.PI) / 180);
-    const xs = lons.map((l) => l * k);
-    const minX = Math.min(...xs);
-    const maxX = Math.max(...xs);
-    const minY = Math.min(...lats);
-    const maxY = Math.max(...lats);
-    const spanX = Math.max(maxX - minX, 1e-5);
-    const spanY = Math.max(maxY - minY, 1e-5);
-    const pad = 8;
-    const W = 100;
-    const H = 62;
-    // Même échelle sur les deux axes : la carte doit rester proportionnée.
-    const scale = Math.min((W - 2 * pad) / spanX, (H - 2 * pad) / spanY);
-    const offX = (W - spanX * scale) / 2;
-    const offY = (H - spanY * scale) / 2;
-    return geo.map((g, i) => ({
-      stop: g,
-      n: rows.indexOf(g) + 1,
-      x: offX + ((g.lon as number) * k - minX) * scale,
-      // L'axe y de l'écran descend, la latitude monte.
-      y: H - (offY + ((g.lat as number) - minY) * scale),
-      color: STAGE_COLOR[g.stage] ?? '#8A8478',
-    }));
-  }, [geo, rows]);
+  // Les points de la carte. Plus de projection maison : Leaflet place les
+  // coordonnees sur un vrai fond de plan, donc on lui passe lat/lon tels quels.
+  const pins = useMemo(
+    () =>
+      geo.map((g) => ({
+        id: g.id,
+        n: rows.indexOf(g) + 1,
+        nom: g.name,
+        lat: g.lat as number,
+        lon: g.lon as number,
+        couleur: STAGE_COLOR[g.stage] ?? '#8A8478',
+        adresse: g.address,
+      })),
+    [geo, rows]
+  );
 
   const mapsUrl = useMemo(() => {
     if (geo.length < 2) return null;
@@ -113,6 +107,34 @@ export function RoadshowDay({
     if (waypoints) p.set('waypoints', waypoints);
     return `https://www.google.com/maps/dir/?${p.toString()}`;
   }, [geo]);
+
+  async function placerSurLaCarte() {
+    setGeocodage('en cours');
+    setResultatGeo(null);
+    try {
+      const res = await fetch('/api/admin/geocoder', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ jour }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setResultatGeo(data.error ?? 'La recherche a échoué.');
+        setGeocodage('repos');
+        return;
+      }
+      const bouts = [`${data.places} lieu(x) placé(s)`];
+      if (data.introuvables?.length) {
+        bouts.push(`introuvables : ${data.introuvables.join(', ')} — à saisir à la main`);
+      }
+      if (data.restants) bouts.push(`${data.restants} restant(s), relance pour les suivants`);
+      setResultatGeo(bouts.join(' · ') + '. Recharge la page pour voir la carte.');
+      setGeocodage('fait');
+    } catch {
+      setResultatGeo("La recherche a échoué : le serveur n'a pas répondu.");
+      setGeocodage('repos');
+    }
+  }
 
   function move(id: string, stage: string) {
     setRows((prev) => prev.map((r) => (r.id === id ? { ...r, stage } : r)));
@@ -140,35 +162,12 @@ export function RoadshowDay({
 
       {/* ------------------------------------------------------------ carte */}
       {pins.length > 0 && (
-        <div className="mt-4 rounded-2xl border hairline bg-ink-900/50 p-2.5">
-          <svg
-            viewBox="0 0 100 62"
-            role="img"
-            aria-label="Carte des lieux de la journée"
-            className="block w-full"
-            style={{ height: 'min(44vh, 340px)' }}
-          >
-            {pins.map((p) => (
-              <g key={p.stop.id} onClick={() => focusCard(p.stop.id)} style={{ cursor: 'pointer' }}>
-                <circle cx={p.x} cy={p.y} r={2.5} fill={p.color} stroke="#0B0A08" strokeWidth={0.4} />
-                <text
-                  x={p.x}
-                  y={p.y}
-                  fontSize={2.4}
-                  fontWeight={600}
-                  fill="#0B0A08"
-                  textAnchor="middle"
-                  dominantBaseline="central"
-                  pointerEvents="none"
-                >
-                  {p.n}
-                </text>
-              </g>
-            ))}
-          </svg>
+        <div className="mt-4">
+          <CarteRoadshow points={pins} onPointClick={focusCard} />
           <div className="flex flex-wrap items-center justify-between gap-2 px-1 pt-1.5">
             <p className="text-[11px] text-bone-faint">
-              Un point par lieu, numéroté comme la liste. Touche un point pour ouvrir sa fiche.
+              Numérotés comme la liste. Touche un point pour son adresse et l&rsquo;itinéraire,
+              double-touche pour ouvrir sa fiche.
             </p>
             {mapsUrl && (
               <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-brass underline">
@@ -180,10 +179,22 @@ export function RoadshowDay({
       )}
 
       {rows.length > 0 && geo.length < rows.length && (
-        <p className="mt-2 text-[11px] text-bone-faint">
-          {rows.length - geo.length} lieu(x) sans coordonnées ne figurent pas sur la carte.
-        </p>
+        <div className="mt-2 flex flex-wrap items-center gap-3">
+          <p className="text-[11px] text-bone-faint">
+            {rows.length - geo.length} lieu(x) sans coordonnées ne figurent pas sur la carte.
+          </p>
+          <button
+            type="button"
+            onClick={placerSurLaCarte}
+            disabled={geocodage === 'en cours'}
+            className="min-h-[36px] rounded-full border border-brass/50 px-4 text-[11px] text-brass hover:bg-brass/10 disabled:opacity-50"
+          >
+            {geocodage === 'en cours' ? 'Recherche en cours…' : 'Les placer sur la carte'}
+          </button>
+        </div>
       )}
+
+      {resultatGeo && <p className="mt-2 text-[11px] leading-relaxed text-bone-dim">{resultatGeo}</p>}
 
       {/* ------------------------------------------------------------ liste */}
       <ol className="mt-4 space-y-2">
@@ -277,9 +288,14 @@ export function RoadshowDay({
                           Appeler {r.contactName ?? ''}
                         </a>
                       )}
-                      {r.address && (
+                      {/* Sans adresse, on envoie le nom et la ville : Google Maps
+                          retrouve l'etablissement. Mieux qu'un bouton absent
+                          au moment ou on cherche la porte. */}
+                      {(r.address || r.name) && (
                         <a
-                          href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(r.address)}`}
+                          href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
+                            r.address || [r.name, r.city].filter(Boolean).join(', ')
+                          )}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-xs text-brass underline"
