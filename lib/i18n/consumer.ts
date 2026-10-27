@@ -10,7 +10,11 @@ export function detectBrowserLang(): ConsumerLang {
   return 'en';
 }
 
-export const consumerCopy: Record<ConsumerLang, any> = {
+// Le type etait `any`, donc rien ne verifiait que les trois langues portent
+// les memes cles : une cle deplacee d'un bloc a l'autre passait la compilation
+// et ne se voyait qu'a l'ecran, en « undefined » — ou en page blanche quand la
+// cle manquante etait une fonction. L'anglais sert desormais de reference.
+const copie = {
   en: {
     intentions: { dating: 'Dating', business: 'Business', social: 'Social', friends: 'With friends', looking: 'Just looking' },
     filters: { everyone: 'Everyone' },
@@ -87,6 +91,13 @@ export const consumerCopy: Record<ConsumerLang, any> = {
       termsAnd: 'and the',
       privacyLink: 'Privacy Policy',
       poweredBy: 'Powered by Lucky',
+      termsRequired: 'Please accept the Terms of Use to continue.',
+      enableNotifications: 'Get notified about waves & messages',
+      notificationsEnabled: 'Notifications on',
+      iosInstallTitle: "Don't miss a wave or message",
+      iosInstallBody: (venue: string) =>
+        `Add ${venue} to your Home Screen to get notified — tap the Share button below, then "Add to Home Screen".`,
+      iosInstallDismiss: 'Maybe later',
     },
     suivre: {
       label: (venue: string) => `Keep me posted about ${venue}`,
@@ -95,13 +106,6 @@ export const consumerCopy: Record<ConsumerLang, any> = {
       actif: (venue: string) => `You're following ${venue}.`,
       retirer: 'Stop following',
       erreur: "That didn't save. Try again.",
-      termsRequired: 'Please accept the Terms of Use to continue.',
-      enableNotifications: 'Get notified about waves & messages',
-      notificationsEnabled: 'Notifications on',
-      iosInstallTitle: "Don't miss a wave or message",
-      iosInstallBody: (venue: string) =>
-        `Add ${venue} to your Home Screen to get notified — tap the Share button below, then "Add to Home Screen".`,
-      iosInstallDismiss: 'Maybe later',
     },
     chat: {
       placeholder: 'Type a message…',
@@ -260,6 +264,13 @@ export const consumerCopy: Record<ConsumerLang, any> = {
       termsAnd: 'et la',
       privacyLink: 'Politique de Confidentialité',
       poweredBy: 'Propulsé par Lucky',
+      termsRequired: "Merci d'accepter les Conditions d'Utilisation pour continuer.",
+      enableNotifications: 'Être notifié des waves et messages',
+      notificationsEnabled: 'Notifications activées',
+      iosInstallTitle: 'Ne ratez aucun wave ou message',
+      iosInstallBody: (venue: string) =>
+        `Ajoutez ${venue} à votre écran d’accueil pour être notifié — appuyez sur le bouton Partager ci-dessous, puis « Sur l’écran d’accueil ».`,
+      iosInstallDismiss: 'Plus tard',
     },
     suivre: {
       label: (venue: string) => `Je veux recevoir les actualités du ${venue}`,
@@ -268,13 +279,6 @@ export const consumerCopy: Record<ConsumerLang, any> = {
       actif: (venue: string) => `Vous suivez ${venue}.`,
       retirer: 'Ne plus suivre',
       erreur: "L'enregistrement a échoué. Réessayez.",
-      termsRequired: "Merci d'accepter les Conditions d'Utilisation pour continuer.",
-      enableNotifications: 'Être notifié des waves et messages',
-      notificationsEnabled: 'Notifications activées',
-      iosInstallTitle: 'Ne ratez aucun wave ou message',
-      iosInstallBody: (venue: string) =>
-        `Ajoutez ${venue} à votre écran d’accueil pour être notifié — appuyez sur le bouton Partager ci-dessous, puis « Sur l’écran d’accueil ».`,
-      iosInstallDismiss: 'Plus tard',
     },
     chat: {
       placeholder: 'Écrire un message…',
@@ -433,6 +437,13 @@ export const consumerCopy: Record<ConsumerLang, any> = {
       termsAnd: 'y la',
       privacyLink: 'Política de Privacidad',
       poweredBy: 'Con tecnología de Lucky',
+      termsRequired: 'Acepta los Términos de Uso para continuar.',
+      enableNotifications: 'Recibir avisos de saludos y mensajes',
+      notificationsEnabled: 'Notificaciones activadas',
+      iosInstallTitle: 'No te pierdas ningún saludo o mensaje',
+      iosInstallBody: (venue: string) =>
+        `Añade ${venue} a tu pantalla de inicio para recibir avisos — toca el botón Compartir de abajo y luego "Añadir a pantalla de inicio".`,
+      iosInstallDismiss: 'Más tarde',
     },
     suivre: {
       label: (venue: string) => `Quiero recibir las novedades de ${venue}`,
@@ -441,13 +452,6 @@ export const consumerCopy: Record<ConsumerLang, any> = {
       actif: (venue: string) => `Sigues a ${venue}.`,
       retirer: 'Dejar de seguir',
       erreur: 'No se pudo guardar. Inténtalo de nuevo.',
-      termsRequired: 'Acepta los Términos de Uso para continuar.',
-      enableNotifications: 'Recibir avisos de saludos y mensajes',
-      notificationsEnabled: 'Notificaciones activadas',
-      iosInstallTitle: 'No te pierdas ningún saludo o mensaje',
-      iosInstallBody: (venue: string) =>
-        `Añade ${venue} a tu pantalla de inicio para recibir avisos — toca el botón Compartir de abajo y luego "Añadir a pantalla de inicio".`,
-      iosInstallDismiss: 'Más tarde',
     },
     chat: {
       placeholder: 'Escribe un mensaje…',
@@ -531,3 +535,7 @@ export const consumerCopy: Record<ConsumerLang, any> = {
     },
   },
 };
+
+export type ConsumerCopy = (typeof copie)['en'];
+
+export const consumerCopy: Record<ConsumerLang, ConsumerCopy> = copie;
