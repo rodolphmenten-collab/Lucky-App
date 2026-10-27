@@ -173,6 +173,16 @@ export default function PolitiqueConfidentialite() {
               voit, sur un bon présenté au comptoir, que le montant à encaisser et le prénom associé.
             </li>
             <li>
+              <strong className="text-bone">Sauf si vous le demandez vous-même.</strong> Dans la salle, une case
+              décochée vous propose de recevoir les actualités de cet établissement précis. Si vous la cochez,
+              et seulement dans ce cas, votre prénom, votre adresse e-mail et la date de votre accord lui sont
+              transmis ; il devient alors responsable de l&rsquo;usage qu&rsquo;il en fait et doit vous offrir
+              un moyen de vous désinscrire de ses envois. Votre accord vaut pour cet établissement et pour aucun
+              autre, et vous pouvez le retirer à tout moment au même endroit — il cesse alors de vous voir dans
+              sa liste. Nous conservons la date de votre accord et celle de son retrait, afin de pouvoir établir
+              ce que vous aviez accepté et quand.
+            </li>
+            <li>
               <strong className="text-bone">Nos prestataires techniques</strong>, strictement pour faire
               fonctionner le service : hébergement et base de données (Supabase, Union européenne), envoi
               d&rsquo;emails, paiement des abonnements des établissements (Stripe). Ils agissent sur nos
