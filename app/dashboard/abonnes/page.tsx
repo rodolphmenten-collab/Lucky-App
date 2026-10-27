@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import { redirect, notFound } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createServiceClient } from '@/lib/supabase/server';
+import { isPlatformAdminEmail } from '@/lib/admin';
+import { getAdminViewingVenueId } from '@/lib/adminViewing';
 import { ExportAbonnes } from './ExportAbonnes';
 
 export const dynamic = 'force-dynamic';
@@ -23,22 +25,61 @@ export default async function AbonnesPage({
   } = await supabase.auth.getUser();
   if (!user) redirect('/venue-login?next=/dashboard/abonnes');
 
-  const { data: liens } = await supabase
-    .from('venue_admins')
-    .select('venue_id, venues(id, name)')
-    .eq('user_id', user.id);
-  if (!liens || liens.length === 0) notFound();
+  // Un administrateur de la plateforme qui visualise un lieu n'est pas, lui,
+  // dans venue_admins : sans ce cas, l'écran lui répondrait introuvable au
+  // moment précis où il veut montrer la fonctionnalité.
+  const vuAdmin = getAdminViewingVenueId();
+  const estAdminPlateforme = await isPlatformAdminEmail(user.email);
 
-  const lien = searchParams.venue
-    ? liens.find((l: any) => l.venue_id === searchParams.venue)
-    : liens[0];
-  if (!lien) notFound();
-  const venue: any = (lien as any).venues;
+  let venue: { id: string; name: string } | null = null;
+  let abonnes: any[] | null = null;
 
-  // Appel avec le client de l'utilisateur, et non le client de service : la
-  // fonction lit l'identité de l'appelant pour vérifier qu'il administre bien
-  // ce lieu avant de joindre les e-mails.
-  const { data: abonnes } = await supabase.rpc('venue_followers', { p_venue_id: venue.id });
+  if (vuAdmin && estAdminPlateforme) {
+    const service = createServiceClient();
+    const { data: v } = await service
+      .from('venues')
+      .select('id, name')
+      .eq('id', vuAdmin)
+      .maybeSingle();
+    if (!v) notFound();
+    venue = v;
+
+    const { data } = await service
+      .from('venue_follows')
+      .select('consented_at, user_id')
+      .eq('venue_id', v.id)
+      .is('withdrawn_at', null)
+      .order('consented_at', { ascending: false });
+
+    // En visualisation, on affiche le volume et les dates mais pas les
+    // adresses : la liste appartient au lieu, pas à la plateforme.
+    abonnes = (data ?? []).map((a: any) => ({
+      first_name: '—',
+      email: 'masqué en visualisation',
+      consented_at: a.consented_at,
+    }));
+  } else {
+    const { data: liens } = await supabase
+      .from('venue_admins')
+      .select('venue_id, venues(id, name)')
+      .eq('user_id', user.id);
+    if (!liens || liens.length === 0) notFound();
+
+    const lien = searchParams.venue
+      ? liens.find((l: any) => l.venue_id === searchParams.venue)
+      : liens[0];
+    if (!lien) notFound();
+    venue = (lien as any).venues;
+
+    // Appel avec le client de l'utilisateur, et non le client de service : la
+    // fonction lit l'identité de l'appelant pour vérifier qu'il administre bien
+    // ce lieu avant de joindre les e-mails.
+    const { data } = await supabase.rpc('venue_followers', { p_venue_id: venue!.id });
+    abonnes = data;
+  }
+
+  if (!venue) notFound();
+  const enVisualisation = Boolean(vuAdmin && estAdminPlateforme);
 
   const lignes: { prenom: string; email: string; date: string }[] = (abonnes ?? []).map(
     (a: any) => ({ prenom: a.first_name ?? '', email: a.email ?? '', date: a.consented_at })
@@ -63,7 +104,9 @@ export default async function AbonnesPage({
                 : `${lignes.length} personne${lignes.length > 1 ? 's' : ''} ont accepté de recevoir vos actualités.`}
             </p>
           </div>
-          {lignes.length > 0 && <ExportAbonnes venueId={venue.id} venueName={venue.name} />}
+          {lignes.length > 0 && !enVisualisation && (
+            <ExportAbonnes venueId={venue.id} venueName={venue.name} />
+          )}
         </div>
 
         <div className="mt-6 rounded-2xl border border-brass/30 bg-brass/5 p-5">
