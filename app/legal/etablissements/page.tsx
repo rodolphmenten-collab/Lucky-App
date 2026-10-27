@@ -240,6 +240,23 @@ export default function CGUEtablissements() {
             aucun cas les coordonnées exactes, le contenu des échanges, ou les données de blocage entre
             utilisateurs ne sont accessibles au Client.
           </p>
+          <p className="mt-3">
+            Par exception, un utilisateur peut consentir expressément, dans la salle du Client et par une case
+            décochée par défaut le désignant nommément, à recevoir les actualités de cet établissement. Les
+            données transmises au Client sont alors limitées au prénom, à l'adresse e-mail et à la date du
+            consentement.
+          </p>
+          <p className="mt-3">
+            À compter de cette transmission, le Client agit comme responsable de traitement autonome pour ces
+            données. Il s'engage à ne les utiliser que pour communiquer sur son propre établissement, à ne les
+            céder ni les louer à quiconque, à faire figurer dans chaque envoi un moyen de désinscription
+            fonctionnel, à traiter sans délai les demandes d'effacement et d'opposition qui lui sont adressées,
+            et à cesser tout envoi à une personne qui ne figure plus dans la liste mise à sa disposition. Le
+            Client vérifie cette liste avant chaque campagne. OLIGART n'est pas responsable des communications
+            émises par le Client ni de l'usage qu'il fait de ces données, et le Client garantit OLIGART contre
+            toute réclamation en découlant. En cas de manquement, OLIGART peut suspendre l'accès à cette
+            fonctionnalité sans que cela ouvre droit à indemnité.
+          </p>
         </section>
 
         <section>
