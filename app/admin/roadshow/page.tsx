@@ -156,7 +156,12 @@ export default async function RoadshowPage({
               })}
             </p>
 
+            {/* La cle vaut la journee : sans elle, React garde le meme
+                composant d'un jour a l'autre, et son etat initial avec — on
+                changeait de date et la liste comme la carte restaient sur la
+                journee precedente. */}
             <RoadshowDay
+              key={selected!}
               stops={stops}
               setStageAction={setStage}
               addNoteAction={addNote}
