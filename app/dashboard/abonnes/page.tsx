@@ -44,20 +44,12 @@ export default async function AbonnesPage({
     if (!v) notFound();
     venue = v;
 
-    const { data } = await service
-      .from('venue_follows')
-      .select('consented_at, user_id')
-      .eq('venue_id', v.id)
-      .is('withdrawn_at', null)
-      .order('consented_at', { ascending: false });
-
-    // En visualisation, on affiche le volume et les dates mais pas les
-    // adresses : la liste appartient au lieu, pas à la plateforme.
-    abonnes = (data ?? []).map((a: any) => ({
-      first_name: '—',
-      email: 'masqué en visualisation',
-      consented_at: a.consented_at,
-    }));
+    // Même vue que le lieu, adresses comprises : l'appartenance à la
+    // plateforme vient d'être vérifiée, et ces adresses sont de toute façon
+    // dans la base — les masquer ne protégeait rien et rendait
+    // l'impersonation inutile pour le support.
+    const { data } = await service.rpc('venue_followers', { p_venue_id: v.id });
+    abonnes = data;
   } else {
     const { data: liens } = await supabase
       .from('venue_admins')
@@ -79,7 +71,6 @@ export default async function AbonnesPage({
   }
 
   if (!venue) notFound();
-  const enVisualisation = Boolean(vuAdmin && estAdminPlateforme);
 
   const lignes: { prenom: string; email: string; date: string }[] = (abonnes ?? []).map(
     (a: any) => ({ prenom: a.first_name ?? '', email: a.email ?? '', date: a.consented_at })
@@ -106,17 +97,15 @@ export default async function AbonnesPage({
                   : `${lignes.length} personnes ont accepté de recevoir vos actualités.`}
             </p>
           </div>
-          {lignes.length > 0 && !enVisualisation && (
-            <ExportAbonnes venueId={venue.id} venueName={venue.name} />
-          )}
+          {lignes.length > 0 && <ExportAbonnes venueId={venue.id} venueName={venue.name} />}
         </div>
 
         <div className="mt-6 rounded-2xl border border-brass/30 bg-brass/5 p-5">
           <p className="text-sm leading-relaxed text-bone-dim">
-            Ces personnes vous ont donné leur accord à vous, en vous nommant. Dès que vous
-            exportez cette liste, vous en devenez responsable : n&rsquo;écrivez que sur vos
-            actualités, prévoyez un lien de désinscription dans chaque envoi, et retirez de vos
-            envois toute personne qui disparaît de cette liste.
+            Ces personnes ont donné leur accord à cet établissement, en le nommant. Dès que la
+            liste est exportée, l&rsquo;établissement en devient responsable&nbsp;:
+            n&rsquo;écrire que sur ses propres actualités, prévoir un lien de désinscription dans
+            chaque envoi, et retirer de ses envois toute personne qui disparaît d&rsquo;ici.
           </p>
         </div>
 
