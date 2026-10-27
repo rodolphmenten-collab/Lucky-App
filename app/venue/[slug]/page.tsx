@@ -2,6 +2,7 @@ import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { JoinRoom } from './JoinRoom';
 import { PeopleHere } from './PeopleHere';
+import { SuivreLieu } from './SuivreLieu';
 import { PeopleCountLine } from './PeopleCountLine';
 
 /**
@@ -57,6 +58,19 @@ export default async function VenuePage({ params }: { params: { slug: string } }
     hasActiveCheckIn = Boolean(activeCheckIn);
   }
 
+  // Abonnement aux actualites du lieu : lu ici pour que la case arrive deja
+  // dans le bon etat, plutot que de se cocher toute seule apres l'affichage.
+  let dejaSuivi = false;
+  if (user) {
+    const { data: suivi } = await supabase
+      .from('venue_follows')
+      .select('withdrawn_at')
+      .eq('user_id', user.id)
+      .eq('venue_id', venue.id)
+      .maybeSingle();
+    dejaSuivi = Boolean(suivi && !suivi.withdrawn_at);
+  }
+
   return (
     <main className="min-h-screen">
       <header className="relative flex h-64 items-end overflow-hidden border-b hairline">
@@ -93,12 +107,19 @@ export default async function VenuePage({ params }: { params: { slug: string } }
             termsAcceptedAt={termsAcceptedAt}
           />
         ) : (
-          <PeopleHere
-            venueSlug={venue.slug}
-            venueId={venue.id}
-            venueName={venue.name}
-            durationMinutes={venue.checkin_duration_minutes}
-          />
+          <>
+            <PeopleHere
+              venueSlug={venue.slug}
+              venueId={venue.id}
+              venueName={venue.name}
+              durationMinutes={venue.checkin_duration_minutes}
+            />
+            {/* Separe de l'entree dans la salle : on ne conditionne pas
+                l'acces au service a l'acceptation de recevoir des e-mails. */}
+            <div className="mx-auto max-w-sm">
+              <SuivreLieu venueId={venue.id} venueName={venue.name} dejaSuivi={dejaSuivi} />
+            </div>
+          </>
         )}
       </div>
     </main>
