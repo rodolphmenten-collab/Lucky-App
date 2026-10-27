@@ -21,7 +21,8 @@ import { VENUE_TYPES } from '@/lib/venues';
 import { FicheTabs, ongletDepuisUrl } from '@/components/admin/FicheTabs';
 import { CoverPhotoPanel } from '@/components/admin/CoverPhotoPanel';
 import { ShopView } from '@/app/dashboard/shop/ShopView';
-import { getVenueOrders } from '@/lib/attribution';
+import { getVenueOrders, getAttributionStats, getTodayOrders } from '@/lib/attribution';
+import { PerformancePanel } from '@/components/admin/PerformancePanel';
 import { setStage, addNote, setNextAction, updateCrmVenue, updateVenueSettings } from '../../actions';
 
 export const dynamic = 'force-dynamic';
@@ -123,6 +124,25 @@ export default async function CrmVenuePage({
   // inutile d'interroger la base pour un ecran qu'on ne regarde pas.
   const commandes =
     venue && onglet === 'carte' ? await getVenueOrders(service, venue.id, 30) : [];
+
+  // La performance n'est chargee que sur son onglet : c'est quatre requetes,
+  // inutiles tant qu'on regarde le suivi commercial.
+  const perf =
+    venue && onglet === 'performance'
+      ? await (async () => {
+          const [{ data: stats }, attribution, todayOrders, { count }] = await Promise.all([
+            service.rpc('venue_dashboard_stats', { p_venue_id: venue.id }).maybeSingle(),
+            getAttributionStats(service, venue.id, venue.average_ticket_cents ?? null),
+            getTodayOrders(service, venue.id),
+            service
+              .from('venue_follows')
+              .select('user_id', { count: 'exact', head: true })
+              .eq('venue_id', venue.id)
+              .is('withdrawn_at', null),
+          ]);
+          return { stats, attribution, todayOrders, abonnes: count ?? 0 };
+        })()
+      : null;
 
   // Commandes de supports physiques, pour la boutique de l'onglet QR.
   const { data: commandesSupports } =
@@ -319,7 +339,7 @@ export default async function CrmVenuePage({
         {/* Onglets qui dependent d'un etablissement cree. Sans lui, on ne cache
             pas l'onglet : on explique ce qui manque et on donne le geste
             suivant, plutot que de laisser l'utilisateur chercher. */}
-        {!venue && ['carte', 'abonnement', 'position', 'qr'].includes(onglet) && (
+        {!venue && ['carte', 'abonnement', 'position', 'qr', 'performance'].includes(onglet) && (
           <div className="mt-6 rounded-2xl border hairline p-8 text-center">
             <p className="font-display text-xl italic text-bone">
               Pas encore d&rsquo;établissement
@@ -329,6 +349,8 @@ export default async function CrmVenuePage({
               {onglet === 'abonnement' && 'L’abonnement et le lien de paiement s’activent une fois le lieu créé dans Lucky.'}
               {onglet === 'position' && 'Les coordonnées GPS et le rayon de présence se règlent une fois le lieu créé dans Lucky.'}
               {onglet === 'qr' && 'Le QR code est généré à la création du lieu dans Lucky.'}
+              {onglet === 'performance' &&
+                "Il n'y a pas encore de chiffres : ils commencent à exister dès que le lieu est créé et que des clients ouvrent la salle."}
             </p>
             <Link
               href={`/admin/venues/new?crm=${c.id}`}
@@ -344,6 +366,17 @@ export default async function CrmVenuePage({
 
         {venue && (
           <>
+            {onglet === 'performance' && perf && (
+              <PerformancePanel
+                venueName={venue.name}
+                venueId={venue.id}
+                stats={perf.stats}
+                attribution={perf.attribution}
+                todayOrders={perf.todayOrders}
+                abonnes={perf.abonnes}
+              />
+            )}
+
             {onglet === 'qr' && (
               <>
                 <div className="mt-6 rounded-2xl border hairline p-5">
