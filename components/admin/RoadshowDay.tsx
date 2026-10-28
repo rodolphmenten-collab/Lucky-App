@@ -69,6 +69,9 @@ export function RoadshowDay({
   const [rows, setRows] = useState(stops);
   const [open, setOpen] = useState<string | null>(null);
   const [geocodage, setGeocodage] = useState<'repos' | 'en cours' | 'fait'>('repos');
+  // Une note prise dans la rue doit se voir enregistree tout de suite : sans
+  // retour visible, on retape la meme note en croyant l'avoir perdue.
+  const [notes, setNotes] = useState<Record<string, 'repos' | 'envoi' | 'ok' | 'echec'>>({});
   const [resultatGeo, setResultatGeo] = useState<string | null>(null);
   const cardRefs = useRef(new Map<string, HTMLElement>());
 
@@ -133,6 +136,25 @@ export function RoadshowDay({
     } catch {
       setResultatGeo("La recherche a échoué : le serveur n'a pas répondu.");
       setGeocodage('repos');
+    }
+  }
+
+  async function enregistrerNote(id: string, formulaire: HTMLFormElement) {
+    const fd = new FormData(formulaire);
+    if (!String(fd.get('body') ?? '').trim()) return;
+    setNotes((n) => ({ ...n, [id]: 'envoi' }));
+    try {
+      await addNoteAction(fd);
+      formulaire.reset();
+      setRows((prev) =>
+        prev.map((r) =>
+          r.id === id ? { ...r, lastNoteAt: new Date().toISOString(), lastNoteBy: me } : r
+        )
+      );
+      setNotes((n) => ({ ...n, [id]: 'ok' }));
+    } catch {
+      // On ne vide pas le champ : le texte reste disponible pour reessayer.
+      setNotes((n) => ({ ...n, [id]: 'echec' }));
     }
   }
 
@@ -267,7 +289,13 @@ export function RoadshowDay({
                     </button>
                   </div>
 
-                  <form action={addNoteAction} className="mt-3">
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      void enregistrerNote(r.id, e.currentTarget);
+                    }}
+                    className="mt-3"
+                  >
                     <input type="hidden" name="crmId" value={r.id} />
                     <textarea
                       name="body"
@@ -279,10 +307,19 @@ export function RoadshowDay({
                     <div className="mt-2 flex flex-wrap items-center gap-3">
                       <button
                         type="submit"
-                        className="min-h-[44px] rounded-full bg-bone px-5 text-xs font-medium text-ink hover:bg-brass-bright"
+                        disabled={notes[r.id] === 'envoi'}
+                        className="min-h-[44px] rounded-full bg-bone px-5 text-xs font-medium text-ink hover:bg-brass-bright disabled:opacity-50"
                       >
-                        Enregistrer la note
+                        {notes[r.id] === 'envoi' ? 'Enregistrement…' : 'Enregistrer la note'}
                       </button>
+                      {notes[r.id] === 'ok' && (
+                        <span className="text-xs text-signal-live">Note enregistrée ✓</span>
+                      )}
+                      {notes[r.id] === 'echec' && (
+                        <span className="text-xs text-red-400">
+                          Échec — ton texte est conservé, réessaie.
+                        </span>
+                      )}
                       {r.contactPhone && (
                         <a href={`tel:${r.contactPhone}`} className="text-xs text-brass underline">
                           Appeler {r.contactName ?? ''}
