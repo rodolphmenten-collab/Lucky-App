@@ -241,6 +241,15 @@ export default function CGUEtablissements() {
             utilisateurs ne sont accessibles au Client.
           </p>
           <p className="mt-3">
+            OLIGART s&rsquo;interdit d&rsquo;exploiter les données des utilisateurs rencontrés dans
+            l&rsquo;établissement du Client à d&rsquo;autres fins que le fonctionnement du Service.
+            En particulier, OLIGART ne vend, ne loue ni ne cède ces données à quiconque, ne les
+            utilise pas à des fins publicitaires ou de prospection pour son propre compte ou celui
+            d&rsquo;un tiers, et ne s&rsquo;en sert pas pour démarcher la clientèle du Client au
+            profit d&rsquo;un autre établissement. Cet engagement survit à la fin du présent
+            contrat.
+          </p>
+          <p className="mt-3">
             Par exception, un utilisateur peut consentir expressément, dans la salle du Client et par une case
             décochée par défaut le désignant nommément, à recevoir les actualités de cet établissement. Les
             données transmises au Client sont alors limitées au prénom, à l'adresse e-mail et à la date du
