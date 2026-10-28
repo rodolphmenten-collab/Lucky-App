@@ -333,6 +333,28 @@ function inviteEmailHtml(firstName: string, venueName: string, actionLink: strin
     <p style="font-size:14px; color:#333;">À très vite,<br />L'équipe Lucky</p>
   `);
 }
+export async function setVenueActive(formData: FormData) {
+  const user = await requireAdmin();
+  if (!user) return;
+
+  const venueId = formData.get('venueId') as string;
+  const crmId = (formData.get('crmId') as string) || undefined;
+  const actif = formData.get('actif') === '1';
+  if (!venueId) return;
+
+  const service = createServiceClient();
+  await service
+    .from('venues')
+    .update({
+      active: actif,
+      deactivated_at: actif ? null : new Date().toISOString(),
+      deactivation_reason: actif ? null : ((formData.get('raison') as string) || '').trim() || null,
+    })
+    .eq('id', venueId);
+
+  refresh(crmId);
+}
+
 export async function sendVenueInvite(formData: FormData) {
   const supabase = createClient();
   const {
