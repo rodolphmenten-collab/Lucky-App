@@ -468,17 +468,20 @@ export function PipelineBoard({
                       </div>
                     </div>
 
-                    <div className="mt-2 flex items-center justify-between gap-2 border-t hairline pt-2">
-                      {/* Le libelle dit ce qui va se passer : un prospect n'a
-                          pas d'etablissement a ouvrir, il en a un a creer. */}
-                      {c.venueId ? (
-                        <Link
-                          href={`/admin/crm/${c.id}`}
-                          className="rounded-full border border-brass/50 px-3 py-1 text-[10px] text-brass hover:bg-brass/10"
-                        >
-                          Ouvrir l&rsquo;établissement
-                        </Link>
-                      ) : (
+                    <div className="mt-2 flex flex-wrap items-center justify-between gap-2 border-t hairline pt-2">
+                      {/* La fiche s'ouvre toujours : c'est la qu'on note ce qui
+                          s'est dit. Un prospect n'avait que « creer
+                          l'etablissement », donc aucun moyen d'ecrire une note
+                          sans creer un lieu Lucky dont on n'a pas encore
+                          besoin. « Fiche » et « etablissement » sont deux
+                          choses differentes, les libelles le disent. */}
+                      <Link
+                        href={`/admin/crm/${c.id}`}
+                        className="rounded-full border border-brass/50 px-3 py-1 text-[10px] text-brass hover:bg-brass/10"
+                      >
+                        Ouvrir la fiche
+                      </Link>
+                      {!c.venueId && (
                         <Link
                           href={`/admin/venues/new?crm=${c.id}`}
                           className="rounded-full border hairline px-3 py-1 text-[10px] text-bone-dim hover:border-brass hover:text-brass"
