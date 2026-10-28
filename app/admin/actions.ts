@@ -27,6 +27,10 @@ async function requireAdmin() {
 
 function refresh(id?: string) {
   revalidatePath('/admin');
+  // La tournee lit les memes lignes que le pipeline : sans elle, une note
+  // prise sur le terrain etait bien ecrite mais l'ecran ne bougeait pas, et
+  // on la retapait en croyant avoir rate l'enregistrement.
+  revalidatePath('/admin/roadshow');
   if (id) revalidatePath(`/admin/crm/${id}`);
 }
 
