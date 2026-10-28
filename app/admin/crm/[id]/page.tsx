@@ -23,7 +23,14 @@ import { CoverPhotoPanel } from '@/components/admin/CoverPhotoPanel';
 import { ShopView } from '@/app/dashboard/shop/ShopView';
 import { getVenueOrders, getAttributionStats, getTodayOrders } from '@/lib/attribution';
 import { PerformancePanel } from '@/components/admin/PerformancePanel';
-import { setStage, addNote, setNextAction, updateCrmVenue, updateVenueSettings } from '../../actions';
+import {
+  setStage,
+  addNote,
+  setNextAction,
+  updateCrmVenue,
+  updateVenueSettings,
+  setVenueActive,
+} from '../../actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -381,6 +388,63 @@ export default async function CrmVenuePage({
               <>
                 <div className="mt-6 rounded-2xl border hairline p-5">
                   <VenuePanel slug={venue.slug} siteUrl={siteUrl} />
+                </div>
+
+                {/* Eteindre le lieu plutot que le supprimer : c'est ce qui
+                    ferme une soiree ponctuelle, les supports restant sur
+                    place. Le QR continue de mener quelque part, mais la salle
+                    annonce qu'elle est fermee. */}
+                <div className="mt-4 rounded-2xl border hairline p-5">
+                  <div className="flex flex-wrap items-start justify-between gap-4">
+                    <div>
+                      <p className="font-mono text-xs uppercase tracking-[0.2em] text-brass">
+                        État du QR
+                      </p>
+                      <p className="mt-2 text-sm text-bone">
+                        {venue.active === false ? (
+                          <>
+                            Désactivé
+                            {venue.deactivated_at
+                              ? ` depuis le ${new Date(venue.deactivated_at).toLocaleDateString('fr-FR')}`
+                              : ''}
+                            {venue.deactivation_reason ? ` — ${venue.deactivation_reason}` : ''}
+                          </>
+                        ) : (
+                          'Actif — les clients peuvent entrer dans la salle'
+                        )}
+                      </p>
+                    </div>
+
+                    <form action={setVenueActive} className="flex flex-wrap items-center gap-2">
+                      <input type="hidden" name="venueId" value={venue.id} />
+                      <input type="hidden" name="crmId" value={c.id} />
+                      <input type="hidden" name="actif" value={venue.active === false ? '1' : '0'} />
+                      {venue.active !== false && (
+                        <input
+                          name="raison"
+                          placeholder="Motif (soirée terminée, impayé…)"
+                          className="min-h-[44px] w-56 rounded-xl border hairline bg-transparent px-4 text-sm text-bone placeholder:text-bone-faint focus:border-brass focus:outline-none"
+                        />
+                      )}
+                      <button
+                        type="submit"
+                        className={
+                          venue.active === false
+                            ? 'min-h-[44px] rounded-full bg-bone px-5 text-sm font-medium text-ink hover:bg-brass-bright'
+                            : 'min-h-[44px] rounded-full border border-red-400/40 px-5 text-sm text-red-400 hover:bg-red-400/10'
+                        }
+                      >
+                        {venue.active === false ? 'Réactiver le QR' : 'Désactiver le QR'}
+                      </button>
+                    </form>
+                  </div>
+
+                  <p className="mt-3 text-xs leading-relaxed text-bone-faint">
+                    Désactiver n&rsquo;efface rien : l&rsquo;historique, le chiffre d&rsquo;affaires
+                    tracké et les abonnés restent. Les supports déjà posés continuent de renvoyer
+                    ici, mais la salle annonce qu&rsquo;elle est fermée. C&rsquo;est ce qui clôt une
+                    soirée ponctuelle.
+                  </p>
                 </div>
 
                 {/* Commander les supports est le prolongement direct du QR.
