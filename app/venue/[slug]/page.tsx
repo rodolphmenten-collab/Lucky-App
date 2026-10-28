@@ -18,11 +18,26 @@ export default async function VenuePage({ params }: { params: { slug: string } }
 
   const { data: venue } = await supabase
     .from('venues')
-    .select('id, slug, name, city, type, checkin_duration_minutes, cover_photo_url')
+    .select('id, slug, name, city, type, checkin_duration_minutes, cover_photo_url, active')
     .eq('slug', params.slug)
     .maybeSingle();
 
   if (!venue) notFound();
+
+  // Lieu éteint : le QR mène toujours quelque part, mais la salle est fermée.
+  // On le dit plutôt que de renvoyer une page introuvable, qui laisserait
+  // croire à une panne — et on ne nomme pas la raison, qui regarde le lieu.
+  if (venue.active === false) {
+    return (
+      <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center px-6 text-center">
+        <p className="font-display text-2xl italic text-bone">{venue.name}</p>
+        <p className="mt-4 text-sm leading-relaxed text-bone-dim">
+          La salle n&rsquo;est pas ouverte en ce moment. Repassez un soir où le service est actif
+          — l&rsquo;équipe de l&rsquo;établissement saura vous le dire.
+        </p>
+      </main>
+    );
+  }
 
   const { data: counts } = (await supabase
     .rpc('get_venue_live_counts', { p_venue_slug: params.slug })
