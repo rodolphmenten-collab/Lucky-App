@@ -168,7 +168,7 @@ export function JoinRoom({
       {errorMsg && <p className="mt-4 text-xs text-red-400">{errorMsg}</p>}
 
       {showLocationHelp && (
-        <LocationPermissionHelp onRetry={requestLocation} onDismiss={() => setShowLocationHelp(false)} />
+        <LocationPermissionHelp onDismiss={() => setShowLocationHelp(false)} />
       )}
 
       {/* Mention discrete, au pied de l'ecran de consentement et nulle part
