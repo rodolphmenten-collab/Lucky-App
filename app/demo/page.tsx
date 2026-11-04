@@ -42,6 +42,30 @@ export default function DemoPage() {
         preload="metadata"
       />
 
+      {/* Ce que ca change pour le lieu. Place apres la video : le patron a vu
+          le mecanisme, il se demande maintenant ce qu'il y gagne — et le CA
+          n'est pas la seule reponse. Formulations courtes : il lit debout. */}
+      <section className="mt-10">
+        <p className="text-center font-mono text-[10px] uppercase tracking-[0.3em] text-brass">
+          Ce que ça change chez vous
+        </p>
+        <ul className="mt-5 space-y-3">
+          {[
+            ['Du chiffre d’affaires tracké', 'Chaque consommation offerte via votre carte est attribuée, à l’euro près.'],
+            ['Vos soirées creuses se remplissent', 'Un mardi n’a pas besoin d’une remise, il a besoin d’une raison de sortir.'],
+            ['Vos clients restent plus longtemps', 'Qui vient de rencontrer quelqu’un ne part pas après un verre.'],
+            ['Un fichier clients qui vous appartient', 'Ceux qui le souhaitent vous laissent leur e-mail, en vous nommant.'],
+            ['Une salle qui se parle', 'La convivialité ne s’achète pas. C’est ce qui les fait revenir.'],
+            ['Ce que votre caisse ne dit pas', 'Affluence par créneau, durée de présence, intentions de sortie.'],
+          ].map(([titre, corps]) => (
+            <li key={titre} className="rounded-2xl border hairline bg-ink-800/60 px-5 py-4">
+              <p className="text-sm font-medium text-bone">{titre}</p>
+              <p className="mt-1 text-xs leading-relaxed text-bone-dim">{corps}</p>
+            </li>
+          ))}
+        </ul>
+      </section>
+
       {/* ---- Rappel ------------------------------------------------------ */}
       <section className="mt-10 rounded-3xl border border-brass/30 bg-brass/[0.04] p-6 text-center">
         <p className="font-display text-xl italic text-bone">30 jours d’essai, offerts.</p>
