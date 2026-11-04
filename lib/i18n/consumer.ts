@@ -78,7 +78,8 @@ const copie = {
       needsLocation: 'Location access is off. Check your browser or phone settings (Privacy → Location) and allow it for this site, then try again.',
       locationHelpTitle: 'Location is turned off',
       locationHelpBody: 'We can\u2019t open your settings for you — no website can, on any phone, for security reasons. Follow these steps, then come back here.',
-      locationHelpRetry: 'I\u2019ve enabled it — try again',
+      locationHelpRetry: 'I\u2019ve enabled it — reload the page',
+      locationHelpReload: 'The page has to be reloaded for the browser to see the new permission — tapping retry alone won\u2019t do it.',
       locationSteps: {
         iosSafari: ['Open the Settings app', 'Go to Privacy & Security → Location Services', 'Make sure Location Services is on', 'Scroll down, tap Safari Websites, choose "Ask" or "Allow"'],
         androidChrome: ['Tap the ⓘ or lock icon next to the address bar', 'Tap Permissions (or Site settings)', 'Set Location to Allow', 'Reload the page'],
@@ -251,7 +252,8 @@ const copie = {
       needsLocation: 'La localisation est désactivée. Vérifiez les réglages de votre navigateur ou de votre téléphone (Confidentialité → Position) et autorisez-la pour ce site, puis réessayez.',
       locationHelpTitle: 'La localisation est désactivée',
       locationHelpBody: 'Nous ne pouvons pas ouvrir vos réglages à votre place — aucun site web ne le peut, sur aucun téléphone, pour des raisons de sécurité. Suivez ces étapes, puis revenez ici.',
-      locationHelpRetry: 'J\u2019ai activé — réessayer',
+      locationHelpRetry: 'J\u2019ai activé — recharger la page',
+      locationHelpReload: 'La page doit être rechargée pour que le navigateur voie la nouvelle autorisation — réessayer seul ne suffit pas.',
       locationSteps: {
         iosSafari: ['Ouvrez l\u2019app Réglages', 'Allez dans Confidentialité et sécurité → Service de localisation', 'Vérifiez que le Service de localisation est activé', 'Descendez, appuyez sur Safari Websites, choisissez "Demander" ou "Toujours"'],
         androidChrome: ['Appuyez sur l\u2019icône ⓘ ou cadenas à côté de la barre d\u2019adresse', 'Appuyez sur Autorisations (ou Paramètres du site)', 'Réglez Position sur Autoriser', 'Rechargez la page'],
@@ -424,7 +426,8 @@ const copie = {
       needsLocation: 'La ubicación está desactivada. Revisa los ajustes de tu navegador o teléfono (Privacidad → Ubicación) y actívala para este sitio, luego inténtalo de nuevo.',
       locationHelpTitle: 'La ubicación está desactivada',
       locationHelpBody: 'No podemos abrir tus ajustes por ti — ningún sitio web puede, en ningún teléfono, por razones de seguridad. Sigue estos pasos y vuelve aquí.',
-      locationHelpRetry: 'Ya la activé — reintentar',
+      locationHelpRetry: 'Ya la activé — recargar la página',
+      locationHelpReload: 'Hay que recargar la página para que el navegador vea el nuevo permiso — reintentar por sí solo no basta.',
       locationSteps: {
         iosSafari: ['Abre la app Ajustes', 'Ve a Privacidad y seguridad → Localización', 'Comprueba que la Localización esté activada', 'Baja, toca Sitios web de Safari, elige "Preguntar" o "Permitir"'],
         androidChrome: ['Toca el icono ⓘ o candado junto a la barra de direcciones', 'Toca Permisos (o Configuración del sitio)', 'Pon Ubicación en Permitir', 'Recarga la página'],

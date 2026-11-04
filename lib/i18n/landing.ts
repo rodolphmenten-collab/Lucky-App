@@ -35,6 +35,36 @@ export const landingCopy = {
     previewTitle: 'Presence, not memory.',
     previewBody:
       'Every profile is confirmed present through location and activity signals, re-verified as the evening goes on. When someone leaves your venue, they disappear from the room — your guests never have to guess who’s still around.',
+    benefitsEyebrow: 'What it changes for you',
+    benefitsTitle: 'A full room is only the beginning.',
+    benefitsBody:
+      'The extra revenue is the part you can count. It is rarely the part that makes a venue keep us.',
+    benefits: [
+      {
+        title: 'Revenue, tracked to the euro',
+        body: 'Every round bought through your menu is attributed. You do not take our word for the result — you read it, venue by venue, night by night.',
+      },
+      {
+        title: 'Your quiet nights fill up',
+        body: 'A Tuesday does not need a discount, it needs a reason to come out. People come when they know the room will be alive.',
+      },
+      {
+        title: 'Guests stay longer',
+        body: 'Someone who has just met someone does not leave after one drink. Longer stays are more covers, without a single extra seat.',
+      },
+      {
+        title: 'A mailing list that is yours',
+        body: 'Guests who want to can leave you their email, naming your venue. The list belongs to you, not to us, and you can export it whenever you like.',
+      },
+      {
+        title: 'A room that talks',
+        body: 'The atmosphere you cannot buy: people speaking to each other. That is what they remember, and what brings them back.',
+      },
+      {
+        title: 'What your till never tells you',
+        body: 'Footfall by time slot, how long people stay, why they came out. Your till knows what was sold — not who was in the room.',
+      },
+    ],
     showcaseRows: [
       {
         eyebrow: 'The room',
@@ -183,6 +213,36 @@ export const landingCopy = {
     previewTitle: 'La présence, pas le souvenir.',
     previewBody:
       'Chaque profil est confirmé présent grâce à des signaux de localisation et d’activité, revérifiés au fil de la soirée. Quand quelqu’un quitte votre établissement, il disparaît de la salle — vos clients n’ont jamais à deviner qui est encore là.',
+    benefitsEyebrow: 'Ce que ça change pour vous',
+    benefitsTitle: 'Une salle pleine n’est que le début.',
+    benefitsBody:
+      'Le chiffre d’affaires supplémentaire est la partie qui se compte. C’est rarement celle qui fait qu’un lieu nous garde.',
+    benefits: [
+      {
+        title: 'Du chiffre d’affaires, tracké à l’euro',
+        body: 'Chaque consommation offerte via votre carte est attribuée. Vous ne croyez pas le résultat sur parole — vous le lisez, établissement par établissement, soir par soir.',
+      },
+      {
+        title: 'Vos soirées creuses se remplissent',
+        body: 'Un mardi n’a pas besoin d’une remise, il a besoin d’une raison de sortir. On vient quand on sait que la salle sera vivante.',
+      },
+      {
+        title: 'Vos clients restent plus longtemps',
+        body: 'Quelqu’un qui vient de rencontrer quelqu’un ne part pas après un verre. Du temps en plus, c’est du couvert en plus, sans une place supplémentaire.',
+      },
+      {
+        title: 'Un fichier clients qui vous appartient',
+        body: 'Ceux qui le souhaitent vous laissent leur e-mail, en vous nommant. La liste est à vous, pas à nous, et vous l’exportez quand vous voulez.',
+      },
+      {
+        title: 'Une salle qui se parle',
+        body: 'La convivialité ne s’achète pas : c’est que les gens se parlent. C’est ce dont ils se souviennent, et ce qui les fait revenir.',
+      },
+      {
+        title: 'Ce que votre caisse ne dit pas',
+        body: 'L’affluence par créneau, la durée de présence, les intentions de sortie. Votre caisse sait ce qui a été vendu — pas qui était en salle.',
+      },
+    ],
     showcaseRows: [
       {
         eyebrow: 'La salle',
