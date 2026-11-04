@@ -122,6 +122,27 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Ce que ca change pour l'exploitant. Place juste avant les tarifs :
+          on repond a « qu'est-ce que j'y gagne » avant de montrer un prix. */}
+      <section className="mx-auto max-w-7xl border-t hairline px-6 py-28">
+        <div className="mx-auto max-w-2xl text-center">
+          <p className="font-mono text-xs uppercase tracking-[0.3em] text-brass">{t.benefitsEyebrow}</p>
+          <h2 className="mt-4 font-display text-4xl italic leading-tight text-bone text-balance">
+            {t.benefitsTitle}
+          </h2>
+          <p className="mt-5 text-sm leading-relaxed text-bone-dim">{t.benefitsBody}</p>
+        </div>
+
+        <div className="mx-auto mt-14 grid max-w-5xl gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {t.benefits.map((b: { title: string; body: string }) => (
+            <div key={b.title} className="rounded-2xl border hairline bg-ink-800/60 p-6">
+              <p className="font-display text-lg italic leading-snug text-bone">{b.title}</p>
+              <p className="mt-3 text-sm leading-relaxed text-bone-dim">{b.body}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* Pricing */}
       <section id="pricing" className="mx-auto max-w-7xl border-t hairline px-6 py-28">
         <p className="font-mono text-xs uppercase tracking-[0.3em] text-brass">{t.pricingEyebrow}</p>
