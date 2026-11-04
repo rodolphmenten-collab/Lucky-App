@@ -42,6 +42,18 @@ export default async function ChatPage({
     .eq('match_id', match.id)
     .order('created_at', { ascending: true });
 
+  // Marquage de lecture cote serveur, au chargement de la page.
+  //
+  // Le client le fait aussi, pour les messages qui arrivent pendant qu'on lit.
+  // Mais un appel lance depuis le navigateur peut ne jamais aboutir : on
+  // ouvre le fil, on repart aussitot, l'onglet passe en arriere-plan ou le
+  // reseau lache dans un bar — et le badge reste alors qu'on a bien lu.
+  // Ici, l'ecriture a lieu avant meme que la page s'affiche.
+  await supabase.from('match_reads').upsert(
+    { match_id: match.id, user_id: user.id, last_read_at: new Date().toISOString() },
+    { onConflict: 'match_id,user_id' }
+  );
+
   const { data: existingFeedback } = await supabase
     .from('match_feedback')
     .select('id')
