@@ -11,7 +11,7 @@ function detectPlatform(): 'iosSafari' | 'androidChrome' | 'desktop' {
   return 'desktop';
 }
 
-export function LocationPermissionHelp({ onRetry, onDismiss }: { onRetry: () => void; onDismiss?: () => void }) {
+export function LocationPermissionHelp({ onDismiss }: { onDismiss?: () => void }) {
   const { t } = useLanguage();
   const platform = detectPlatform();
   const steps: string[] = t.join.locationSteps[platform];
@@ -21,6 +21,10 @@ export function LocationPermissionHelp({ onRetry, onDismiss }: { onRetry: () => 
       <div className="w-full max-w-sm rounded-t-3xl border hairline bg-ink-900 p-6 sm:rounded-3xl">
         <p className="font-display text-xl italic text-bone">{t.join.locationHelpTitle}</p>
         <p className="mt-2 text-xs leading-relaxed text-bone-dim">{t.join.locationHelpBody}</p>
+        {/* Autoriser la position dans les reglages ne suffit pas : la page
+            doit etre rechargee pour que le navigateur en tienne compte. On le
+            dit, et le bouton recharge vraiment au lieu de redemander. */}
+        <p className="mt-2 text-xs leading-relaxed text-brass">{t.join.locationHelpReload}</p>
 
         <ol className="mt-5 space-y-3">
           {steps.map((step, i) => (
@@ -34,7 +38,7 @@ export function LocationPermissionHelp({ onRetry, onDismiss }: { onRetry: () => 
         </ol>
 
         <button
-          onClick={onRetry}
+          onClick={() => window.location.reload()}
           className="mt-6 w-full rounded-full bg-bone py-3 text-sm font-medium tracking-wide text-ink hover:bg-brass-bright"
         >
           {t.join.locationHelpRetry}
