@@ -18,12 +18,12 @@ export default function CGUEtablissements() {
         <section>
           <h2 className="text-base font-semibold text-bone">Éditeur du service</h2>
           <p className="mt-2">
-            Le service Lucky (ci-après « Lucky » ou « le Service ») est édité par OLIGART, société par actions
-            simplifiée unipersonnelle (SASU) au capital de [À COMPLÉTER] euros, immatriculée au Registre du
-            Commerce et des Sociétés de Paris sous le numéro [SIRET À COMPLÉTER], dont le siège social est situé
-            9 bis rue Pérignon, 75015 Paris, France (ci-après « OLIGART », « Lucky », « nous »).
+            Le service Lucky (ci-après « Lucky » ou « le Service ») est édité par LUCKY, société par actions
+            simplifiée (SAS) au capital de 200 euros, immatriculée au Registre du Commerce et des Sociétés de
+            Paris sous le numéro 132 148 941, dont le siège social est situé 8 bis rue Abel, 75012 Paris,
+            France (ci-après « LUCKY », « Lucky », « nous »).
           </p>
-          <p className="mt-2">Directeur de la publication : [NOM À COMPLÉTER].</p>
+          <p className="mt-2">Directeur de la publication : Rodolph Menten, Président.</p>
           <p className="mt-2">Contact : hello@lucky-app.io</p>
         </section>
 
@@ -31,14 +31,14 @@ export default function CGUEtablissements() {
           <h2 className="text-base font-semibold text-bone">Article 1 — Objet</h2>
           <p className="mt-2">
             Les présentes Conditions Générales de Vente et d'Utilisation (ci-après « CGV ») ont pour objet de
-            définir les conditions dans lesquelles OLIGART met à disposition des établissements (hôtels,
+            définir les conditions dans lesquelles LUCKY met à disposition des établissements (hôtels,
             restaurants, bars, beach clubs, coworkings, et tout établissement recevant du public, ci-après
             « l'Établissement » ou « le Client ») le service Lucky, plateforme technique permettant à des
             personnes physiquement présentes dans un même lieu de se découvrir et d'échanger entre elles.
           </p>
           <p className="mt-2">
             Toute souscription au Service implique l'acceptation sans réserve des présentes CGV, ainsi que des
-            conditions particulières éventuellement convenues entre OLIGART et le Client dans le cadre d'un
+            conditions particulières éventuellement convenues entre LUCKY et le Client dans le cadre d'un
             contrat de vente spécifique.
           </p>
         </section>
@@ -62,7 +62,7 @@ export default function CGUEtablissements() {
         <section>
           <h2 className="text-base font-semibold text-bone">Article 3 — Accès au Service et compte Établissement</h2>
           <p className="mt-2">
-            L'accès au Service est réservé aux établissements ayant fait l'objet d'une validation par OLIGART.
+            L'accès au Service est réservé aux établissements ayant fait l'objet d'une validation par LUCKY.
             Le Client s'engage à fournir des informations exactes lors de la création de son compte et à les
             maintenir à jour. Les identifiants de connexion sont strictement personnels et confidentiels ; le
             Client est seul responsable de leur conservation et de toute utilisation en résultant.
@@ -87,7 +87,7 @@ export default function CGUEtablissements() {
               l'amélioration de son propre établissement ;
             </li>
             <li>
-              Signaler sans délai à OLIGART tout dysfonctionnement, incident de sécurité, ou comportement
+              Signaler sans délai à LUCKY tout dysfonctionnement, incident de sécurité, ou comportement
               manifestement illicite dont il aurait connaissance en lien avec l'utilisation du Service dans ses
               locaux.
             </li>
@@ -100,7 +100,7 @@ export default function CGUEtablissements() {
           <h3 className="mt-6 text-sm font-semibold text-bone">4.1 — Supports physiques</h3>
           <p className="mt-2">
             Les supports portant le code QR (plaques, chevalets, jetons, affichages) sont mis à disposition du
-            Client dans le cadre d'un prêt à usage. Ils demeurent la propriété d'OLIGART pendant toute la durée
+            Client dans le cadre d'un prêt à usage. Ils demeurent la propriété de LUCKY pendant toute la durée
             du contrat, y compris lorsqu'ils sont personnalisés aux couleurs du Client.
           </p>
           <ul className="mt-2 list-disc space-y-1.5 pl-5">
@@ -110,13 +110,13 @@ export default function CGUEtablissements() {
               un manquement aux présentes.
             </li>
             <li>
-              L'usure normale est à la charge d'OLIGART, qui remplace les supports concernés. La dégradation,
+              L'usure normale est à la charge de LUCKY, qui remplace les supports concernés. La dégradation,
               la casse, la perte et le vol sont à la charge du Client, qui règle le remplacement au tarif
               unitaire en vigueur — notamment lorsqu'un support est brisé, plié, taché, brûlé, immergé,
               recouvert, ou que son code QR est devenu illisible.
             </li>
             <li>
-              Par année contractuelle, OLIGART remplace gratuitement un nombre de supports égal à 10 % du
+              Par année contractuelle, LUCKY remplace gratuitement un nombre de supports égal à 10 % du
               nombre installé, arrondi à l'unité supérieure. Au-delà, les remplacements sont facturés.
             </li>
             <li>
@@ -125,7 +125,7 @@ export default function CGUEtablissements() {
             </li>
             <li>
               À la fin du contrat, quelle qu'en soit la cause, le Client restitue les supports dans un délai de
-              trente jours, aux frais d'OLIGART. Les supports non restitués passé ce délai sont facturés au
+              trente jours, aux frais de LUCKY. Les supports non restitués passé ce délai sont facturés au
               tarif unitaire en vigueur.
             </li>
           </ul>
@@ -139,7 +139,7 @@ export default function CGUEtablissements() {
             Le Service, sa technologie, son concept (incluant sans limitation le principe de vérification de
             présence géolocalisée associée à une mise en relation par intention), son interface, sa marque, son
             nom, son logo, ainsi que l'ensemble des éléments logiciels, graphiques et textuels qui le composent,
-            sont la propriété exclusive d'OLIGART et sont protégés par le droit de la propriété intellectuelle.
+            sont la propriété exclusive de LUCKY et sont protégés par le droit de la propriété intellectuelle.
           </p>
           <p className="mt-2 font-medium text-bone">
             Il est strictement interdit au Client, à ses préposés, ou à tout tiers agissant pour son compte,
@@ -175,7 +175,7 @@ export default function CGUEtablissements() {
             moment, avec un préavis de trente (30) jours notifié par écrit.
           </p>
           <p className="mt-2">
-            OLIGART se réserve le droit de suspendre ou résilier immédiatement l'accès au Service, sans préavis
+            LUCKY se réserve le droit de suspendre ou résilier immédiatement l'accès au Service, sans préavis
             ni indemnité, en cas de manquement grave du Client à ses obligations, notamment en cas de non-respect
             de l'Article 5, d'impayé, ou d'utilisation du Service de nature à porter atteinte à la sécurité des
             utilisateurs.
@@ -191,15 +191,15 @@ export default function CGUEtablissements() {
           </p>
           <p className="mt-2">
             Lucky est un outil technique de mise en relation fondé sur la présence géographique déclarée et
-            vérifiée par signal de localisation. Ni OLIGART ni le Client n'effectuent de vérification d'identité
+            vérifiée par signal de localisation. Ni LUCKY ni le Client n'effectuent de vérification d'identité
             approfondie, de contrôle d'antécédents, ni aucune forme de filtrage des utilisateurs au-delà des
             informations librement déclarées par ceux-ci lors de la création de leur profil.
           </p>
           <p className="mt-2">
-            OLIGART et le Client ne sont en conséquence parties à aucune interaction, échange, rencontre ou
+            LUCKY et le Client ne sont en conséquence parties à aucune interaction, échange, rencontre ou
             relation, quelle qu'en soit la nature, se nouant entre les utilisateurs du Service par l'intermédiaire
             de celui-ci, que cette interaction ait lieu dans l'enceinte de l'Établissement ou en dehors. Ni
-            OLIGART ni le Client ne pourront être tenus responsables, à quelque titre que ce soit, des
+            LUCKY ni le Client ne pourront être tenus responsables, à quelque titre que ce soit, des
             conséquences directes ou indirectes de ces interactions, y compris en cas de dommage corporel,
             matériel, moral, de comportement délictuel ou de tout litige opposant des utilisateurs entre eux.
           </p>
@@ -207,7 +207,7 @@ export default function CGUEtablissements() {
             Le Service met à disposition des utilisateurs des outils de signalement et de blocage (voir les
             Conditions Générales d'Utilisation applicables aux utilisateurs). L'existence de ces outils ne
             saurait constituer une garantie de sécurité et ne transfère aucune obligation de surveillance ou de
-            résultat à la charge d'OLIGART ou du Client.
+            résultat à la charge de LUCKY ou du Client.
           </p>
           <p className="mt-2">
             Le Client s'engage à ne faire aucune déclaration, publicité ou communication laissant entendre que
@@ -218,14 +218,14 @@ export default function CGUEtablissements() {
         <section>
           <h2 className="text-base font-semibold text-bone">Article 9 — Garanties et limitation de responsabilité générale</h2>
           <p className="mt-2">
-            Le Service est fourni « en l'état ». OLIGART s'engage à mettre en œuvre des moyens raisonnables pour
-            assurer la disponibilité et le bon fonctionnement du Service, sans garantie de résultat. OLIGART ne
+            Le Service est fourni « en l'état ». LUCKY s'engage à mettre en œuvre des moyens raisonnables pour
+            assurer la disponibilité et le bon fonctionnement du Service, sans garantie de résultat. LUCKY ne
             saurait être tenue responsable des interruptions, dysfonctionnements ou pertes de données résultant
             de causes qui lui sont extérieures, notamment de la défaillance de prestataires techniques tiers, de
             problèmes de connectivité, ou de cas de force majeure.
           </p>
           <p className="mt-2">
-            En tout état de cause, la responsabilité totale d'OLIGART au titre du présent contrat, toutes causes
+            En tout état de cause, la responsabilité totale de LUCKY au titre du présent contrat, toutes causes
             confondues, est limitée au montant des sommes effectivement versées par le Client au titre des douze
             (12) derniers mois précédant le fait générateur du dommage.
           </p>
@@ -241,9 +241,9 @@ export default function CGUEtablissements() {
             utilisateurs ne sont accessibles au Client.
           </p>
           <p className="mt-3">
-            OLIGART s&rsquo;interdit d&rsquo;exploiter les données des utilisateurs rencontrés dans
+            LUCKY s&rsquo;interdit d&rsquo;exploiter les données des utilisateurs rencontrés dans
             l&rsquo;établissement du Client à d&rsquo;autres fins que le fonctionnement du Service.
-            En particulier, OLIGART ne vend, ne loue ni ne cède ces données à quiconque, ne les
+            En particulier, LUCKY ne vend, ne loue ni ne cède ces données à quiconque, ne les
             utilise pas à des fins publicitaires ou de prospection pour son propre compte ou celui
             d&rsquo;un tiers, et ne s&rsquo;en sert pas pour démarcher la clientèle du Client au
             profit d&rsquo;un autre établissement. Cet engagement survit à la fin du présent
@@ -261,9 +261,9 @@ export default function CGUEtablissements() {
             céder ni les louer à quiconque, à faire figurer dans chaque envoi un moyen de désinscription
             fonctionnel, à traiter sans délai les demandes d'effacement et d'opposition qui lui sont adressées,
             et à cesser tout envoi à une personne qui ne figure plus dans la liste mise à sa disposition. Le
-            Client vérifie cette liste avant chaque campagne. OLIGART n'est pas responsable des communications
-            émises par le Client ni de l'usage qu'il fait de ces données, et le Client garantit OLIGART contre
-            toute réclamation en découlant. En cas de manquement, OLIGART peut suspendre l'accès à cette
+            Client vérifie cette liste avant chaque campagne. LUCKY n'est pas responsable des communications
+            émises par le Client ni de l'usage qu'il fait de ces données, et le Client garantit LUCKY contre
+            toute réclamation en découlant. En cas de manquement, LUCKY peut suspendre l'accès à cette
             fonctionnalité sans que cela ouvre droit à indemnité.
           </p>
         </section>
@@ -271,7 +271,7 @@ export default function CGUEtablissements() {
         <section>
           <h2 className="text-base font-semibold text-bone">Article 11 — Modification des CGV</h2>
           <p className="mt-2">
-            OLIGART se réserve le droit de modifier les présentes CGV à tout moment. Les Clients seront informés
+            LUCKY se réserve le droit de modifier les présentes CGV à tout moment. Les Clients seront informés
             de toute modification substantielle par email ou via leur tableau de bord, avec un préavis raisonnable
             avant leur entrée en vigueur.
           </p>
