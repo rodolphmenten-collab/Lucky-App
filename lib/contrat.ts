@@ -3,6 +3,8 @@ import {
   COMMITMENTS,
   monthlyCentsAfterDiscount,
   formatCentsExclTax,
+  TAUX_TVA,
+  centsTva,
   type PlanKey,
   type CommitmentMonths,
 } from '@/lib/stripe';
@@ -92,7 +94,15 @@ export interface Contrat {
     contactOperationnel: string;
   };
   formule: { cle: PlanKey; label: string; mensuelHT: string };
-  engagement: { mois: number; label: string; remise: number; mensuelApresRemise: string };
+  engagement: {
+    mois: number;
+    label: string;
+    remise: number;
+    mensuelApresRemise: string;
+    tauxTva: number;
+    mensuelTva: string;
+    mensuelTtc: string;
+  };
   supports: { installes: number | null; inclus: number; personnalises: boolean; supplement: number | null };
   dates: { debutEssai: string; premierPrelevement: string; fait: string };
   manquants: string[];
@@ -155,6 +165,14 @@ export function preparerContrat(c: any, debutEssai = new Date()): Contrat {
       label: engagement.label,
       remise: engagement.discountPercent,
       mensuelApresRemise: formatCentsExclTax(monthlyCentsAfterDiscount(clePlan, mois)),
+      // Le Lieu signe un montant HT, mais c'est le TTC qui sera prélevé :
+      // autant qu'il le lise sur le contrat plutôt que de le découvrir
+      // sur sa première facture.
+      tauxTva: TAUX_TVA,
+      mensuelTva: formatCentsExclTax(centsTva(monthlyCentsAfterDiscount(clePlan, mois))),
+      mensuelTtc: formatCentsExclTax(
+        monthlyCentsAfterDiscount(clePlan, mois) + centsTva(monthlyCentsAfterDiscount(clePlan, mois)),
+      ),
     },
     supports: {
       installes: c.supports_count ?? null,

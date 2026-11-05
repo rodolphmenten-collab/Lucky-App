@@ -162,6 +162,16 @@ export function automaticTaxEnabled(): boolean {
   return process.env.STRIPE_AUTOMATIC_TAX === 'true';
 }
 
+/**
+ * Taux de TVA applicable aux prestations de services en France.
+ * Lucky a opté pour la TVA : les prix affichés sont HT et la taxe s'ajoute.
+ */
+export const TAUX_TVA = 20;
+
+export function centsTva(centsHT: number): number {
+  return Math.round((centsHT * TAUX_TVA) / 100);
+}
+
 export function formatPriceExclTax(cents: number): string {
   return `${(cents / 100).toFixed(2).replace('.', ',')} € HT`;
 }

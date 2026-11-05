@@ -126,6 +126,8 @@ export async function construireContratPdf(crm: any): Promise<Uint8Array> {
     ["Durée d'engagement", k.engagement.label],
     ['Remise applicable', `${k.engagement.remise} %`],
     ['Montant mensuel HT après remise', `${k.engagement.mensuelApresRemise} / mois`],
+    [`TVA (${k.engagement.tauxTva} %)`, `${k.engagement.mensuelTva} / mois`],
+    ['Montant mensuel TTC prélevé', `${k.engagement.mensuelTtc} / mois`],
     ["Début de la période d'essai", k.dates.debutEssai],
     ['Premier prélèvement', `${k.dates.premierPrelevement} (30 jours après)`],
     ['Contact opérationnel du Lieu', k.lieu.contactOperationnel],
