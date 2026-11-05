@@ -38,9 +38,9 @@ export default function PolitiqueConfidentialite() {
         <section>
           <h2 className="text-base font-semibold text-bone">1. Qui est responsable de vos données</h2>
           <p className="mt-2">
-            Le responsable du traitement est <strong className="text-bone">LUCKY</strong>, [forme sociale à
-            compléter] au capital de [montant à compléter] euros, immatriculée au RCS de [ville à compléter] sous
-            le numéro [SIREN à compléter], dont le siège social est situé [adresse à compléter].
+            Le responsable du traitement est <strong className="text-bone">LUCKY</strong>, société par actions
+            simplifiée (SAS) au capital de 200 euros, immatriculée au RCS de Paris sous le numéro 132 148 941,
+            dont le siège social est situé 8 bis rue Abel, 75012 Paris, France.
           </p>
           <p className="mt-2">
             Contact pour toute question relative à vos données :{' '}
