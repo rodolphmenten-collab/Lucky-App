@@ -21,16 +21,26 @@ import {
  * complété au jugé sur un acte qui engage.
  */
 
-/** Identité de Lucky. À compléter dès que la société est immatriculée. */
+/**
+ * Identité de Lucky, telle qu'elle figure sur l'extrait Kbis du 28/10/2026
+ * (Greffe du Tribunal des Activités Économiques de Paris, n° de gestion
+ * 2026B53779). Ces valeurs sont publiques et ne varient pas d'un
+ * environnement à l'autre : elles vivent donc dans le code, et non dans des
+ * variables d'environnement qu'il faudrait penser à configurer. L'env reste
+ * prioritaire si une valeur change avant le prochain déploiement.
+ *
+ * `siren` est le numéro d'immatriculation au RCS, qui est la mention
+ * légalement exigée — ce n'est pas le SIRET, qui désigne l'établissement.
+ */
 export const LUCKY = {
-  raisonSociale: process.env.NEXT_PUBLIC_LUCKY_RAISON_SOCIALE ?? 'Lucky',
-  formeSociale: process.env.NEXT_PUBLIC_LUCKY_FORME ?? '[forme sociale]',
-  capital: process.env.NEXT_PUBLIC_LUCKY_CAPITAL ?? '[montant]',
-  rcsVille: process.env.NEXT_PUBLIC_LUCKY_RCS ?? '[ville]',
-  siren: process.env.NEXT_PUBLIC_LUCKY_SIREN ?? '[SIREN]',
-  siege: process.env.NEXT_PUBLIC_LUCKY_SIEGE ?? '[adresse]',
+  raisonSociale: process.env.NEXT_PUBLIC_LUCKY_RAISON_SOCIALE ?? 'LUCKY',
+  formeSociale: process.env.NEXT_PUBLIC_LUCKY_FORME ?? 'société par actions simplifiée (SAS)',
+  capital: process.env.NEXT_PUBLIC_LUCKY_CAPITAL ?? '200',
+  rcsVille: process.env.NEXT_PUBLIC_LUCKY_RCS ?? 'Paris',
+  siren: process.env.NEXT_PUBLIC_LUCKY_SIREN ?? '132 148 941',
+  siege: process.env.NEXT_PUBLIC_LUCKY_SIEGE ?? '8 bis rue Abel, 75012 Paris',
   representant: process.env.NEXT_PUBLIC_LUCKY_REPRESENTANT ?? 'Rodolph Menten',
-  qualite: process.env.NEXT_PUBLIC_LUCKY_QUALITE ?? '[qualité]',
+  qualite: process.env.NEXT_PUBLIC_LUCKY_QUALITE ?? 'Président',
 };
 
 export interface SignataireLucky {
@@ -46,12 +56,17 @@ export interface SignataireLucky {
 export const LUCKY_SIGNATAIRES: SignataireLucky[] = [
   {
     nom: process.env.NEXT_PUBLIC_LUCKY_SIGNATAIRE_1_NOM ?? 'Rodolph Menten',
-    qualite: process.env.NEXT_PUBLIC_LUCKY_SIGNATAIRE_1_QUALITE ?? '[qualité]',
+    // Seul mandataire social au Kbis, donc seul habilité à engager la société.
+    qualite: process.env.NEXT_PUBLIC_LUCKY_SIGNATAIRE_1_QUALITE ?? 'Président',
     email: process.env.LUCKY_SIGNATAIRE_1_EMAIL ?? '',
   },
   {
     nom: process.env.NEXT_PUBLIC_LUCKY_SIGNATAIRE_2_NOM ?? 'Julien Dessertenne',
-    qualite: process.env.NEXT_PUBLIC_LUCKY_SIGNATAIRE_2_QUALITE ?? '[qualité]',
+    // Cofondateur, mais pas mandataire social au Kbis du 28/10/2026 : sa
+    // signature vaut engagement moral, pas pouvoir d'engager la société.
+    // Le titre reste volontairement « Cofondateur » pour ne pas laisser
+    // croire à un mandat qu'il n'a pas.
+    qualite: process.env.NEXT_PUBLIC_LUCKY_SIGNATAIRE_2_QUALITE ?? 'Cofondateur',
     email: process.env.LUCKY_SIGNATAIRE_2_EMAIL ?? '',
   },
 ];
