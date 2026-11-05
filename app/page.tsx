@@ -161,7 +161,9 @@ export default function LandingPage() {
                 <p className="mt-1 text-xs text-bone-faint">{plan.idealFor}</p>
                 <p className="mt-4 font-display text-3xl text-bone">
                   {plan.price}
-                  <span className="text-sm text-bone-faint">{lang === 'fr' ? '/mois' : '/mo'}</span>
+                  <span className="text-sm text-bone-faint">
+                    {lang === 'fr' ? '/mois HT' : '/mo excl. VAT'}
+                  </span>
                 </p>
                 <ul className="mt-6 flex-1 space-y-2.5">
                   {plan.features.map((f) => (
