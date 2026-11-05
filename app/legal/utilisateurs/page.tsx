@@ -16,8 +16,8 @@ export default function CGUUtilisateurs() {
         <section>
           <h2 className="text-base font-semibold text-bone">Éditeur</h2>
           <p className="mt-2">
-            Lucky est édité par OLIGART, SASU au capital de [À COMPLÉTER] euros, immatriculée au RCS de Paris
-            sous le numéro [SIRET À COMPLÉTER], dont le siège social est situé 9 bis rue Pérignon, 75015 Paris,
+            Lucky est édité par LUCKY, SAS au capital de 200 euros, immatriculée au RCS de Paris
+            sous le numéro 132 148 941, dont le siège social est situé 8 bis rue Abel, 75012 Paris,
             France. Contact : hello@lucky-app.io.
           </p>
         </section>
@@ -88,14 +88,14 @@ export default function CGUUtilisateurs() {
             L'Utilisateur reconnaît et accepte expressément ce qui suit avant toute utilisation du Service :
           </p>
           <p className="mt-2">
-            Lucky est un outil de mise en relation fondé sur la présence géographique déclarée. OLIGART
+            Lucky est un outil de mise en relation fondé sur la présence géographique déclarée. LUCKY
             n'effectue aucune vérification d'identité approfondie, aucun contrôle d'antécédents judiciaires ou
             autres, et ne garantit en aucune manière l'identité réelle, les intentions, le comportement ou la
             fiabilité des autres Utilisateurs.
           </p>
           <p className="mt-2">
             Toute interaction, échange, rencontre, physique ou non, entre Utilisateurs se déroule sous leur
-            entière et seule responsabilité. OLIGART et l'établissement partenaire au sein duquel la mise en
+            entière et seule responsabilité. LUCKY et l'établissement partenaire au sein duquel la mise en
             relation a eu lieu ne sont parties à aucune de ces interactions et déclinent toute responsabilité
             quant à leurs conséquences, y compris en cas de préjudice corporel, matériel ou moral.
           </p>
@@ -107,7 +107,7 @@ export default function CGUUtilisateurs() {
           <p className="mt-2">
             Le Service met à la disposition de l'Utilisateur des fonctionnalités de signalement et de blocage
             d'un autre Utilisateur. Ces fonctionnalités constituent des outils mis à disposition et ne sauraient
-            engager la responsabilité d'OLIGART au titre d'une obligation de surveillance ou de résultat.
+            engager la responsabilité de LUCKY au titre d'une obligation de surveillance ou de résultat.
           </p>
         </section>
 
@@ -115,7 +115,7 @@ export default function CGUUtilisateurs() {
           <h2 className="text-base font-semibold text-bone">Article 6 — Signalement, blocage et modération</h2>
           <p className="mt-2">
             Tout Utilisateur peut signaler ou bloquer un autre Utilisateur directement depuis l'application.
-            OLIGART se réserve le droit d'examiner tout signalement et de suspendre ou supprimer, à sa seule
+            LUCKY se réserve le droit d'examiner tout signalement et de suspendre ou supprimer, à sa seule
             discrétion, tout compte dont le comportement contreviendrait aux présentes CGU ou à la loi.
           </p>
         </section>
@@ -145,9 +145,9 @@ export default function CGUUtilisateurs() {
         <section>
           <h2 className="text-base font-semibold text-bone">Article 9 — Limitation de responsabilité</h2>
           <p className="mt-2">
-            Le Service est fourni « en l'état ». OLIGART ne garantit pas que le Service sera exempt d'erreurs ou
-            disponible sans interruption. Dans les limites permises par la loi, la responsabilité d'OLIGART ne
-            pourra être engagée qu'en cas de faute prouvée directement imputable à OLIGART dans la fourniture
+            Le Service est fourni « en l'état ». LUCKY ne garantit pas que le Service sera exempt d'erreurs ou
+            disponible sans interruption. Dans les limites permises par la loi, la responsabilité de LUCKY ne
+            pourra être engagée qu'en cas de faute prouvée directement imputable à LUCKY dans la fourniture
             du Service, à l'exclusion de tout dommage résultant du comportement d'un autre Utilisateur ou d'un
             tiers.
           </p>
@@ -156,7 +156,7 @@ export default function CGUUtilisateurs() {
         <section>
           <h2 className="text-base font-semibold text-bone">Article 10 — Modification des CGU</h2>
           <p className="mt-2">
-            OLIGART peut modifier les présentes CGU à tout moment. Toute modification substantielle sera portée
+            LUCKY peut modifier les présentes CGU à tout moment. Toute modification substantielle sera portée
             à la connaissance de l'Utilisateur, dont l'acceptation pourra à nouveau être requise.
           </p>
         </section>
