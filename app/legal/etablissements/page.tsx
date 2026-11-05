@@ -165,6 +165,17 @@ export default function CGUEtablissements() {
             contraire, les abonnements sont facturés mensuellement et renouvelés par tacite reconduction. Tout
             mois commencé est dû dans son intégralité.
           </p>
+          <p className="mt-2">
+            Tous les prix sont indiqués hors taxes. La taxe sur la valeur ajoutée au taux en vigueur, soit
+            20 % à ce jour pour les prestations de services en France, s'ajoute au montant hors taxes et
+            apparaît distinctement sur chaque facture. Le montant effectivement prélevé est le montant toutes
+            taxes comprises.
+          </p>
+          <p className="mt-2">
+            Le Client établi dans un autre État membre de l'Union européenne et disposant d'un numéro de TVA
+            intracommunautaire valide peut être facturé hors taxes par autoliquidation, sous réserve qu'il
+            communique ce numéro lors de la souscription.
+          </p>
         </section>
 
         <section>
