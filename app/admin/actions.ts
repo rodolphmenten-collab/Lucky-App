@@ -532,3 +532,81 @@ export async function reporterRelance(formData: FormData) {
 
   refresh(id);
 }
+
+/**
+ * Changer l'adresse d'un membre de l'équipe.
+ *
+ * Une adresse d'admin n'est pas une étiquette : elle est à la fois l'identifiant
+ * de connexion (auth.users), le laissez-passer du back-office (platform_admins)
+ * et la signature des lieux et des notes. Les modifier séparément, c'est se
+ * verrouiller dehors — changer la ligne platform_admins sans changer la
+ * connexion, et l'admin se reconnecte sous son ancienne adresse qui n'ouvre
+ * plus rien.
+ *
+ * Donc tout bouge ensemble, et le compte de connexion d'abord : c'est la seule
+ * étape qui peut échouer pour une raison extérieure (adresse déjà prise par un
+ * autre compte). Si elle casse, rien d'autre n'a bougé.
+ *
+ * Les notes suivent aussi : elles s'affichent sous la partie gauche de
+ * l'adresse, et une relance signée d'un nom qui n'existe plus ne se relie à
+ * personne six semaines plus tard.
+ */
+export async function updateAdminEmail(formData: FormData) {
+  const user = await requireAdmin();
+  if (!user) return;
+
+  const adminId = formData.get('adminId') as string;
+  const nouvelle = ((formData.get('email') as string) || '').trim().toLowerCase();
+  if (!adminId || !nouvelle) return;
+
+  const service = createServiceClient();
+  const { data: avant } = await service
+    .from('platform_admins')
+    .select('email')
+    .eq('id', adminId)
+    .maybeSingle();
+
+  const ancienne = (avant?.email || '').toLowerCase();
+  if (!ancienne) return;
+  if (ancienne === nouvelle) {
+    revalidatePath('/admin/equipe');
+    return;
+  }
+
+  // Déjà dans l'équipe sous ce nom : refuser plutôt que créer un doublon qui
+  // donnerait deux lignes pour une seule personne.
+  const { data: collision } = await service
+    .from('platform_admins')
+    .select('id')
+    .ilike('email', nouvelle)
+    .maybeSingle();
+  if (collision) redirect('/admin/equipe?err=deja-membre');
+
+  const { data: liste } = await service.auth.admin.listUsers();
+  const compteAncien = liste?.users?.find((u: any) => u.email?.toLowerCase() === ancienne);
+  const comptePris = liste?.users?.find((u: any) => u.email?.toLowerCase() === nouvelle);
+
+  if (comptePris && comptePris.id !== compteAncien?.id) {
+    redirect('/admin/equipe?err=compte-existant');
+  }
+
+  if (compteAncien) {
+    // email_confirm : sans lui, Supabase met l'adresse en attente de
+    // confirmation et la connexion reste sur l'ancienne. Ici c'est un admin
+    // qui change l'adresse d'un admin, la boucle de validation n'apporte rien.
+    const { error } = await service.auth.admin.updateUserById(compteAncien.id, {
+      email: nouvelle,
+      email_confirm: true,
+    });
+    if (error) redirect('/admin/equipe?err=auth');
+  }
+
+  await service.from('platform_admins').update({ email: nouvelle }).eq('id', adminId);
+  await service.from('crm_venues').update({ owner_email: nouvelle }).ilike('owner_email', ancienne);
+  await service.from('crm_notes').update({ author_email: nouvelle }).ilike('author_email', ancienne);
+
+  revalidatePath('/admin/equipe');
+  revalidatePath('/admin');
+  revalidatePath('/admin/roadshow');
+  redirect('/admin/equipe?ok=1');
+}
