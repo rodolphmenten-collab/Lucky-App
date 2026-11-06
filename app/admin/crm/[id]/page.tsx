@@ -59,65 +59,66 @@ export default async function CrmVenuePage({
 
   if (!c) notFound();
 
-  const [{ data: notes }, { data: venue }] = await Promise.all([
-    service
-      .from('crm_notes')
-      .select('id, author_email, body, stage_from, stage_to, created_at')
-      .eq('crm_venue_id', c.id)
-      .order('created_at', { ascending: false }),
-    c.venue_id
-      ? service
-          // select('*') et pas une liste de colonnes : une colonne ajoutée par
-          // migration et oubliée ici revenait `undefined` sans erreur — c'est
-          // ce qui est arrivé à `commitment_months`, affiché vide alors qu'il
-          // était en base.
-          .from('venues')
-          .select('*')
-          .eq('id', c.venue_id)
-          .maybeSingle()
-      : Promise.resolve({ data: null }),
-  ]);
+  // Ces cinq lectures ne dependent que de `c` : les enchainer une par une
+  // ajoutait quatre allers-retours Supabase en serie avant le premier pixel.
+  // Elles partent ensemble, la page attend la plus lente et non leur somme.
+  const depuis30Jours = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+  const [{ data: notes }, { data: venue }, { data: orders }, { data: menuRows }, { data: membres }] =
+    await Promise.all([
+      service
+        .from('crm_notes')
+        .select('id, author_email, body, stage_from, stage_to, created_at')
+        .eq('crm_venue_id', c.id)
+        .order('created_at', { ascending: false }),
+      c.venue_id
+        ? service
+            // select('*') et pas une liste de colonnes : une colonne ajoutée par
+            // migration et oubliée ici revenait `undefined` sans erreur — c'est
+            // ce qui est arrivé à `commitment_months`, affiché vide alors qu'il
+            // était en base.
+            .from('venues')
+            .select('*')
+            .eq('id', c.venue_id)
+            .maybeSingle()
+        : Promise.resolve({ data: null }),
+      // Ce que Lucky a rapporté à ce lieu : le seul argument qui tienne en
+      // renouvellement, et le seul qu'on ne puisse pas contester.
+      c.venue_id
+        ? service
+            .from('lucky_orders')
+            .select('price_cents, net_price_cents, status')
+            .eq('venue_id', c.venue_id)
+            .eq('status', 'served')
+            .gte('created_at', depuis30Jours)
+        : Promise.resolve({ data: [] as any[] }),
+      // La carte du lieu, pour l'éditer sans se connecter à sa place.
+      c.venue_id
+        ? service
+            .from('venue_menu_items')
+            .select('id, name, price_cents, category, sort_order')
+            .eq('venue_id', c.venue_id)
+            .eq('active', true)
+            .order('sort_order', { ascending: true })
+        : Promise.resolve({ data: [] as any[] }),
+      // Les lieux rattaches, quand cette fiche est elle-meme un groupe.
+      c.is_group
+        ? service
+            .from('crm_venues')
+            .select('id, name, city, stage, venue_id, expected_plan')
+            .eq('group_id', c.id)
+            .order('name')
+        : Promise.resolve({ data: [] as any[] }),
+    ]);
 
-  // Ce que Lucky a rapporté à ce lieu : le seul argument qui tienne en
-  // renouvellement, et le seul qu'on ne puisse pas contester.
-  let generatedCents = 0;
-  let servedCount = 0;
-  if (c.venue_id) {
-    const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-    const { data: orders } = await service
-      .from('lucky_orders')
-      .select('price_cents, net_price_cents, status')
-      .eq('venue_id', c.venue_id)
-      .eq('status', 'served')
-      .gte('created_at', since);
-    servedCount = (orders ?? []).length;
-    generatedCents = (orders ?? []).reduce(
-      (s: number, o: any) => s + (o.net_price_cents ?? o.price_cents ?? 0),
-      0
-    );
-  }
+  const servedCount = (orders ?? []).length;
+  const generatedCents = (orders ?? []).reduce(
+    (s: number, o: any) => s + (o.net_price_cents ?? o.price_cents ?? 0),
+    0
+  );
 
-  // La carte du lieu, pour l'éditer sans se connecter à sa place.
-  const { data: menuRows } = c.venue_id
-    ? await service
-        .from('venue_menu_items')
-        .select('id, name, price_cents, category, sort_order')
-        .eq('venue_id', c.venue_id)
-        .eq('active', true)
-        .order('sort_order', { ascending: true })
-    : { data: [] as any[] };
   const menuItems = (menuRows ?? []) as { id: string; name: string; price_cents: number; category: string }[];
 
   const trialDays = venue?.trial_ends_at ? daysUntil(venue.trial_ends_at) : null;
-
-  // Les lieux rattaches, quand cette fiche est elle-meme un groupe.
-  const { data: membres } = c.is_group
-    ? await service
-        .from('crm_venues')
-        .select('id, name, city, stage, venue_id, expected_plan')
-        .eq('group_id', c.id)
-        .order('name')
-    : { data: [] as any[] };
 
   const groupeParent = c.group_id
     ? (groupes ?? []).find((g: any) => g.id === c.group_id) ?? null
