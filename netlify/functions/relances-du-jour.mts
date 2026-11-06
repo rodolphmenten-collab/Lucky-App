@@ -47,7 +47,10 @@ function jourFr(iso: string): string {
 export default async function relancesDuJour(req: Request) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  const repli = process.env.CRM_RELANCES_FALLBACK_EMAIL || 'rodolph@lucky-app.io';
+  // L'adresse de repli doit être celle qu'on retrouve en owner_email dans le
+  // CRM, sinon les lignes sans propriétaire arrivent dans une autre boîte que
+  // les siennes et il reçoit deux récaps au lieu d'un.
+  const repli = process.env.CRM_RELANCES_FALLBACK_EMAIL || 'rodolphmenten@gmail.com';
   const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://lucky-app.io').replace(/\/$/, '');
 
   if (!supabaseUrl || !serviceKey) {
