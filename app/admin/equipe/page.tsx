@@ -2,11 +2,22 @@ import { redirect } from 'next/navigation';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { isPlatformAdminEmail } from '@/lib/admin';
 import { AdminNav } from '@/components/admin/AdminNav';
-import { addAdmin, removeAdmin } from '../actions';
+import LigneAdmin from '@/components/admin/LigneAdmin';
+import { addAdmin } from '../actions';
 
 export const dynamic = 'force-dynamic';
 
-export default async function EquipePage() {
+const MESSAGES: Record<string, string> = {
+  'deja-membre': 'Cette adresse est déjà dans l’équipe.',
+  'compte-existant': 'Un autre compte Lucky utilise déjà cette adresse.',
+  auth: 'Le compte de connexion n’a pas pu être modifié. Rien n’a changé.',
+};
+
+export default async function EquipePage({
+  searchParams,
+}: {
+  searchParams?: { err?: string; ok?: string };
+}) {
   const supabase = createClient();
   const {
     data: { user },
@@ -30,24 +41,24 @@ export default async function EquipePage() {
           désignée comme responsable d&rsquo;un lieu.
         </p>
 
+        {searchParams?.err && (
+          <p className="mt-4 rounded-2xl border border-red-400/40 bg-red-400/5 px-5 py-3 text-sm text-red-300">
+            {MESSAGES[searchParams.err] ?? 'La modification n’a pas abouti.'}
+          </p>
+        )}
+        {searchParams?.ok && (
+          <p className="mt-4 rounded-2xl border border-brass/40 bg-brass/5 px-5 py-3 text-sm text-bone">
+            Adresse mise à jour : connexion, accès au back-office, lieux et notes suivent.
+          </p>
+        )}
+
         <div className="mt-4 divide-y hairline rounded-2xl border hairline">
           {(admins ?? []).map((a: any) => (
-            <div key={a.id} className="flex items-center justify-between px-5 py-4">
-              <div>
-                <p className="text-sm text-bone">{a.email}</p>
-                <p className="mt-0.5 font-mono text-[11px] text-bone-faint">
-                  Ajouté le {new Date(a.added_at).toLocaleDateString('fr-FR')}
-                </p>
-              </div>
-              {a.email.toLowerCase() !== user.email?.toLowerCase() && (
-                <form action={removeAdmin}>
-                  <input type="hidden" name="adminId" value={a.id} />
-                  <button type="submit" className="text-xs text-red-400 hover:text-red-300">
-                    Retirer
-                  </button>
-                </form>
-              )}
-            </div>
+            <LigneAdmin
+              key={a.id}
+              admin={a}
+              estMoi={a.email.toLowerCase() === user.email?.toLowerCase()}
+            />
           ))}
         </div>
 
