@@ -59,6 +59,11 @@ export interface BoardCard {
 
 type Action = (formData: FormData) => void | Promise<void>;
 
+/** Casse et espaces mises de cote : « Paris », « paris » et « Paris » sont la meme ville. */
+function normaliserVille(v: unknown): string {
+  return String(v ?? '').trim().replace(/\s+/g, ' ').toLowerCase();
+}
+
 export function PipelineBoard({
   cards,
   setStageAction,
@@ -97,18 +102,26 @@ export function PipelineBoard({
     () => [...new Set(rows.map((r) => r.country).filter(Boolean))].sort() as string[],
     [rows]
   );
-  const cities = useMemo(
-    () =>
-      [
-        ...new Set(
-          rows
-            .filter((r) => !country || r.country === country)
-            .map((r) => r.city)
-            .filter(Boolean)
-        ),
-      ].sort((a, b) => (a as string).localeCompare(b as string)) as string[],
-    [rows, country]
-  );
+  // Une meme ville est saisie « Paris », « paris », « PARIS » ou avec une
+  // espace finale selon qui remplit la fiche. Lister les valeurs brutes
+  // donnait quatre entrees « Paris » dans le menu, chacune ne filtrant
+  // qu'une partie des lignes. On regroupe donc sur une forme normalisee et
+  // on affiche l'orthographe la plus frequente du groupe.
+  const cities = useMemo(() => {
+    const groupes = new Map<string, Map<string, number>>();
+    for (const r of rows) {
+      if (country && r.country !== country) continue;
+      const brut = String(r.city ?? '').trim().replace(/\s+/g, ' ');
+      if (!brut) continue;
+      const cle = brut.toLowerCase();
+      const variantes = groupes.get(cle) ?? new Map<string, number>();
+      variantes.set(brut, (variantes.get(brut) ?? 0) + 1);
+      groupes.set(cle, variantes);
+    }
+    return [...groupes.values()]
+      .map((variantes) => [...variantes.entries()].sort((a, b) => b[1] - a[1])[0][0])
+      .sort((a, b) => a.localeCompare(b));
+  }, [rows, country]);
   const categories = useMemo(
     () =>
       [...new Set(rows.map((r) => r.category).filter(Boolean))].sort((a, b) =>
@@ -131,7 +144,7 @@ export function PipelineBoard({
     return rows.filter((r) => {
       if (mineOnly && (r.ownerEmail ?? '').toLowerCase() !== me) return false;
       if (country && r.country !== country) return false;
-      if (city && r.city !== city) return false;
+      if (city && normaliserVille(r.city) !== normaliserVille(city)) return false;
       if (category && r.category !== category) return false;
       if (source && r.source !== source) return false;
       if (!q) return true;
