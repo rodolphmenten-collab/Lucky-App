@@ -13,7 +13,10 @@ export default async function DashboardPage() {
   if (!user) redirect('/login?next=/dashboard');
 
   const viewingVenueId = getAdminViewingVenueId();
-  const isAdmin = await isPlatformAdminEmail(user.email);
+  // `isAdmin` ne sert que si un admin consulte a la place d'un lieu. Le
+  // verifier systematiquement ajoutait une requete a chaque ouverture du
+  // tableau de bord, pour tous les patrons qui ne sont pas admins.
+  const isAdmin = viewingVenueId ? await isPlatformAdminEmail(user.email) : false;
 
   if (viewingVenueId && isAdmin) {
     const service = createServiceClient();
