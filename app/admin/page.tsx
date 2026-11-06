@@ -18,6 +18,7 @@ import {
 import { AdminNav } from '@/components/admin/AdminNav';
 import { PipelineBoard, type BoardCard } from '@/components/admin/PipelineBoard';
 import { QuickAddVenue } from '@/components/admin/QuickAddVenue';
+import RelancesDues from '@/components/admin/RelancesDues';
 import { setStage, quickAddVenue, deleteCrmVenue } from './actions';
 
 export const dynamic = 'force-dynamic';
@@ -202,28 +203,16 @@ export default async function AdminPage() {
         {/* ------------------------------------------------------------------
             Les relances dues. Première chose qu'on regarde le matin.
         ------------------------------------------------------------------ */}
-        {dueRows.length > 0 && (
-          <section className="mt-8 rounded-2xl border border-brass/40 bg-brass/5 p-5">
-            <p className="font-mono text-xs uppercase tracking-[0.2em] text-brass">
-              À faire {kpis.actionsOverdue > 0 && `· ${kpis.actionsOverdue} en retard`}
-            </p>
-            <ul className="mt-3 space-y-2">
-              {dueRows.slice(0, 8).map((c: any) => (
-                <li key={c.id} className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
-                  <Link href={`/admin/crm/${c.id}`} className="text-bone underline decoration-brass/40">
-                    {c.name}
-                  </Link>
-                  <span className="text-bone-dim">{c.next_action}</span>
-                  <span
-                    className={`font-mono text-[11px] ${c.next_action_at < todayKey ? 'text-red-400' : 'text-bone-faint'}`}
-                  >
-                    {new Date(c.next_action_at).toLocaleDateString('fr-FR')}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
+        <RelancesDues
+          rows={dueRows.map((c: any) => ({
+            id: c.id,
+            name: c.name,
+            next_action: c.next_action ?? null,
+            next_action_at: c.next_action_at,
+          }))}
+          todayKey={todayKey}
+          enRetard={kpis.actionsOverdue}
+        />
 
         {/* ------------------------------------------------------------------
             Pipeline en colonnes. Le detail du glisser-deposer est dans

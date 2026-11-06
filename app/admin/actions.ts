@@ -479,3 +479,56 @@ export async function dismissReport(formData: FormData) {
   await service.from('reports').update({ status: 'dismissed' }).eq('id', id);
   revalidatePath('/admin/moderation');
 }
+
+/**
+ * Relances : marquer faite, ou reporter.
+ *
+ * Le bloc « À faire » de l'accueil admin se nourrit de next_action_at : tant
+ * que la date est passée ou du jour, la ligne reste là. Deux gestes suffisent
+ * donc à le tenir propre — effacer l'échéance quand c'est fait, la pousser
+ * quand ça attend. Le reste de la logique d'affichage n'a rien à savoir.
+ */
+export async function marquerRelanceFaite(formData: FormData) {
+  const user = await requireAdmin();
+  if (!user) return;
+
+  const id = formData.get('crmId') as string;
+  if (!id) return;
+
+  const service = createServiceClient();
+  const { data: avant } = await service
+    .from('crm_venues')
+    .select('next_action')
+    .eq('id', id)
+    .maybeSingle();
+
+  await service
+    .from('crm_venues')
+    .update({ next_action: null, next_action_at: null })
+    .eq('id', id);
+
+  // On garde une trace : six semaines plus tard, « relancé le 12, pas de
+  // réponse » vaut mieux qu'une case vide dont personne ne sait si elle a
+  // été traitée ou abandonnée.
+  await service.from('crm_notes').insert({
+    crm_venue_id: id,
+    author_email: user.email,
+    body: avant?.next_action ? `Relance faite : ${avant.next_action}` : 'Relance faite',
+  });
+
+  refresh(id);
+}
+
+export async function reporterRelance(formData: FormData) {
+  const user = await requireAdmin();
+  if (!user) return;
+
+  const id = formData.get('crmId') as string;
+  const date = ((formData.get('next_action_at') as string) || '').trim();
+  if (!id || !date) return;
+
+  const service = createServiceClient();
+  await service.from('crm_venues').update({ next_action_at: date }).eq('id', id);
+
+  refresh(id);
+}
