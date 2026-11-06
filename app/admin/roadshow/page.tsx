@@ -54,9 +54,20 @@ export default async function RoadshowPage({
     (rows.find((r: any) => r.roadshow_date === d && r.roadshow_label)?.roadshow_label as
       | string
       | undefined) ??
-    [...new Set(rows.filter((r: any) => r.roadshow_date === d).map((r: any) => String(r.city ?? '')))]
-      .filter(Boolean)
-      .join(', ');
+    // Dedoublonnage insensible a la casse : « Lille » et « lille » saisis le
+    // meme jour donnaient un libelle « Lille, lille ».
+    [
+      ...rows
+        .filter((r: any) => r.roadshow_date === d)
+        .map((r: any) => String(r.city ?? '').trim().replace(/\s+/g, ' '))
+        .filter(Boolean)
+        .reduce((acc: Map<string, string>, ville: string) => {
+          const cle = ville.toLowerCase();
+          if (!acc.has(cle)) acc.set(cle, ville);
+          return acc;
+        }, new Map<string, string>())
+        .values(),
+    ].join(', ');
 
   const todayKey = new Date().toISOString().slice(0, 10);
   const selected: string | null =
