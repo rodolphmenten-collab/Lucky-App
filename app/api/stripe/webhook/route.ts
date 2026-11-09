@@ -52,18 +52,37 @@ export async function POST(request: Request) {
         const venueId = session.client_reference_id ?? session.metadata?.venue_id ?? null;
         if (!venueId) break;
 
-        await service
-          .from('venues')
-          .update({
-            stripe_customer_id:
-              typeof session.customer === 'string' ? session.customer : session.customer?.id ?? null,
-            stripe_subscription_id:
-              typeof session.subscription === 'string'
-                ? session.subscription
-                : session.subscription?.id ?? null,
-            subscription_status: 'trialing',
-          })
-          .eq('id', venueId);
+        const clientId =
+          typeof session.customer === 'string' ? session.customer : session.customer?.id ?? null;
+
+        if (session.mode === 'payment') {
+          // Soirée payée d'un coup : il n'y a pas d'abonnement derrière, donc
+          // pas de statut à poser — l'écrire en « trialing » ferait croire à
+          // un essai qui se transformerait, et gonflerait le MRR dans trente
+          // jours. On allume le lieu, c'est tout ; il sera éteint à la main
+          // après la soirée.
+          await service
+            .from('venues')
+            .update({
+              stripe_customer_id: clientId,
+              active: true,
+              deactivated_at: null,
+              deactivation_reason: null,
+            })
+            .eq('id', venueId);
+        } else {
+          await service
+            .from('venues')
+            .update({
+              stripe_customer_id: clientId,
+              stripe_subscription_id:
+                typeof session.subscription === 'string'
+                  ? session.subscription
+                  : session.subscription?.id ?? null,
+              subscription_status: 'trialing',
+            })
+            .eq('id', venueId);
+        }
 
         await service.from('billing_events').update({ venue_id: venueId }).eq('event_id', event.id);
         break;
