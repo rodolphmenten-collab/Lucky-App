@@ -776,6 +776,12 @@ export default async function CrmVenuePage({
               <option value="12">12 mois — remise de 20 %</option>
             </select>
           </label>
+          <Input
+            name="soiree_date"
+            label="Date de la soirée (formule Soirée)"
+            type="date"
+            defaultValue={c.soiree_date}
+          />
           <Input name="roadshow_date" label="Date de tournée (vide = hors tournée)" type="date" defaultValue={c.roadshow_date} />
           <Input name="roadshow_label" label="Nom de la journée" defaultValue={c.roadshow_label} />
 
@@ -789,7 +795,8 @@ export default async function CrmVenuePage({
               <option value="">À définir</option>
               {Object.values(PLANS).map((p) => (
                 <option key={p.key} value={p.key}>
-                  {p.label} — {formatEurosPrecise(p.monthlyCentsExclTax)}/mois
+                  {p.label} — {formatEurosPrecise(p.monthlyCentsExclTax)}
+                  {p.oneShot ? ' la soirée' : '/mois'}
                 </option>
               ))}
             </select>
