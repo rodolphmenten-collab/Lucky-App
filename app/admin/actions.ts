@@ -126,6 +126,7 @@ export async function updateCrmVenue(formData: FormData) {
     commitment_months: Number.isFinite(engagement) ? engagement : null,
     lost_reason: text('lost_reason'),
     soiree_date: text('soiree_date'),
+    soiree_offerte: formData.get('soiree_offerte') === 'on',
     roadshow_date: text('roadshow_date'),
     roadshow_label: text('roadshow_label'),
     is_group: formData.get('is_group') === 'on',
@@ -610,4 +611,96 @@ export async function updateAdminEmail(formData: FormData) {
   revalidatePath('/admin');
   revalidatePath('/admin/roadshow');
   redirect('/admin/equipe?ok=1');
+}
+
+/**
+ * Jalons commerciaux posés à la main : contrat signé, soirée offerte honorée.
+ *
+ * Ces deux-là ne viennent d'aucun webhook. La signature arrive aujourd'hui par
+ * Yousign sans retour automatique vers Lucky, et une soirée offerte ne passe
+ * par aucune caisse. Sans ces boutons, le suivi commercial n'aurait jamais su
+ * qu'elles ont eu lieu — et c'est précisément ce qu'on reproche au CRM.
+ */
+export async function marquerContratSigne(formData: FormData) {
+  const user = await requireAdmin();
+  if (!user) return;
+
+  const id = formData.get('crmId') as string;
+  if (!id) return;
+
+  const service = createServiceClient();
+  const { data: avant } = await service
+    .from('crm_venues')
+    .select('contract_signed_at')
+    .eq('id', id)
+    .maybeSingle();
+
+  // Deux clics ne font pas deux signatures : on garde la première date.
+  if (avant?.contract_signed_at) return;
+
+  await service
+    .from('crm_venues')
+    .update({ contract_signed_at: new Date().toISOString() })
+    .eq('id', id);
+
+  await service.from('crm_notes').insert({
+    crm_venue_id: id,
+    author_email: user.email,
+    kind: 'signature',
+    body: 'Contrat signé',
+  });
+
+  refresh(id);
+}
+
+export async function marquerSoireeHonoree(formData: FormData) {
+  const user = await requireAdmin();
+  if (!user) return;
+
+  const id = formData.get('crmId') as string;
+  if (!id) return;
+
+  const service = createServiceClient();
+  const { data: fiche } = await service
+    .from('crm_venues')
+    .select('venue_id, soiree_offerte')
+    .eq('id', id)
+    .maybeSingle();
+
+  if (!fiche?.venue_id) return;
+
+  // Montant zéro, et non « pas de montant » : c'est ce qui la fait apparaître
+  // au tableau de bord parmi les soirées, au lieu de disparaître.
+  await service
+    .from('venues')
+    .update({
+      soiree_paid_at: new Date().toISOString(),
+      soiree_amount_cents: 0,
+      active: true,
+      deactivated_at: null,
+      deactivation_reason: null,
+    })
+    .eq('id', fiche.venue_id);
+
+  await service.from('crm_notes').insert({
+    crm_venue_id: id,
+    author_email: user.email,
+    kind: 'paiement',
+    body: 'Soirée offerte — lieu activé',
+  });
+
+  refresh(id);
+}
+
+export async function basculerSoireeOfferte(formData: FormData) {
+  const user = await requireAdmin();
+  if (!user) return;
+
+  const id = formData.get('crmId') as string;
+  if (!id) return;
+  const offerte = formData.get('offerte') === '1';
+
+  const service = createServiceClient();
+  await service.from('crm_venues').update({ soiree_offerte: offerte }).eq('id', id);
+  refresh(id);
 }

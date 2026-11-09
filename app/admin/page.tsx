@@ -65,7 +65,7 @@ export default async function AdminPage() {
       .order('updated_at', { ascending: false }),
     service
       .from('venues')
-      .select('id, slug, name, plan, subscription_status, trial_ends_at, created_at'),
+      .select('id, slug, name, plan, subscription_status, trial_ends_at, created_at, is_test, soiree_paid_at, soiree_amount_cents'),
     service.from('profiles').select('*', { count: 'exact', head: true }),
     service
       .from('check_ins')
@@ -177,6 +177,20 @@ export default async function AdminPage() {
             label="Pipeline pondéré"
             value={formatEuros(kpis.weightedPipelineMrrCents)}
             sub={`${kpis.pipelineVenues} lieu${kpis.pipelineVenues > 1 ? 'x' : ''} ouverts · ${formatEuros(kpis.pipelineMrrCents)} brut`}
+          />
+          {/* Les soirées à l'unité ne sont pas du MRR et ne doivent jamais y
+              entrer. Elles ont leur propre tuile : de l'encaissement réel,
+              affiché pour ce qu'il est. */}
+          <Kpi
+            label="Soirées encaissées"
+            value={formatEuros(kpis.soireesCashCents)}
+            sub={
+              kpis.soireesCount === 0
+                ? 'Aucune soirée vendue'
+                : `${kpis.soireesCount} soirée${kpis.soireesCount > 1 ? 's' : ''}${
+                    kpis.soireesOffertes > 0 ? ` · dont ${kpis.soireesOffertes} offerte${kpis.soireesOffertes > 1 ? 's' : ''}` : ''
+                  }`
+            }
           />
         </section>
 
