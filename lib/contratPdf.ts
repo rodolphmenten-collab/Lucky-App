@@ -131,14 +131,20 @@ export async function construireContratPdf(crm: any): Promise<Uint8Array> {
   // mensualités pour une prestation d'un soir.
   const lignes: [string, string][] = k.estSoiree
     ? [
-        ['Prestation', `${k.formule.label} — Lucky actif pour une soirée`],
+        [
+          'Prestation',
+          `${k.formule.label} — Lucky actif pour une soirée${k.soiree.offerte ? ' (offerte)' : ''}`,
+        ],
         ['Date de la soirée', k.soiree.date],
         ['Nombre de supports installés', libelleSupports(k)],
         ['Supports personnalisés', k.supports.personnalises ? 'Oui' : 'Non'],
         ['Montant HT', k.soiree.montantHT],
         [`TVA (${k.engagement.tauxTva} %)`, k.soiree.tva],
         ['Montant TTC à régler', k.soiree.ttc],
-        ['Modalité de paiement', 'À la signature, en une fois'],
+        [
+          'Modalité de paiement',
+          k.soiree.offerte ? 'Sans contrepartie financière' : 'À la signature, en une fois',
+        ],
         ['Contact opérationnel du Lieu', k.lieu.contactOperationnel],
       ]
     : [
@@ -189,7 +195,9 @@ export async function construireContratPdf(crm: any): Promise<Uint8Array> {
     );
     espace(10);
     ecrire(
-      "Le montant est dû en une seule fois à la signature. Les supports installés restent " +
+      (k.soiree.offerte
+        ? "Cette soirée est offerte par Lucky : aucune somme n'est due par le Lieu. Les supports installés restent "
+        : "Le montant est dû en une seule fois à la signature. Les supports installés restent ") +
       "acquis au Lieu. Le Lieu reconnaît avoir pris connaissance des conditions générales " +
       "consultables à l'adresse lucky-app.io/legal/etablissements et les accepter sans " +
       "réserve ; en cas de divergence, les présentes conditions particulières prévalent."

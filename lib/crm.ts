@@ -93,6 +93,11 @@ export interface VenueRow {
   created_at: string;
   /** Lieu créé pour essayer le parcours : exclu de tous les compteurs. */
   is_test?: boolean | null;
+  /** Soirée réglée : date d'encaissement et montant HT en centimes. Le
+   *  montant peut valoir zéro — une soirée offerte reste une soirée vendue
+   *  du point de vue du suivi, seulement pas du point de vue de la caisse. */
+  soiree_paid_at?: string | null;
+  soiree_amount_cents?: number | null;
 }
 
 export interface CrmRow {
@@ -131,6 +136,12 @@ export interface FounderKpis {
   /** Relances dues aujourd'hui ou en retard. */
   actionsDue: number;
   actionsOverdue: number;
+
+  /** Soirées à l'unité. Tenues à part du MRR : c'est de l'encaissement
+   *  ponctuel, qui ne revient pas le mois suivant. */
+  soireesCount: number;
+  soireesCashCents: number;
+  soireesOffertes: number;
 }
 
 /**
@@ -190,6 +201,13 @@ export function computeFounderKpis(
     )
   );
 
+  // Soirées honorées, offertes comprises. On compte sur les lieux et non sur
+  // les paiements Stripe : une soirée offerte n'en a pas, et doit pourtant
+  // figurer au tableau.
+  const soirees = venues.filter((v) => v.soiree_paid_at);
+  const soireesCashCents = soirees.reduce((sum, v) => sum + (v.soiree_amount_cents ?? 0), 0);
+  const soireesOffertes = soirees.filter((v) => (v.soiree_amount_cents ?? 0) === 0).length;
+
   const todayKey = toDateKey(today);
   const withAction = openCrm.filter((c) => c.next_action_at);
   const actionsDue = withAction.filter((c) => c.next_action_at! <= todayKey).length;
@@ -211,6 +229,9 @@ export function computeFounderKpis(
     pastDueVenues: pastDue.length,
     actionsDue,
     actionsOverdue,
+    soireesCount: soirees.length,
+    soireesCashCents,
+    soireesOffertes,
   };
 }
 

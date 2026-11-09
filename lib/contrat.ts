@@ -98,8 +98,10 @@ export interface Contrat {
   /** Vrai pour la formule Soirée : prestation ponctuelle, pas d'abonnement.
    *  Le PDF bascule alors sur une autre trame — titre, tableau et clauses. */
   estSoiree: boolean;
-  /** Renseigné seulement quand estSoiree. Montants d'une vente unique. */
-  soiree: { date: string; montantHT: string; tva: string; ttc: string };
+  /** Renseigné seulement quand estSoiree. Montants d'une vente unique.
+   *  `offerte` met tout à zéro : le contrat part quand même, avec les mêmes
+   *  conditions générales — c'est ce qui le distingue d'une poignée de main. */
+  soiree: { date: string; montantHT: string; tva: string; ttc: string; offerte: boolean };
   engagement: {
     mois: number;
     label: string;
@@ -144,6 +146,12 @@ export function preparerContrat(c: any, debutEssai = new Date()): Contrat {
   const engagement = COMMITMENTS[mois] ?? COMMITMENTS[3];
   if (!soiree && !c.commitment_months) manquants.push("la durée d'engagement");
 
+  // Une soirée offerte reste une soirée vendue : même contrat, mêmes CGV,
+  // montant à zéro. C'est ce qui protège les deux parties si la soirée se
+  // passe mal, et ce qu'une simple promesse orale ne fait pas.
+  const offerte = soiree && Boolean(c.soiree_offerte);
+  const montantSoiree = offerte ? 0 : plan.monthlyCentsExclTax;
+
   const dateSoiree = soiree
     ? ou(
         c.soiree_date ? jour(new Date(`${c.soiree_date}T12:00:00`)) : null,
@@ -182,9 +190,10 @@ export function preparerContrat(c: any, debutEssai = new Date()): Contrat {
     estSoiree: soiree,
     soiree: {
       date: dateSoiree,
-      montantHT: formatCentsExclTax(plan.monthlyCentsExclTax),
-      tva: formatCentsExclTax(centsTva(plan.monthlyCentsExclTax)),
-      ttc: formatCentsExclTax(plan.monthlyCentsExclTax + centsTva(plan.monthlyCentsExclTax)),
+      montantHT: formatCentsExclTax(montantSoiree),
+      tva: formatCentsExclTax(centsTva(montantSoiree)),
+      ttc: formatCentsExclTax(montantSoiree + centsTva(montantSoiree)),
+      offerte: offerte,
     },
     engagement: {
       mois: engagement.months,
