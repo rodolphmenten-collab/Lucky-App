@@ -159,7 +159,12 @@ export async function POST(request: Request) {
             current_period_end: periodEndIso(sub),
             // Le plan vendu suit le Price effectivement facturé : si le plan est
             // changé dans Stripe, Lucky ne reste pas désynchronisé.
-            ...(plan ? { plan } : {}),
+            //
+            // Sauf à la résiliation : un abonnement qui s'arrête ne dit plus
+            // quelle formule le lieu a aujourd'hui. Le réécrire ici effaçait
+            // une soirée vendue depuis, et rendait au lieu une formule
+            // mensuelle qu'il venait justement de quitter.
+            ...(plan && event.type !== 'customer.subscription.deleted' ? { plan } : {}),
           })
           .eq('id', venueId);
 
