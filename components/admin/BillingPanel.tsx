@@ -36,6 +36,8 @@ export function BillingPanel({
   trialEndsAt,
   currentPeriodEnd,
   checkoutSentAt,
+  soireePaidAt,
+  soireeAmountCents,
 }: {
   venueId: string;
   currentPlan: string;
@@ -46,6 +48,9 @@ export function BillingPanel({
   trialEndsAt: string | null;
   currentPeriodEnd: string | null;
   checkoutSentAt: string | null;
+  /** Soirée réglée : c'est elle qui fait foi, pas le statut d'abonnement. */
+  soireePaidAt: string | null;
+  soireeAmountCents: number | null;
 }) {
   const [plan, setPlan] = useState(currentPlan);
   const [commitment, setCommitment] = useState<CommitmentMonths>(
@@ -88,19 +93,40 @@ export function BillingPanel({
     }
   }
 
-  const statusTone =
-    status === 'active' || status === 'trialing'
+  // Une soirée réglée prime sur le statut d'abonnement : un lieu qui vient de
+  // payer sa soirée affichait « Résilié » parce que c'était le dernier état
+  // connu de son abonnement — qui n'a plus rien à dire sur lui.
+  const payee = Boolean(soireePaidAt);
+  const offerte = payee && (soireeAmountCents ?? 0) === 0;
+
+  const statusTone = payee
+    ? 'text-emerald-400'
+    : status === 'active' || status === 'trialing'
       ? 'text-brass'
       : status === 'past_due' || status === 'unpaid'
         ? 'text-red-400'
         : 'text-bone-dim';
 
+  const libelleEtat = payee ? (offerte ? 'Soirée offerte' : 'Soirée payée') : statusLabel;
+
   return (
-    <section id="abonnement" className="mt-10 scroll-mt-8 rounded-2xl border border-brass/30 bg-brass/[0.03] p-6">
+    <section
+      id="abonnement"
+      className={`mt-10 scroll-mt-8 rounded-2xl border p-6 ${
+        payee ? 'border-emerald-500/50 bg-emerald-500/[0.06]' : 'border-brass/30 bg-brass/[0.03]'
+      }`}
+    >
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <p className="text-sm text-bone">Abonnement</p>
-        <p className={`font-mono text-[11px] uppercase tracking-[0.2em] ${statusTone}`}>{statusLabel}</p>
+        <p className={`font-mono text-[11px] uppercase tracking-[0.2em] ${statusTone}`}>{libelleEtat}</p>
       </div>
+
+      {payee && (
+        <p className="mt-2 text-sm text-emerald-300">
+          {offerte ? 'Soirée offerte' : `Réglée — ${((soireeAmountCents ?? 0) / 100).toFixed(2).replace('.', ',')} €`}{' '}
+          le {new Date(soireePaidAt as string).toLocaleDateString('fr-FR')}. Le lieu est allumé.
+        </p>
+      )}
 
       <div className="mt-3 space-y-1 text-xs text-bone-faint">
         {trialEndsAt && <p>Essai jusqu’au {new Date(trialEndsAt).toLocaleDateString('fr-FR')}</p>}
