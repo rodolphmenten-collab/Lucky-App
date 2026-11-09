@@ -5,6 +5,7 @@ import {
   PLANS,
   COMMITMENTS,
   DEFAULT_COMMITMENT,
+  isOneShot,
   monthlyCentsAfterDiscount,
   formatCentsExclTax,
   type PlanKey,
@@ -15,7 +16,9 @@ const PLAN_OPTIONS: { value: PlanKey; label: string }[] = (
   Object.values(PLANS) as (typeof PLANS)[PlanKey][]
 ).map((p) => ({
   value: p.key,
-  label: `${p.label} — ${formatCentsExclTax(p.monthlyCentsExclTax)} HT / mois · jusqu'à ${p.supportsIncluded} supports`,
+  label: p.oneShot
+    ? `${p.label} — ${formatCentsExclTax(p.monthlyCentsExclTax)} HT la soirée · jusqu'à ${p.supportsIncluded} supports`
+    : `${p.label} — ${formatCentsExclTax(p.monthlyCentsExclTax)} HT / mois · jusqu'à ${p.supportsIncluded} supports`,
 }));
 
 const COMMITMENT_OPTIONS = (Object.values(COMMITMENTS) as (typeof COMMITMENTS)[CommitmentMonths][]).map((c) => ({
@@ -48,6 +51,8 @@ export function BillingPanel({
   const [commitment, setCommitment] = useState<CommitmentMonths>(
     (currentCommitment as CommitmentMonths) || DEFAULT_COMMITMENT
   );
+
+  const soiree = isOneShot(plan);
   const [busy, setBusy] = useState(false);
   const [link, setLink] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -120,17 +125,21 @@ export function BillingPanel({
         ))}
       </select>
 
-      <select
-        value={commitment}
-        onChange={(e) => setCommitment(Number(e.target.value) as CommitmentMonths)}
-        className="mt-3 w-full rounded-full border hairline bg-ink-900 px-5 py-3 text-sm text-bone"
-      >
-        {COMMITMENT_OPTIONS.map((o) => (
-          <option key={o.value} value={o.value}>
-            Engagement {o.label}
-          </option>
-        ))}
-      </select>
+      {/* Une soirée ne s'engage pas : afficher une durée ici laisserait croire
+          qu'on vend douze soirées. */}
+      {!soiree && (
+        <select
+          value={commitment}
+          onChange={(e) => setCommitment(Number(e.target.value) as CommitmentMonths)}
+          className="mt-3 w-full rounded-full border hairline bg-ink-900 px-5 py-3 text-sm text-bone"
+        >
+          {COMMITMENT_OPTIONS.map((o) => (
+            <option key={o.value} value={o.value}>
+              Engagement {o.label}
+            </option>
+          ))}
+        </select>
+      )}
 
       {/* Le montant affiché ici est celui qui partira dans le lien de paiement :
           c'est le seul endroit où l'on voit, avant d'envoyer, ce que le lieu
@@ -138,10 +147,12 @@ export function BillingPanel({
       <div className="mt-4 rounded-xl border border-brass/30 bg-brass/5 px-4 py-3">
         <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-brass">Ce que paiera le lieu</p>
         <p className="mt-1 font-display text-2xl text-bone">
-          {formatCentsExclTax(monthlyCentsAfterDiscount(plan as PlanKey, commitment))}
-          <span className="text-sm text-bone-dim"> HT / mois</span>
+          {soiree
+            ? formatCentsExclTax(PLANS[plan as PlanKey].monthlyCentsExclTax)
+            : formatCentsExclTax(monthlyCentsAfterDiscount(plan as PlanKey, commitment))}
+          <span className="text-sm text-bone-dim">{soiree ? ' HT la soirée' : ' HT / mois'}</span>
         </p>
-        {COMMITMENTS[commitment].discountPercent > 0 && (
+        {!soiree && COMMITMENTS[commitment].discountPercent > 0 && (
           <p className="mt-1 text-[11px] text-bone-dim">
             au lieu de{' '}
             <span className="line-through">{formatCentsExclTax(PLANS[plan as PlanKey].monthlyCentsExclTax)}</span> ·{' '}
@@ -155,9 +166,17 @@ export function BillingPanel({
       </div>
 
       <p className="mt-2 text-[11px] leading-relaxed text-bone-faint">
-        30 jours d’essai : la carte est enregistrée à la signature, le premier prélèvement intervient
+        {soiree ? (
+          <>
+            Paiement unique, prélevé tout de suite — ni essai ni abonnement. Le lieu est allumé dès
+            le paiement ; il faudra l’éteindre à la main après la soirée, depuis sa fiche
+            établissement. Prix hors taxes, TVA ajoutée sur la facture.
+          </>
+        ) : (
+          <>30 jours d’essai : la carte est enregistrée à la signature, le premier prélèvement intervient
         à J+30. Prix hors taxes, TVA ajoutée sur la facture. La remise est portée par un coupon
-        Stripe ; l’engagement lui-même tient par le contrat, pas par Stripe.
+        Stripe ; l’engagement lui-même tient par le contrat, pas par Stripe.</>
+        )}
       </p>
 
       <div className="mt-4 flex flex-wrap gap-3">
