@@ -41,10 +41,21 @@ export async function POST(request: Request) {
 
   if (!venue) return NextResponse.json({ error: 'Établissement introuvable' }, { status: 404 });
 
-  await service
+  // Erreur contrôlée, et pas seulement attendue : plan est un enum en base.
+  // Une valeur inconnue y échouait sans bruit, le lieu payait le bon montant
+  // et gardait l'ancienne formule sur sa fiche. Mieux vaut refuser d'envoyer
+  // un lien que de vendre une formule que la base n'enregistre pas.
+  const { error: erreurPlan } = await service
     .from('venues')
     .update({ commitment_months: months, plan })
     .eq('id', venueId);
+
+  if (erreurPlan) {
+    return NextResponse.json(
+      { error: `Formule « ${plan} » non enregistrable : ${erreurPlan.message}` },
+      { status: 400 },
+    );
+  }
 
   const { url, error } = await createVenueCheckoutSession(service, venue, plan, months);
   if (error || !url) return NextResponse.json({ error: error ?? 'Échec' }, { status: 400 });
