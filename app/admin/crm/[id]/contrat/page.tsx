@@ -54,7 +54,7 @@ export default async function ContratPage({ params }: { params: { id: string } }
         {/* La feuille. Fond blanc et texte noir : un contrat se lit et s'imprime. */}
         <article className="rounded-lg bg-white px-12 py-14 text-[13px] leading-relaxed text-neutral-900 shadow-2xl print:rounded-none print:px-0 print:py-0 print:shadow-none">
           <p className="text-center text-[10px] uppercase tracking-[0.3em] text-neutral-500">
-            Contrat d&rsquo;abonnement — lieux partenaires
+            {k.estSoiree ? 'Contrat de prestation — soirée' : 'Contrat d’abonnement — lieux partenaires'}
           </p>
           <h1 className="mt-4 text-center text-2xl font-semibold">Conditions particulières</h1>
 
@@ -83,38 +83,79 @@ export default async function ContratPage({ params }: { params: { id: string } }
               </tr>
             </thead>
             <tbody>
-              <Ligne libelle="Formule souscrite" valeur={`${k.formule.label} — ${k.formule.mensuelHT} / mois HT`} />
-              <Ligne
-                libelle="Nombre de supports installés"
-                valeur={
-                  k.supports.installes != null
-                    ? `${k.supports.installes} (dont ${Math.min(k.supports.installes, k.supports.inclus)} inclus dans la formule)`
-                    : '____'
-                }
-              />
-              <Ligne libelle="Supports personnalisés" valeur={k.supports.personnalises ? 'Oui' : 'Non'} />
-              <Ligne libelle="Durée d’engagement" valeur={k.engagement.label} />
-              <Ligne libelle="Remise applicable" valeur={`${k.engagement.remise} %`} />
-              <Ligne
-                libelle="Montant mensuel HT après remise"
-                valeur={`${k.engagement.mensuelApresRemise} / mois`}
-              />
-              <Ligne libelle="Début de la période d’essai" valeur={k.dates.debutEssai} />
-              <Ligne
-                libelle="Premier prélèvement"
-                valeur={`${k.dates.premierPrelevement} (30 jours après le début de l’essai)`}
-              />
-              <Ligne libelle="Contact opérationnel du Lieu" valeur={k.lieu.contactOperationnel} />
+              {k.estSoiree ? (
+                <>
+                  <Ligne libelle="Prestation" valeur={`${k.formule.label} — Lucky actif pour une soirée`} />
+                  <Ligne libelle="Date de la soirée" valeur={k.soiree.date} />
+                  <Ligne
+                    libelle="Nombre de supports installés"
+                    valeur={
+                      k.supports.installes != null
+                        ? `${k.supports.installes} (dont ${Math.min(k.supports.installes, k.supports.inclus)} inclus)`
+                        : '____'
+                    }
+                  />
+                  <Ligne libelle="Supports personnalisés" valeur={k.supports.personnalises ? 'Oui' : 'Non'} />
+                  <Ligne libelle="Montant HT" valeur={k.soiree.montantHT} />
+                  <Ligne libelle={`TVA (${k.engagement.tauxTva} %)`} valeur={k.soiree.tva} />
+                  <Ligne libelle="Montant TTC à régler" valeur={k.soiree.ttc} />
+                  <Ligne libelle="Modalité de paiement" valeur="À la signature, en une fois" />
+                  <Ligne libelle="Contact opérationnel du Lieu" valeur={k.lieu.contactOperationnel} />
+                </>
+              ) : (
+                <>
+                  <Ligne libelle="Formule souscrite" valeur={`${k.formule.label} — ${k.formule.mensuelHT} / mois HT`} />
+                  <Ligne
+                    libelle="Nombre de supports installés"
+                    valeur={
+                      k.supports.installes != null
+                        ? `${k.supports.installes} (dont ${Math.min(k.supports.installes, k.supports.inclus)} inclus dans la formule)`
+                        : '____'
+                    }
+                  />
+                  <Ligne libelle="Supports personnalisés" valeur={k.supports.personnalises ? 'Oui' : 'Non'} />
+                  <Ligne libelle="Durée d’engagement" valeur={k.engagement.label} />
+                  <Ligne libelle="Remise applicable" valeur={`${k.engagement.remise} %`} />
+                  <Ligne
+                    libelle="Montant mensuel HT après remise"
+                    valeur={`${k.engagement.mensuelApresRemise} / mois`}
+                  />
+                  <Ligne libelle="Début de la période d’essai" valeur={k.dates.debutEssai} />
+                  <Ligne
+                    libelle="Premier prélèvement"
+                    valeur={`${k.dates.premierPrelevement} (30 jours après le début de l’essai)`}
+                  />
+                  <Ligne libelle="Contact opérationnel du Lieu" valeur={k.lieu.contactOperationnel} />
+                </>
+              )}
             </tbody>
           </table>
 
-          <p className="mt-10">
-            Le Lieu reconnaît avoir pris connaissance des conditions générales d&rsquo;abonnement,
-            annexées au présent contrat et consultables à l&rsquo;adresse{' '}
-            <span className="font-medium">lucky-app.io/legal/etablissements</span>, et les accepter sans
-            réserve. Les trente premiers jours sont gratuits et le Lieu peut mettre fin au contrat à tout
-            moment pendant cette période, par simple email, sans justification ni frais.
-          </p>
+          {k.estSoiree ? (
+            <>
+              <p className="mt-10">
+                Le présent contrat a pour objet une prestation ponctuelle : Lucky est actif dans
+                l&rsquo;établissement pour la seule soirée indiquée ci-dessus. Il ne vaut ni abonnement ni
+                engagement de durée, ne se renouvelle pas par tacite reconduction, et prend fin de plein
+                droit à l&rsquo;issue de la soirée, sans formalité ni préavis de part ni d&rsquo;autre.
+              </p>
+              <p className="mt-4">
+                Le montant est dû en une seule fois à la signature. Les supports installés restent acquis
+                au Lieu. Le Lieu reconnaît avoir pris connaissance des conditions générales consultables à
+                l&rsquo;adresse <span className="font-medium">lucky-app.io/legal/etablissements</span> et
+                les accepter sans réserve ; en cas de divergence, les présentes conditions particulières
+                prévalent.
+              </p>
+            </>
+          ) : (
+            <p className="mt-10">
+              Le Lieu reconnaît avoir pris connaissance des conditions générales d&rsquo;abonnement,
+              annexées au présent contrat et consultables à l&rsquo;adresse{' '}
+              <span className="font-medium">lucky-app.io/legal/etablissements</span>, et les accepter sans
+              réserve. Les trente premiers jours sont gratuits et le Lieu peut mettre fin au contrat à tout
+              moment pendant cette période, par simple email, sans justification ni frais.
+            </p>
+          )}
 
           <p className="mt-8">
             Fait à ______________________, le {k.dates.fait}, en deux exemplaires.
