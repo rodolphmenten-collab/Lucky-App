@@ -92,8 +92,16 @@ export async function createVenueCheckoutSession(
     params.discounts = [{ coupon: couponId }];
   }
 
+  // tax_id_collection impose que Stripe puisse mettre a jour le nom du client
+  // existant : sans customer_update, la session est refusee avec « Tax ID
+  // collection requires updating business name on the customer ». Ce reglage
+  // ne depend donc pas de Stripe Tax, contrairement a ce qu'on croyait — il
+  // doit etre la des qu'on collecte un numero de TVA, c'est-a-dire toujours.
+  params.customer_update = { name: 'auto' };
+
   if (automaticTaxEnabled()) {
     params.automatic_tax = { enabled: true };
+    // Stripe Tax a besoin de l'adresse pour determiner le taux applicable.
     params.customer_update = { address: 'auto', name: 'auto' };
   }
 
