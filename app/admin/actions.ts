@@ -125,6 +125,7 @@ export async function updateCrmVenue(formData: FormData) {
     supports_count: Number.isFinite(supports) ? supports : null,
     commitment_months: Number.isFinite(engagement) ? engagement : null,
     lost_reason: text('lost_reason'),
+    soiree_date: text('soiree_date'),
     roadshow_date: text('roadshow_date'),
     roadshow_label: text('roadshow_label'),
     is_group: formData.get('is_group') === 'on',
