@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import type Stripe from 'stripe';
 import { getStripe, planForPriceId } from '@/lib/stripe';
 import { createServiceClient } from '@/lib/supabase/server';
+import { sendEmail, emailShell } from '@/lib/email';
 
 // Signature Stripe = hash du corps brut. Toute réécriture du body invalide la
 // vérification, d'où le runtime Node et la lecture en texte.
@@ -85,6 +86,57 @@ export async function POST(request: Request) {
         }
 
         await service.from('billing_events').update({ venue_id: venueId }).eq('event_id', event.id);
+
+        // Accusé de réception au lieu. Il vient de saisir sa carte sur une
+        // page Stripe et retombe sur une page de remerciement : sans ce mail,
+        // il n'a aucune trace écrite de ce qu'il a souscrit, et c'est nous
+        // qu'il rappelle le lendemain pour demander si c'est bien passé.
+        //
+        // L'envoi ne doit jamais faire échouer le webhook : Stripe
+        // réessaierait l'événement et le lieu serait mis à jour deux fois.
+        try {
+          const { data: lieu } = await service
+            .from('venues')
+            .select('name, contact_email')
+            .eq('id', venueId)
+            .maybeSingle();
+
+          if (lieu?.contact_email) {
+            const soiree = session.mode === 'payment';
+            await sendEmail({
+              to: lieu.contact_email,
+              subject: soiree
+                ? `Votre soirée Lucky est confirmée — ${lieu.name}`
+                : `Votre abonnement Lucky est activé — ${lieu.name}`,
+              html: emailShell(
+                soiree
+                  ? `<h1 style="font-size:22px;margin:0 0 16px;">C'est confirmé</h1>
+                     <p style="font-size:14px;line-height:1.6;color:#333;">
+                       Votre paiement est bien reçu et Lucky est actif pour ${lieu.name}.
+                       Vos supports n'ont qu'à rester sur les tables : vos clients scannent, et
+                       la soirée fait le reste.
+                     </p>
+                     <p style="font-size:14px;line-height:1.6;color:#333;">
+                       Votre facture vous parvient séparément. Une question d'ici là, répondez
+                       simplement à ce message.
+                     </p>`
+                  : `<h1 style="font-size:22px;margin:0 0 16px;">Bienvenue chez Lucky</h1>
+                     <p style="font-size:14px;line-height:1.6;color:#333;">
+                       Votre carte est enregistrée et l'abonnement de ${lieu.name} est actif.
+                       Les trente premiers jours sont offerts : rien ne sera prélevé avant la
+                       fin de cette période.
+                     </p>
+                     <p style="font-size:14px;line-height:1.6;color:#333;">
+                       Vous pouvez arrêter à tout moment pendant l'essai, par simple réponse à
+                       ce message, sans justification ni frais.
+                     </p>`,
+              ),
+            });
+          }
+        } catch (err) {
+          console.error('webhook : mail de confirmation non envoyé —', err);
+        }
+
         break;
       }
 
