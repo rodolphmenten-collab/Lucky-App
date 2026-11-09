@@ -145,8 +145,8 @@ export function BillingPanel({
           <p className="mt-1 text-[11px] text-bone-dim">
             au lieu de{' '}
             <span className="line-through">{formatCentsExclTax(PLANS[plan as PlanKey].monthlyCentsExclTax)}</span> ·{' '}
-            <span className="text-brass">−{COMMITMENTS[commitment].discountPercent} %</span> pendant{' '}
-            {COMMITMENTS[commitment].label}
+            <span className="text-brass">−{COMMITMENTS[commitment].discountPercent} %</span> à vie,
+            engagement {COMMITMENTS[commitment].label}
           </p>
         )}
         <p className="mt-1 text-[11px] text-bone-faint">
