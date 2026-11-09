@@ -30,6 +30,8 @@ import {
   updateCrmVenue,
   updateVenueSettings,
   setVenueActive,
+  marquerContratSigne,
+  marquerSoireeHonoree,
 } from '../../actions';
 
 export const dynamic = 'force-dynamic';
@@ -67,7 +69,7 @@ export default async function CrmVenuePage({
     await Promise.all([
       service
         .from('crm_notes')
-        .select('id, author_email, body, stage_from, stage_to, created_at')
+        .select('id, author_email, body, stage_from, stage_to, kind, created_at')
         .eq('crm_venue_id', c.id)
         .order('created_at', { ascending: false }),
       c.venue_id
@@ -276,12 +278,45 @@ export default async function CrmVenuePage({
               prêtes à signer.
             </p>
           </div>
-          <Link
-            href={`/admin/crm/${c.id}/contrat`}
-            className="flex min-h-[48px] items-center rounded-full border border-brass/50 px-6 text-sm text-brass hover:bg-brass/10"
-          >
-            Générer le contrat
-          </Link>
+          <div className="flex flex-wrap items-center gap-3">
+            <Link
+              href={`/admin/crm/${c.id}/contrat`}
+              className="flex min-h-[48px] items-center rounded-full border border-brass/50 px-6 text-sm text-brass hover:bg-brass/10"
+            >
+              Générer le contrat
+            </Link>
+
+            {/* Yousign ne renvoie rien à Lucky aujourd'hui : sans ce bouton,
+                une signature n'existerait nulle part dans le suivi. */}
+            {c.contract_signed_at ? (
+              <span className="flex min-h-[48px] items-center rounded-full border border-emerald-500/50 bg-emerald-500/10 px-6 text-sm text-emerald-300">
+                Signé le {new Date(c.contract_signed_at).toLocaleDateString('fr-FR')}
+              </span>
+            ) : (
+              <form action={marquerContratSigne}>
+                <input type="hidden" name="crmId" value={c.id} />
+                <button
+                  type="submit"
+                  className="min-h-[48px] rounded-full border border-emerald-500/50 px-6 text-sm text-emerald-300 hover:bg-emerald-500/10"
+                >
+                  Marquer comme signé
+                </button>
+              </form>
+            )}
+
+            {/* Soirée offerte : aucun paiement ne viendra l'allumer. */}
+            {c.soiree_offerte && c.venue_id && !venue?.soiree_paid_at && (
+              <form action={marquerSoireeHonoree}>
+                <input type="hidden" name="crmId" value={c.id} />
+                <button
+                  type="submit"
+                  className="min-h-[48px] rounded-full border border-emerald-500/50 px-6 text-sm text-emerald-300 hover:bg-emerald-500/10"
+                >
+                  Soirée offerte honorée — allumer le lieu
+                </button>
+              </form>
+            )}
+          </div>
         </section>
           </>
         )}
@@ -527,6 +562,8 @@ export default async function CrmVenuePage({
                 currentCommitment={venue.commitment_months ?? c.commitment_months ?? null}
                 status={venue.subscription_status ?? 'none'}
                 statusLabel={subscriptionStatusLabel(venue.subscription_status)}
+                soireePaidAt={venue.soiree_paid_at ?? null}
+                soireeAmountCents={venue.soiree_amount_cents ?? null}
                 contactEmail={venue.contact_email ?? c.contact_email ?? null}
                 trialEndsAt={venue.trial_ends_at ?? null}
                 currentPeriodEnd={venue.current_period_end ?? null}
@@ -638,15 +675,33 @@ export default async function CrmVenuePage({
         </form>
 
         <div className="mt-6 space-y-3">
-          {(notes ?? []).map((n: any) => (
-            <div key={n.id} className="rounded-2xl border hairline p-4">
-              <p className="font-mono text-[11px] text-bone-faint">
-                {n.author_email.split('@')[0]} · {new Date(n.created_at).toLocaleString('fr-FR')}
-                {n.stage_to && ' · changement d’étape'}
-              </p>
-              <p className={`mt-1 text-sm ${n.stage_to ? 'text-brass' : 'text-bone'}`}>{n.body}</p>
-            </div>
-          ))}
+          {(notes ?? []).map((n: any) => {
+            // Argent encaissé et contrat signé sont les deux seuls événements
+            // qu'on cherche des yeux en ouvrant une fiche. Ils sortent du lot.
+            const jalon = n.kind === 'paiement' || n.kind === 'signature';
+            return (
+              <div
+                key={n.id}
+                className={`rounded-2xl border p-4 ${
+                  jalon ? 'border-emerald-500/50 bg-emerald-500/[0.07]' : 'hairline'
+                }`}
+              >
+                <p className="font-mono text-[11px] text-bone-faint">
+                  {n.author_email.split('@')[0]} · {new Date(n.created_at).toLocaleString('fr-FR')}
+                  {n.stage_to && ' · changement d’étape'}
+                  {n.kind === 'paiement' && ' · encaissement'}
+                  {n.kind === 'signature' && ' · signature'}
+                </p>
+                <p
+                  className={`mt-1 text-sm ${
+                    jalon ? 'font-medium text-emerald-300' : n.stage_to ? 'text-brass' : 'text-bone'
+                  }`}
+                >
+                  {n.body}
+                </p>
+              </div>
+            );
+          })}
           {(!notes || notes.length === 0) && (
             <p className="rounded-2xl border hairline px-5 py-8 text-center text-sm text-bone-faint">
               Rien dans le journal pour l&rsquo;instant.
@@ -782,6 +837,17 @@ export default async function CrmVenuePage({
             type="date"
             defaultValue={c.soiree_date}
           />
+          <label className="flex items-center gap-3 self-end pb-3">
+            <input
+              type="checkbox"
+              name="soiree_offerte"
+              defaultChecked={!!c.soiree_offerte}
+              className="h-4 w-4 accent-emerald-500"
+            />
+            <span className="text-xs text-bone-faint">
+              Soirée offerte — contrat à 0 €, sans paiement
+            </span>
+          </label>
           <Input name="roadshow_date" label="Date de tournée (vide = hors tournée)" type="date" defaultValue={c.roadshow_date} />
           <Input name="roadshow_label" label="Nom de la journée" defaultValue={c.roadshow_label} />
 
