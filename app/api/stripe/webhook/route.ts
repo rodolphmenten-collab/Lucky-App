@@ -62,6 +62,8 @@ export async function POST(request: Request) {
           // un essai qui se transformerait, et gonflerait le MRR dans trente
           // jours. On allume le lieu, c'est tout ; il sera éteint à la main
           // après la soirée.
+          const montant = session.amount_total ?? 0;
+
           await service
             .from('venues')
             .update({
@@ -69,8 +71,28 @@ export async function POST(request: Request) {
               active: true,
               deactivated_at: null,
               deactivation_reason: null,
+              soiree_paid_at: new Date().toISOString(),
+              soiree_amount_cents: montant,
             })
             .eq('id', venueId);
+
+          // Une ligne dans le suivi commercial. Sans elle, le paiement
+          // n'existait nulle part dans le CRM : la fiche gardait son dernier
+          // statut d'abonnement, et on rappelait un lieu qui avait déjà payé.
+          const { data: fiche } = await service
+            .from('crm_venues')
+            .select('id')
+            .eq('venue_id', venueId)
+            .maybeSingle();
+
+          if (fiche?.id) {
+            await service.from('crm_notes').insert({
+              crm_venue_id: fiche.id,
+              author_email: 'stripe',
+              kind: 'paiement',
+              body: `Soirée payée — ${(montant / 100).toFixed(2).replace('.', ',')} €`,
+            });
+          }
         } else {
           await service
             .from('venues')
