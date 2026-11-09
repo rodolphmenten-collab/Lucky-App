@@ -85,7 +85,10 @@ export default async function ContratPage({ params }: { params: { id: string } }
             <tbody>
               {k.estSoiree ? (
                 <>
-                  <Ligne libelle="Prestation" valeur={`${k.formule.label} — Lucky actif pour une soirée`} />
+                  <Ligne
+                    libelle="Prestation"
+                    valeur={`${k.formule.label} — Lucky actif pour une soirée${k.soiree.offerte ? ' (offerte)' : ''}`}
+                  />
                   <Ligne libelle="Date de la soirée" valeur={k.soiree.date} />
                   <Ligne
                     libelle="Nombre de supports installés"
@@ -99,7 +102,10 @@ export default async function ContratPage({ params }: { params: { id: string } }
                   <Ligne libelle="Montant HT" valeur={k.soiree.montantHT} />
                   <Ligne libelle={`TVA (${k.engagement.tauxTva} %)`} valeur={k.soiree.tva} />
                   <Ligne libelle="Montant TTC à régler" valeur={k.soiree.ttc} />
-                  <Ligne libelle="Modalité de paiement" valeur="À la signature, en une fois" />
+                  <Ligne
+                    libelle="Modalité de paiement"
+                    valeur={k.soiree.offerte ? 'Sans contrepartie financière' : 'À la signature, en une fois'}
+                  />
                   <Ligne libelle="Contact opérationnel du Lieu" valeur={k.lieu.contactOperationnel} />
                 </>
               ) : (
@@ -140,8 +146,9 @@ export default async function ContratPage({ params }: { params: { id: string } }
                 droit à l&rsquo;issue de la soirée, sans formalité ni préavis de part ni d&rsquo;autre.
               </p>
               <p className="mt-4">
-                Le montant est dû en une seule fois à la signature. Les supports installés restent acquis
-                au Lieu. Le Lieu reconnaît avoir pris connaissance des conditions générales consultables à
+                {k.soiree.offerte
+                  ? 'Cette soirée est offerte par Lucky : aucune somme n’est due par le Lieu. Les supports installés restent acquis au Lieu.'
+                  : 'Le montant est dû en une seule fois à la signature. Les supports installés restent acquis au Lieu.'}{' '} Le Lieu reconnaît avoir pris connaissance des conditions générales consultables à
                 l&rsquo;adresse <span className="font-medium">lucky-app.io/legal/etablissements</span> et
                 les accepter sans réserve ; en cas de divergence, les présentes conditions particulières
                 prévalent.
