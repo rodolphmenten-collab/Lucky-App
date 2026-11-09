@@ -14,7 +14,7 @@ export function getStripe(): Stripe | null {
   return new Stripe(key, { apiVersion: '2026-08-26.dahlia' });
 }
 
-export type PlanKey = 'basique' | 'essentiel' | 'premium';
+export type PlanKey = 'basique' | 'essentiel' | 'premium' | 'soiree';
 
 export interface PlanDefinition {
   key: PlanKey;
@@ -23,6 +23,13 @@ export interface PlanDefinition {
    *  est celui du Price Stripe, jamais celui-ci. */
   monthlyCentsExclTax: number;
   priceIdEnv: string;
+  /** Vente unique plutôt qu'abonnement : une soirée, payée une fois, pour une
+   *  date donnee. Le QR s'éteint ensuite à la main depuis l'admin.
+   *
+   *  Conséquence à ne pas perdre de vue : ce montant n'est pas du récurrent.
+   *  planMonthlyCents() le ramène à zéro pour que le MRR ne gonfle pas d'un
+   *  chiffre qui ne reviendra pas le mois suivant. */
+  oneShot?: boolean;
   /** Nombre de supports inclus dans la formule. C'est lui qui détermine la
    *  formule : on vend une couverture de salle, pas une liste de fonctions.
    *  Le produit est identique dans les trois formules. */
@@ -51,7 +58,23 @@ export const PLANS: Record<PlanKey, PlanDefinition> = {
     priceIdEnv: 'STRIPE_PRICE_PREMIUM',
     supportsIncluded: 40,
   },
+  // Volontairement plus cher qu'un mois d'abonnement : la soirée n'est pas une
+  // alternative moins chère, c'est un essai paye. Au-delà d'une soirée, le
+  // lieu a interet a s'abonner, et c'est le but.
+  soiree: {
+    key: 'soiree',
+    label: 'Soirée',
+    monthlyCentsExclTax: 24900,
+    priceIdEnv: 'STRIPE_PRICE_SOIREE',
+    supportsIncluded: 10,
+    oneShot: true,
+  },
 };
+
+/** Vrai si la formule se paie une fois (soirée) plutôt qu'au mois. */
+export function isOneShot(plan: string | null | undefined): boolean {
+  return isPlanKey(plan) && Boolean(PLANS[plan as PlanKey].oneShot);
+}
 
 export const TRIAL_DAYS = 30;
 

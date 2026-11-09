@@ -62,7 +62,14 @@ export function stageLabel(value: string | null | undefined): string {
 }
 
 export function planMonthlyCents(plan: string | null | undefined): number {
-  return isPlanKey(plan) ? PLANS[plan as PlanKey].monthlyCentsExclTax : 0;
+  if (!isPlanKey(plan)) return 0;
+  const def = PLANS[plan as PlanKey];
+  // Une soirée est encaissée une fois. La compter ici la ferait apparaître
+  // dans le MRR, l'ARR et le pipeline pondéré — des chiffres qu'on regarde
+  // pour décider, et qu'on cite à des investisseurs. Elle vaut donc zéro
+  // récurrent, ce qui est la vérité.
+  if (def.oneShot) return 0;
+  return def.monthlyCentsExclTax;
 }
 
 export function formatEuros(cents: number): string {

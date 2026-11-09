@@ -1,6 +1,7 @@
 import type Stripe from 'stripe';
 import {
   getStripe,
+  isOneShot,
   priceIdForPlan,
   couponIdForCommitment,
   automaticTaxEnabled,
@@ -61,19 +62,19 @@ export async function createVenueCheckoutSession(
     await service.from('venues').update({ stripe_customer_id: customerId }).eq('id', venue.id);
   }
 
+  // Une soirée se paie une fois : pas d'abonnement, pas d'essai de 30 jours
+  // (il n'y aurait rien à essayer), pas de remise d'engagement. On demande
+  // quand même la facture, parce que le lieu la réclamera.
+  const soiree = isOneShot(plan);
+
   const params: Stripe.Checkout.SessionCreateParams = {
-    mode: 'subscription',
+    mode: soiree ? 'payment' : 'subscription',
     customer: customerId,
     client_reference_id: venue.id,
     locale: 'fr',
     line_items: [{ price: priceId, quantity: 1 }],
     // La carte est enregistrée à la signature ; le premier prélèvement a lieu
     // à la fin de l'essai.
-    payment_method_collection: 'always',
-    subscription_data: {
-      trial_period_days: TRIAL_DAYS,
-      metadata: { venue_id: venue.id, plan, commitment_months: String(commitmentMonths) },
-    },
     metadata: { venue_id: venue.id, plan, commitment_months: String(commitmentMonths) },
     billing_address_collection: 'required',
     // B2B : on collecte le numéro de TVA intracommunautaire pour les factures.
@@ -84,10 +85,25 @@ export async function createVenueCheckoutSession(
     cancel_url: `${siteUrl}/abonnement?annule=1`,
   };
 
+  if (soiree) {
+    params.invoice_creation = { enabled: true };
+    params.payment_intent_data = {
+      metadata: { venue_id: venue.id, plan },
+    };
+  } else {
+    // La carte est enregistrée à la signature ; le premier prélèvement a lieu
+    // à la fin de l'essai.
+    params.payment_method_collection = 'always';
+    params.subscription_data = {
+      trial_period_days: TRIAL_DAYS,
+      metadata: { venue_id: venue.id, plan, commitment_months: String(commitmentMonths) },
+    };
+  }
+
   // La remise d'engagement est portée par un coupon. Sans lui, le lieu signe
   // un contrat à 134,10 € et se fait prelever 149 € : l'ecart ne se voit qu'a
   // la premiere facture, c'est-a-dire trente jours trop tard.
-  const couponId = couponIdForCommitment(commitmentMonths);
+  const couponId = soiree ? null : couponIdForCommitment(commitmentMonths);
   if (couponId) {
     params.discounts = [{ coupon: couponId }];
   }
