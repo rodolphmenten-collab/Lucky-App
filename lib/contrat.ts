@@ -1,6 +1,7 @@
 import {
   PLANS,
   COMMITMENTS,
+  isOneShot,
   monthlyCentsAfterDiscount,
   formatCentsExclTax,
   TAUX_TVA,
@@ -94,6 +95,11 @@ export interface Contrat {
     contactOperationnel: string;
   };
   formule: { cle: PlanKey; label: string; mensuelHT: string };
+  /** Vrai pour la formule Soirée : prestation ponctuelle, pas d'abonnement.
+   *  Le PDF bascule alors sur une autre trame — titre, tableau et clauses. */
+  estSoiree: boolean;
+  /** Renseigné seulement quand estSoiree. Montants d'une vente unique. */
+  soiree: { date: string; montantHT: string; tva: string; ttc: string };
   engagement: {
     mois: number;
     label: string;
@@ -129,9 +135,22 @@ export function preparerContrat(c: any, debutEssai = new Date()): Contrat {
   const plan = PLANS[clePlan];
   if (!c.expected_plan) manquants.push('la formule');
 
+  // Une soirée ne s'engage pas et n'a pas d'essai : réclamer une durée ou
+  // signaler un essai manquant n'aurait aucun sens, et bloquerait l'envoi
+  // d'un contrat pourtant complet.
+  const soiree = isOneShot(clePlan);
+
   const mois = (c.commitment_months ?? 3) as CommitmentMonths;
   const engagement = COMMITMENTS[mois] ?? COMMITMENTS[3];
-  if (!c.commitment_months) manquants.push("la durée d'engagement");
+  if (!soiree && !c.commitment_months) manquants.push("la durée d'engagement");
+
+  const dateSoiree = soiree
+    ? ou(
+        c.soiree_date ? jour(new Date(`${c.soiree_date}T12:00:00`)) : null,
+        manquants,
+        'la date de la soirée',
+      )
+    : '';
 
   if (c.supports_count == null) manquants.push('le nombre de supports');
 
@@ -159,6 +178,13 @@ export function preparerContrat(c: any, debutEssai = new Date()): Contrat {
       cle: clePlan,
       label: plan.label,
       mensuelHT: formatCentsExclTax(plan.monthlyCentsExclTax),
+    },
+    estSoiree: soiree,
+    soiree: {
+      date: dateSoiree,
+      montantHT: formatCentsExclTax(plan.monthlyCentsExclTax),
+      tva: formatCentsExclTax(centsTva(plan.monthlyCentsExclTax)),
+      ttc: formatCentsExclTax(plan.monthlyCentsExclTax + centsTva(plan.monthlyCentsExclTax)),
     },
     engagement: {
       mois: engagement.months,

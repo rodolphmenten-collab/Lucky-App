@@ -60,7 +60,11 @@ export async function construireContratPdf(crm: any): Promise<Uint8Array> {
   const k: Contrat = preparerContrat(crm);
 
   const doc = await PDFDocument.create();
-  doc.setTitle(`Contrat d'abonnement Lucky — ${k.lieu.enseigne}`);
+  doc.setTitle(
+    k.estSoiree
+      ? `Contrat de prestation Lucky — soirée — ${k.lieu.enseigne}`
+      : `Contrat d'abonnement Lucky — ${k.lieu.enseigne}`,
+  );
   doc.setCreator('Lucky');
 
   const normal = await doc.embedFont(StandardFonts.Helvetica);
@@ -85,7 +89,9 @@ export async function construireContratPdf(crm: any): Promise<Uint8Array> {
   const espace = (n: number) => { c.y -= n; };
 
   // ---- en-tête ----
-  const titre = "CONTRAT D'ABONNEMENT — LIEUX PARTENAIRES";
+  const titre = k.estSoiree
+    ? 'CONTRAT DE PRESTATION — SOIRÉE'
+    : "CONTRAT D'ABONNEMENT — LIEUX PARTENAIRES";
   c.page.drawText(titre, {
     x: (A4.l - normal.widthOfTextAtSize(titre, 8)) / 2,
     y: c.y, size: 8, font: normal, color: GRIS,
@@ -119,19 +125,35 @@ export async function construireContratPdf(crm: any): Promise<Uint8Array> {
   espace(26);
 
   // ---- tableau ----
-  const lignes: [string, string][] = [
-    ['Formule souscrite', `${k.formule.label} — ${k.formule.mensuelHT} / mois HT`],
-    ['Nombre de supports installés', libelleSupports(k)],
-    ['Supports personnalisés', k.supports.personnalises ? 'Oui' : 'Non'],
-    ["Durée d'engagement", k.engagement.label],
-    ['Remise applicable', `${k.engagement.remise} %`],
-    ['Montant mensuel HT après remise', `${k.engagement.mensuelApresRemise} / mois`],
-    [`TVA (${k.engagement.tauxTva} %)`, `${k.engagement.mensuelTva} / mois`],
-    ['Montant mensuel TTC prélevé', `${k.engagement.mensuelTtc} / mois`],
-    ["Début de la période d'essai", k.dates.debutEssai],
-    ['Premier prélèvement', `${k.dates.premierPrelevement} (30 jours après)`],
-    ['Contact opérationnel du Lieu', k.lieu.contactOperationnel],
-  ];
+  // Deux trames : la soirée est une vente unique, elle n'a ni engagement, ni
+  // remise, ni essai, ni prélèvement différé. Reprendre les lignes de
+  // l'abonnement en les laissant vides donnerait un contrat qui parle de
+  // mensualités pour une prestation d'un soir.
+  const lignes: [string, string][] = k.estSoiree
+    ? [
+        ['Prestation', `${k.formule.label} — Lucky actif pour une soirée`],
+        ['Date de la soirée', k.soiree.date],
+        ['Nombre de supports installés', libelleSupports(k)],
+        ['Supports personnalisés', k.supports.personnalises ? 'Oui' : 'Non'],
+        ['Montant HT', k.soiree.montantHT],
+        [`TVA (${k.engagement.tauxTva} %)`, k.soiree.tva],
+        ['Montant TTC à régler', k.soiree.ttc],
+        ['Modalité de paiement', 'À la signature, en une fois'],
+        ['Contact opérationnel du Lieu', k.lieu.contactOperationnel],
+      ]
+    : [
+        ['Formule souscrite', `${k.formule.label} — ${k.formule.mensuelHT} / mois HT`],
+        ['Nombre de supports installés', libelleSupports(k)],
+        ['Supports personnalisés', k.supports.personnalises ? 'Oui' : 'Non'],
+        ["Durée d'engagement", k.engagement.label],
+        ['Remise applicable', `${k.engagement.remise} %`],
+        ['Montant mensuel HT après remise', `${k.engagement.mensuelApresRemise} / mois`],
+        [`TVA (${k.engagement.tauxTva} %)`, `${k.engagement.mensuelTva} / mois`],
+        ['Montant mensuel TTC prélevé', `${k.engagement.mensuelTtc} / mois`],
+        ["Début de la période d'essai", k.dates.debutEssai],
+        ['Premier prélèvement', `${k.dates.premierPrelevement} (30 jours après)`],
+        ['Contact opérationnel du Lieu', k.lieu.contactOperationnel],
+      ];
 
   const COL = MARGE + 230;
   c.page.drawLine({
@@ -158,12 +180,28 @@ export async function construireContratPdf(crm: any): Promise<Uint8Array> {
 
   espace(22);
 
-  ecrire(
-    "Le Lieu reconnaît avoir pris connaissance des conditions générales d'abonnement, annexées au " +
-    "présent contrat et consultables à l'adresse lucky-app.io/legal/etablissements, et les accepter " +
-    "sans réserve. Les trente premiers jours sont gratuits : le Lieu peut mettre fin au contrat à " +
-    "tout moment pendant cette période, par simple email, sans justification ni frais."
-  );
+  if (k.estSoiree) {
+    ecrire(
+      "Le présent contrat a pour objet une prestation ponctuelle : Lucky est actif dans " +
+      "l'établissement pour la seule soirée indiquée ci-dessus. Il ne vaut ni abonnement ni " +
+      "engagement de durée, ne se renouvelle pas par tacite reconduction, et prend fin de " +
+      "plein droit à l'issue de la soirée, sans formalité ni préavis de part ni d'autre."
+    );
+    espace(10);
+    ecrire(
+      "Le montant est dû en une seule fois à la signature. Les supports installés restent " +
+      "acquis au Lieu. Le Lieu reconnaît avoir pris connaissance des conditions générales " +
+      "consultables à l'adresse lucky-app.io/legal/etablissements et les accepter sans " +
+      "réserve ; en cas de divergence, les présentes conditions particulières prévalent."
+    );
+  } else {
+    ecrire(
+      "Le Lieu reconnaît avoir pris connaissance des conditions générales d'abonnement, annexées au " +
+      "présent contrat et consultables à l'adresse lucky-app.io/legal/etablissements, et les accepter " +
+      "sans réserve. Les trente premiers jours sont gratuits : le Lieu peut mettre fin au contrat à " +
+      "tout moment pendant cette période, par simple email, sans justification ni frais."
+    );
+  }
   espace(18);
 
   ecrire(`Fait à ______________________, le ${k.dates.fait}, en deux exemplaires.`, { taille: 10 });
@@ -212,7 +250,9 @@ export async function construireContratPdf(crm: any): Promise<Uint8Array> {
 
   c.y = yCadre - 26;
   ecrire(
-    "Les conditions générales d'abonnement font partie intégrante du contrat.",
+    k.estSoiree
+      ? 'Prestation ponctuelle — sans abonnement ni reconduction.'
+      : "Les conditions générales d'abonnement font partie intégrante du contrat.",
     { taille: 7.5, couleur: GRIS }
   );
 
