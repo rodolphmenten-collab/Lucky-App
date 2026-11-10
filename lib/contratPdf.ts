@@ -216,15 +216,26 @@ export async function construireContratPdf(crm: any): Promise<Uint8Array> {
   espace(30);
 
   // ---- signatures ----
-  // Trois cadres : le Lieu, puis les deux fondateurs. Chacun porte son ancre,
-  // et c'est l'ancre — pas une coordonnee calculee a la main — qui dit au
-  // prestataire ou poser le champ. Le jour ou la mise en page bouge, les
-  // champs suivent tout seuls.
+  // Trois cadres : le Lieu, puis les deux fondateurs.
+  //
+  // Côté Lucky, le contrat est émis depuis l'espace authentifié d'un
+  // fondateur : l'envoi vaut signature, et les deux cadres sont donc remplis
+  // ici, à la construction du document. Côté Lieu, le cadre reste vide et
+  // renvoie à la page de preuve, ajoutée au moment où le gérant signe en
+  // ligne — elle porte l'horodatage, l'adresse IP et l'empreinte.
+  const signeLe = new Date().toLocaleDateString('fr-FR', {
+    day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Paris',
+  });
   const CADRES = [
-    { titre: 'Pour le Lieu', sous: 'Signature précédée de « lu et approuvé »' },
+    {
+      titre: 'Pour le Lieu',
+      sous: 'Signature précédée de « lu et approuvé »',
+      rempli: null as string[] | null,
+    },
     ...LUCKY_SIGNATAIRES.map((sg, i) => ({
       titre: i === 0 ? 'Pour Lucky' : ' ',
       sous: `${sg.nom}, ${sg.qualite}`,
+      rempli: [sg.nom, 'Signé électroniquement', `le ${signeLe}`] as string[] | null,
     })),
   ];
 
@@ -248,12 +259,24 @@ export async function construireContratPdf(crm: any): Promise<Uint8Array> {
       borderColor: TRAIT, borderWidth: 0.8,
     });
 
-    // Blanc sur blanc : invisible a la lecture et a l'impression, present
-    // dans le texte extrait, qui est ce que lit le prestataire.
-    c.page.drawText(`{{s${i + 1}|signature|${Math.round(largeurCadre - 12)}|60}}`, {
-      x: x + 6, y: yCadre + 52, size: 7,
-      font: normal, color: rgb(1, 1, 1),
-    });
+    if (cadre.rempli) {
+      // Signature déjà apposée : nom en gras, puis la mention et la date.
+      c.page.drawText(cadre.rempli[0], {
+        x: x + 8, y: yCadre + 46, size: 9, font: gras, color: NOIR,
+      });
+      c.page.drawText(cadre.rempli[1], {
+        x: x + 8, y: yCadre + 31, size: 7.5, font: normal, color: GRIS,
+      });
+      c.page.drawText(cadre.rempli[2], {
+        x: x + 8, y: yCadre + 20, size: 7.5, font: normal, color: GRIS,
+      });
+    } else {
+      for (const [j, ligne] of ['Signature électronique —', 'voir la page de preuve', 'en fin de document'].entries()) {
+        c.page.drawText(ligne, {
+          x: x + 8, y: yCadre + 44 - j * 11, size: 7.5, font: normal, color: GRIS,
+        });
+      }
+    }
   });
 
   c.y = yCadre - 26;
