@@ -149,8 +149,13 @@ export function BillingPanel({
       )}
 
       <div className="mt-3 space-y-1 text-xs text-bone-faint">
-        {trialEndsAt && <p>Essai jusqu’au {new Date(trialEndsAt).toLocaleDateString('fr-FR')}</p>}
-        {currentPeriodEnd && (
+        {/* Essai et période en cours appartiennent à un abonnement. Sur une
+            soirée, ce sont des reliquats qui contredisent ce qui est affiché
+            juste au-dessus. */}
+        {!payee && !offerteAVenir && trialEndsAt && (
+          <p>Essai jusqu’au {new Date(trialEndsAt).toLocaleDateString('fr-FR')}</p>
+        )}
+        {!payee && !offerteAVenir && currentPeriodEnd && (
           <p>Période en cours jusqu’au {new Date(currentPeriodEnd).toLocaleDateString('fr-FR')}</p>
         )}
         {checkoutSentAt && !trialEndsAt && (
