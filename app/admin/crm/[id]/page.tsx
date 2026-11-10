@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { isPlatformAdminEmail } from '@/lib/admin';
 import { subscriptionStatusLabel } from '@/lib/billing';
-import { PLANS } from '@/lib/stripe';
+import { PLANS, isOneShot } from '@/lib/stripe';
 import {
   SOURCE_LABELS,
   daysUntil,
@@ -216,15 +216,28 @@ export default async function CrmVenuePage({
         {/* Client actif : on montre ce qu'il paie et ce qu'il gagne, côte à côte. */}
         {venue && (
           <section className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {/* Une soirée réglée prime sur le statut d'abonnement, qui n'a plus
+                rien à dire sur ce lieu — et son montant ne se dit pas « par
+                mois ». */}
             <Tile
-              label="Abonnement"
-              value={subscriptionStatusLabel(venue.subscription_status)}
+              label={isOneShot(venue.plan) ? 'Soirée' : 'Abonnement'}
+              value={
+                venue.soiree_paid_at
+                  ? (venue.soiree_amount_cents ?? 0) === 0
+                    ? 'Offerte'
+                    : 'Payée'
+                  : subscriptionStatusLabel(venue.subscription_status)
+              }
               sub={
-                venue.subscription_status === 'trialing' && trialDays !== null
-                  ? `Fin d'essai dans ${Math.max(0, trialDays)} j`
-                  : venue.plan
-                    ? `${formatEuros(PLANS[venue.plan as keyof typeof PLANS]?.monthlyCentsExclTax ?? 0)}/mois`
-                    : undefined
+                venue.soiree_paid_at
+                  ? `${formatEuros(venue.soiree_amount_cents ?? 0)} · ${new Date(venue.soiree_paid_at).toLocaleDateString('fr-FR')}`
+                  : venue.subscription_status === 'trialing' && trialDays !== null
+                    ? `Fin d'essai dans ${Math.max(0, trialDays)} j`
+                    : venue.plan
+                      ? `${formatEuros(PLANS[venue.plan as keyof typeof PLANS]?.monthlyCentsExclTax ?? 0)}${
+                          isOneShot(venue.plan) ? ' la soirée' : '/mois'
+                        }`
+                      : undefined
               }
             />
             <Tile label="CA généré · 30 j" value={formatEuros(generatedCents)} sub={`${servedCount} bons servis`} />
