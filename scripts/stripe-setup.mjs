@@ -28,6 +28,9 @@ const PLANS = [
   { key: 'basique',   nom: 'Lucky — Basique',   montant: 9900,  supports: 10, env: 'STRIPE_PRICE_BASIQUE' },
   { key: 'essentiel', nom: 'Lucky — Essentiel', montant: 14900, supports: 25, env: 'STRIPE_PRICE_ESSENTIEL' },
   { key: 'premium',   nom: 'Lucky — Premium',   montant: 29900, supports: 40, env: 'STRIPE_PRICE_PREMIUM' },
+  // La soirée se paie une fois : pas de `recurring`, donc un prix « one-off »
+  // côté Stripe. C'est ce qui fait passer le checkout en mode paiement.
+  { key: 'soiree',    nom: 'Lucky — Soirée',    montant: 24900, supports: 10, env: 'STRIPE_PRICE_SOIREE', unique: true },
 ];
 
 // Remise à vie : le coupon reste appliqué tant que l'abonnement vit.
@@ -101,7 +104,9 @@ for (const plan of PLANS) {
   if (!produit) {
     produit = await api('POST', '/products', {
       name: plan.nom,
-      description: `Abonnement mensuel Lucky — ${plan.supports} supports QR inclus`,
+      description: plan.unique
+        ? `Lucky actif pour une soirée — paiement unique, ${plan.supports} supports QR inclus`
+        : `Abonnement mensuel Lucky — ${plan.supports} supports QR inclus`,
       metadata: { lucky_plan: plan.key, supports: String(plan.supports) },
     });
   }
@@ -111,7 +116,7 @@ for (const plan of PLANS) {
     (p) =>
       p.unit_amount === plan.montant &&
       p.currency === 'eur' &&
-      p.recurring?.interval === 'month' &&
+      (plan.unique ? !p.recurring : p.recurring?.interval === 'month') &&
       p.tax_behavior === 'exclusive'
   );
 
@@ -121,14 +126,14 @@ for (const plan of PLANS) {
       product: produit.id,
       unit_amount: plan.montant,
       currency: 'eur',
-      recurring: { interval: 'month' },
+      ...(plan.unique ? {} : { recurring: { interval: 'month' } }),
       tax_behavior: 'exclusive',
       metadata: { lucky_plan: plan.key },
     });
   }
 
   console.log(
-    `  ${plan.key.padEnd(10)} ${tarif.id.padEnd(32)} ${(plan.montant / 100).toFixed(2).padStart(7)} € HT/mois  ${existait ? '(existant)' : '(créé)'}`
+    `  ${plan.key.padEnd(10)} ${tarif.id.padEnd(32)} ${(plan.montant / 100).toFixed(2).padStart(7)} € HT${plan.unique ? ' la soirée' : '/mois'}  ${existait ? '(existant)' : '(créé)'}`
   );
   envs.push(`${plan.env}=${tarif.id}`);
 }
