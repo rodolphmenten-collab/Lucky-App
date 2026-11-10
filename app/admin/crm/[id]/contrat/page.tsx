@@ -9,7 +9,6 @@ import {
   LUCKY_SIGNATAIRES,
   representantsLucky,
 } from '@/lib/contrat';
-import { signatureConfiguree } from '@/lib/yousign';
 import { BarreContrat } from './BarreContrat';
 
 export const dynamic = 'force-dynamic';
@@ -48,7 +47,6 @@ export default async function ContratPage({ params }: { params: { id: string } }
           manquants={k.manquants}
           manquantsLucky={trousLucky}
           envoyeLe={c.contract_sent_at ?? null}
-          signatureActive={signatureConfiguree()}
         />
 
         {/* La feuille. Fond blanc et texte noir : un contrat se lit et s'imprime. */}
