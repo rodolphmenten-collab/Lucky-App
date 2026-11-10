@@ -64,7 +64,7 @@ export async function POST(request: Request) {
           // après la soirée.
           const montant = session.amount_total ?? 0;
 
-          await service
+          const { error: erreurSoiree } = await service
             .from('venues')
             .update({
               stripe_customer_id: clientId,
@@ -75,6 +75,16 @@ export async function POST(request: Request) {
               soiree_amount_cents: montant,
             })
             .eq('id', venueId);
+
+          // Un paiement encaissé que Lucky n'enregistre pas est le pire des
+          // deux mondes : le lieu a payé, l'admin l'ignore. On refuse le 200,
+          // Stripe réessaie pendant trois jours et la livraison apparaît en
+          // rouge dans son tableau — au lieu d'un « reçu » qui ment.
+          if (erreurSoiree) {
+            console.error('webhook : soirée payée non enregistrée —', erreurSoiree.message);
+            await service.from('billing_events').delete().eq('event_id', event.id);
+            return NextResponse.json({ error: erreurSoiree.message }, { status: 500 });
+          }
 
           // Une ligne dans le suivi commercial. Sans elle, le paiement
           // n'existait nulle part dans le CRM : la fiche gardait son dernier
@@ -94,7 +104,7 @@ export async function POST(request: Request) {
             });
           }
         } else {
-          await service
+          const { error: erreurAbo } = await service
             .from('venues')
             .update({
               stripe_customer_id: clientId,
@@ -105,6 +115,12 @@ export async function POST(request: Request) {
               subscription_status: 'trialing',
             })
             .eq('id', venueId);
+
+          if (erreurAbo) {
+            console.error('webhook : abonnement non enregistré —', erreurAbo.message);
+            await service.from('billing_events').delete().eq('event_id', event.id);
+            return NextResponse.json({ error: erreurAbo.message }, { status: 500 });
+          }
         }
 
         await service.from('billing_events').update({ venue_id: venueId }).eq('event_id', event.id);
