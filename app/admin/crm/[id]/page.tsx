@@ -226,11 +226,15 @@ export default async function CrmVenuePage({
                   ? (venue.soiree_amount_cents ?? 0) === 0
                     ? 'Offerte'
                     : 'Payée'
-                  : subscriptionStatusLabel(venue.subscription_status)
+                  : c.soiree_offerte
+                    ? 'Offerte'
+                    : subscriptionStatusLabel(venue.subscription_status)
               }
               sub={
                 venue.soiree_paid_at
                   ? `${formatEuros(venue.soiree_amount_cents ?? 0)} · ${new Date(venue.soiree_paid_at).toLocaleDateString('fr-FR')}`
+                  : c.soiree_offerte
+                    ? `0,00 €${c.soiree_date ? ` · ${new Date(c.soiree_date).toLocaleDateString('fr-FR')}` : ' · à honorer'}`
                   : venue.subscription_status === 'trialing' && trialDays !== null
                     ? `Fin d'essai dans ${Math.max(0, trialDays)} j`
                     : venue.plan
@@ -577,6 +581,7 @@ export default async function CrmVenuePage({
                 statusLabel={subscriptionStatusLabel(venue.subscription_status)}
                 soireePaidAt={venue.soiree_paid_at ?? null}
                 soireeAmountCents={venue.soiree_amount_cents ?? null}
+                soireeOfferte={Boolean(c.soiree_offerte)}
                 contactEmail={venue.contact_email ?? c.contact_email ?? null}
                 trialEndsAt={venue.trial_ends_at ?? null}
                 currentPeriodEnd={venue.current_period_end ?? null}
