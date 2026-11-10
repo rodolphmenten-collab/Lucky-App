@@ -96,14 +96,18 @@ export function BillingPanel({
     }
   }
 
-  // Une soirée réglée prime sur le statut d'abonnement : un lieu qui vient de
-  // payer sa soirée affichait « Résilié » parce que c'était le dernier état
-  // connu de son abonnement — qui n'a plus rien à dire sur lui.
-  const payee = Boolean(soireePaidAt);
+  // Trois situations, dans cet ordre de priorité.
+  //
+  // Un abonnement en cours passe devant tout : un lieu qui a testé une soirée
+  // puis s'est abonné est un abonné, et sa soirée n'est plus qu'un souvenir.
+  // Sinon, une soirée réglée prime sur le statut d'abonnement — sans quoi un
+  // lieu qui vient de payer affichait « Résilié », dernier état connu d'un
+  // abonnement qui n'a plus rien à dire sur lui. Enfin, une soirée convenue
+  // comme offerte mais pas encore honorée n'attend aucun paiement.
+  const abonne = status === 'active' || status === 'trialing';
+  const payee = !abonne && Boolean(soireePaidAt);
   const offerte = payee && (soireeAmountCents ?? 0) === 0;
-  // Une soirée convenue comme offerte n'a rien à attendre d'un paiement : tant
-  // qu'elle n'a pas eu lieu, afficher « Résilié » n'aurait aucun sens.
-  const offerteAVenir = !payee && Boolean(soireeOfferte);
+  const offerteAVenir = !abonne && !payee && Boolean(soireeOfferte);
 
   const statusTone = payee
     ? 'text-emerald-400'
