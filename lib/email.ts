@@ -4,7 +4,18 @@
  * (see /api/send-code for the original reasoning: Supabase's dashboard template
  * editor was unreliable, and its default emails deliver poorly).
  */
-export async function sendEmail({ to, subject, html }: { to: string; subject: string; html: string }) {
+export async function sendEmail({
+  to,
+  subject,
+  html,
+  attachments,
+}: {
+  to: string | string[];
+  subject: string;
+  html: string;
+  /** Pièces jointes Resend : le contenu est encodé en base64. */
+  attachments?: { filename: string; content: string }[];
+}) {
   const resendApiKey = process.env.RESEND_API_KEY;
   const fromAddress = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
 
@@ -23,6 +34,7 @@ export async function sendEmail({ to, subject, html }: { to: string; subject: st
       to,
       subject,
       html,
+      ...(attachments?.length ? { attachments } : {}),
     }),
   });
 
