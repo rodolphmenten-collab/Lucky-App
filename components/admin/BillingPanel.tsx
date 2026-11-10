@@ -38,6 +38,7 @@ export function BillingPanel({
   checkoutSentAt,
   soireePaidAt,
   soireeAmountCents,
+  soireeOfferte,
 }: {
   venueId: string;
   currentPlan: string;
@@ -51,6 +52,8 @@ export function BillingPanel({
   /** Soirée réglée : c'est elle qui fait foi, pas le statut d'abonnement. */
   soireePaidAt: string | null;
   soireeAmountCents: number | null;
+  /** Soirée convenue comme offerte : 0 €, mais pas encore honorée. */
+  soireeOfferte?: boolean;
 }) {
   const [plan, setPlan] = useState(currentPlan);
   const [commitment, setCommitment] = useState<CommitmentMonths>(
@@ -98,16 +101,27 @@ export function BillingPanel({
   // connu de son abonnement — qui n'a plus rien à dire sur lui.
   const payee = Boolean(soireePaidAt);
   const offerte = payee && (soireeAmountCents ?? 0) === 0;
+  // Une soirée convenue comme offerte n'a rien à attendre d'un paiement : tant
+  // qu'elle n'a pas eu lieu, afficher « Résilié » n'aurait aucun sens.
+  const offerteAVenir = !payee && Boolean(soireeOfferte);
 
   const statusTone = payee
     ? 'text-emerald-400'
-    : status === 'active' || status === 'trialing'
+    : offerteAVenir
       ? 'text-brass'
-      : status === 'past_due' || status === 'unpaid'
-        ? 'text-red-400'
-        : 'text-bone-dim';
+      : status === 'active' || status === 'trialing'
+        ? 'text-brass'
+        : status === 'past_due' || status === 'unpaid'
+          ? 'text-red-400'
+          : 'text-bone-dim';
 
-  const libelleEtat = payee ? (offerte ? 'Soirée offerte' : 'Soirée payée') : statusLabel;
+  const libelleEtat = payee
+    ? offerte
+      ? 'Soirée offerte'
+      : 'Soirée payée'
+    : offerteAVenir
+      ? 'Soirée offerte — à honorer'
+      : statusLabel;
 
   return (
     <section
@@ -120,6 +134,12 @@ export function BillingPanel({
         <p className="text-sm text-bone">Abonnement</p>
         <p className={`font-mono text-[11px] uppercase tracking-[0.2em] ${statusTone}`}>{libelleEtat}</p>
       </div>
+
+      {offerteAVenir && (
+        <p className="mt-2 text-sm text-brass">
+          Soirée offerte : 0 € à facturer. Le contrat part avec les CGV, et le lieu s'allume le soir venu.
+        </p>
+      )}
 
       {payee && (
         <p className="mt-2 text-sm text-emerald-300">
