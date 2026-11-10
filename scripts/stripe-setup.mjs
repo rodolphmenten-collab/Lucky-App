@@ -21,7 +21,7 @@ if (!key) {
   process.exit(1);
 }
 
-const MODE = key.startsWith('sk_live') ? 'LIVE' : 'TEST';
+const MODE = key.startsWith('sk_live') || key.startsWith('rk_live') ? 'LIVE' : 'TEST';
 const SITE = process.env.SITE_URL || 'https://lucky-app.io';
 
 const PLANS = [
