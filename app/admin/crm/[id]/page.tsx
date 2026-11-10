@@ -122,6 +122,11 @@ export default async function CrmVenuePage({
 
   const trialDays = venue?.trial_ends_at ? daysUntil(venue.trial_ends_at) : null;
 
+  // Un lieu qui a testé une soirée puis s'est abonné est un abonné : son
+  // abonnement en cours passe devant la soirée dans tout ce qui s'affiche.
+  const abonneEnCours =
+    venue?.subscription_status === 'active' || venue?.subscription_status === 'trialing';
+
   const groupeParent = c.group_id
     ? (groupes ?? []).find((g: any) => g.id === c.group_id) ?? null
     : null;
@@ -216,24 +221,25 @@ export default async function CrmVenuePage({
         {/* Client actif : on montre ce qu'il paie et ce qu'il gagne, côte à côte. */}
         {venue && (
           <section className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
-            {/* Une soirée réglée prime sur le statut d'abonnement, qui n'a plus
-                rien à dire sur ce lieu — et son montant ne se dit pas « par
-                mois ». */}
+            {/* Un abonnement en cours passe devant la soirée : un lieu qui a
+                testé puis s'est abonné est un abonné. Sinon la soirée prime
+                sur le statut d'abonnement, qui n'a plus rien à dire sur ce
+                lieu — et son montant ne se dit pas « par mois ». */}
             <Tile
               label={isOneShot(venue.plan) ? 'Soirée' : 'Abonnement'}
               value={
-                venue.soiree_paid_at
+                !abonneEnCours && venue.soiree_paid_at
                   ? (venue.soiree_amount_cents ?? 0) === 0
                     ? 'Offerte'
                     : 'Payée'
-                  : c.soiree_offerte
+                  : !abonneEnCours && c.soiree_offerte
                     ? 'Offerte'
                     : subscriptionStatusLabel(venue.subscription_status)
               }
               sub={
-                venue.soiree_paid_at
+                !abonneEnCours && venue.soiree_paid_at
                   ? `${formatEuros(venue.soiree_amount_cents ?? 0)} · ${new Date(venue.soiree_paid_at).toLocaleDateString('fr-FR')}`
-                  : c.soiree_offerte
+                  : !abonneEnCours && c.soiree_offerte
                     ? `0,00 €${c.soiree_date ? ` · ${new Date(c.soiree_date).toLocaleDateString('fr-FR')}` : ' · à honorer'}`
                   : venue.subscription_status === 'trialing' && trialDays !== null
                     ? `Fin d'essai dans ${Math.max(0, trialDays)} j`
