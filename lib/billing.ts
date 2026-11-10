@@ -49,6 +49,22 @@ export async function createVenueCheckoutSession(
 
   let customerId = venue.stripe_customer_id;
 
+  // Un identifiant client peut être périmé : créé en mode test alors que la
+  // clé est passée en production, ou supprimé à la main dans Stripe. Dans ce
+  // cas Stripe répond « No such customer » et tout s'arrête. On vérifie donc
+  // qu'il existe encore, et on le remplace sinon plutôt que d'échouer.
+  if (customerId) {
+    try {
+      const existant = await stripe.customers.retrieve(customerId);
+      if ((existant as Stripe.DeletedCustomer).deleted) customerId = null;
+    } catch {
+      customerId = null;
+    }
+    if (!customerId) {
+      console.warn(`billing : client Stripe introuvable pour ${venue.name}, un nouveau sera créé.`);
+    }
+  }
+
   if (!customerId) {
     if (!venue.contact_email) {
       return { error: 'Cet établissement n’a pas d’email de contact — renseignez-le avant d’envoyer le lien.' };
@@ -59,7 +75,15 @@ export async function createVenueCheckoutSession(
       metadata: { venue_id: venue.id },
     });
     customerId = customer.id;
-    await service.from('venues').update({ stripe_customer_id: customerId }).eq('id', venue.id);
+    const { error: erreurClient } = await service
+      .from('venues')
+      .update({ stripe_customer_id: customerId })
+      .eq('id', venue.id);
+    if (erreurClient) {
+      // Sans cet enregistrement, chaque envoi recréerait un client : autant le
+      // dire tout de suite plutôt que de laisser des doublons s'accumuler.
+      return { error: `Client Stripe créé mais non enregistré : ${erreurClient.message}` };
+    }
   }
 
   // Une soirée se paie une fois : pas d'abonnement, pas d'essai de 30 jours
