@@ -229,7 +229,7 @@ export async function construireContratPdf(crm: any): Promise<Uint8Array> {
   const CADRES = [
     {
       titre: 'Pour le Lieu',
-      sous: 'Signature précédée de « lu et approuvé »',
+      sous: `${k.lieu.signataire}, ${k.lieu.qualite}`,
       rempli: null as string[] | null,
     },
     ...LUCKY_SIGNATAIRES.map((sg, i) => ({
