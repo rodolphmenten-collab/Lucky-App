@@ -33,7 +33,9 @@ export function PersonCard({
   person: PersonCardData;
   onWave: (userId: string) => Promise<void>;
 }) {
-  const [state, setState] = useState<'idle' | 'sending' | 'sent'>(person.waved_by_me ? 'sent' : 'idle');
+  // Plus d'état « envoyé » qui colle au bouton : écrire ouvre la conversation
+  // et l'écran change. Le bouton ne sert qu'à dire qu'on y va.
+  const [state, setState] = useState<'idle' | 'sending' | 'sent'>('idle');
   const [showProfile, setShowProfile] = useState(false);
   const { t } = useLanguage();
 

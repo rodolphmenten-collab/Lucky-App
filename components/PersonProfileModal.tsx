@@ -35,7 +35,7 @@ export function PersonProfileModal({
   const { t, lang } = useLanguage();
   const allPhotos = [person.photo_url, ...(person.photos ?? [])].filter(Boolean) as string[];
   const [photoIndex, setPhotoIndex] = useState(0);
-  const [waveState, setWaveState] = useState<'idle' | 'sending' | 'sent'>(person.waved_by_me ? 'sent' : 'idle');
+  const [waveState, setWaveState] = useState<'idle' | 'sending' | 'sent'>('idle');
 
   async function handleWave() {
     if (!onWave || waveState !== 'idle') return;
