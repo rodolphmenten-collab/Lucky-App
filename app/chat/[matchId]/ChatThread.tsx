@@ -57,6 +57,8 @@ export function ChatThread({
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [draft, setDraft] = useState('');
   const [showMatchBanner, setShowMatchBanner] = useState(justMatched);
+  // Message d'attente : tant que l'autre n'a pas répondu, on n'écrit qu'une fois.
+  const [attente, setAttente] = useState<string | null>(null);
   const [showMenu, setShowMenu] = useState(false);
   const [actionDone, setActionDone] = useState<string | null>(null);
   const [suggesting, setSuggesting] = useState(false);
@@ -167,8 +169,12 @@ export function ChatThread({
 
     if (!res.ok) {
       setDraft(content); // put it back so nothing is silently lost
+      const data = await res.json().catch(() => null);
+      if (res.status === 409 && data?.error) setAttente(data.error);
       return;
     }
+
+    setAttente(null);
 
     const { message } = await res.json();
     if (message) {
@@ -297,6 +303,12 @@ export function ChatThread({
         >
           {suggesting ? t.chat.suggesting : t.chat.suggestOpener}
         </button>
+      )}
+
+      {attente && (
+        <p className="mt-3 rounded-2xl border border-brass/40 bg-brass/5 px-4 py-3 text-xs leading-relaxed text-bone-dim">
+          {attente}
+        </p>
       )}
 
       <form onSubmit={sendMessage} className="flex gap-2 border-t hairline pt-4">
