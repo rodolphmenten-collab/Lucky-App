@@ -38,7 +38,16 @@ export async function POST(request: Request) {
     .select()
     .single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+  if (error) {
+    // La base refuse un second message tant que l'autre n'a pas répondu.
+    if (error.message.includes('en attente de reponse')) {
+      return NextResponse.json(
+        { error: 'Votre message est parti. Laissez-lui le temps de répondre avant d’en écrire un autre.' },
+        { status: 409 }
+      );
+    }
+    return NextResponse.json({ error: error.message }, { status: 400 });
+  }
 
   const otherId = match.user_a === user.id ? match.user_b : match.user_a;
 
