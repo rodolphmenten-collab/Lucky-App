@@ -185,7 +185,11 @@ export function ChatThread({
   return (
     <main className="mx-auto flex min-h-screen max-w-lg flex-col px-6 py-8">
       <div className="flex items-center gap-3 border-b hairline pb-4">
-        <Link href="/matches" className="text-bone-faint">
+        <Link
+          href="/matches"
+          aria-label="Retour"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/20 bg-ink-800 text-lg text-bone transition-colors hover:border-brass hover:text-brass"
+        >
           &larr;
         </Link>
         <button
