@@ -1,7 +1,9 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { useLanguage } from '@/components/LanguageProvider';
+import { PersonProfileModal } from '@/components/PersonProfileModal';
 import { ConsumerLanguageSwitcher } from '@/components/ConsumerLanguageSwitcher';
 
 interface ProfileLite {
@@ -12,6 +14,8 @@ interface ProfileLite {
   job?: string | null;
   bio?: string | null;
   intentions?: string[] | null;
+  photos?: string[] | null;
+  interests?: string[] | null;
 }
 
 export function MatchesView({
@@ -24,6 +28,8 @@ export function MatchesView({
   profileMap: Record<string, ProfileLite>;
 }) {
   const { t } = useLanguage();
+  // La photo ouvre le profil, le reste de la ligne ouvre la conversation.
+  const [profilOuvert, setProfilOuvert] = useState<string | null>(null);
 
   return (
     <main className="mx-auto min-h-screen max-w-lg px-6 py-16">
@@ -59,27 +65,47 @@ export function MatchesView({
           {matches.map((m) => {
             const other = profileMap[m.otherId];
             return (
-              <Link
-                key={m.id}
-                href={`/chat/${m.id}`}
-                className="flex items-center gap-4 py-4 transition-opacity hover:opacity-80"
-              >
-                <div className="h-12 w-12 overflow-hidden rounded-full bg-ink-700">
+              <div key={m.id} className="flex items-center gap-4 py-4">
+                <button
+                  onClick={() => setProfilOuvert(m.otherId)}
+                  aria-label={`Voir le profil de ${other?.first_name ?? ''}`}
+                  className="h-12 w-12 shrink-0 overflow-hidden rounded-full bg-ink-700 ring-1 ring-white/15 transition-all hover:ring-brass"
+                >
                   {other?.photo_url && (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={other.photo_url} alt="" className="h-full w-full object-cover" />
                   )}
-                </div>
-                <div>
+                </button>
+                <Link
+                  href={`/chat/${m.id}`}
+                  className="flex-1 transition-opacity hover:opacity-80"
+                >
                   <p className="text-sm text-bone">{other?.first_name ?? 'Someone'}</p>
                   <p className="font-mono text-[11px] text-bone-faint">{m.venues?.name}</p>
-                </div>
-              </Link>
+                </Link>
+              </div>
             );
           })}
         </div>
       )}
 
+      {profilOuvert && profileMap[profilOuvert] && (
+        <PersonProfileModal
+          person={{
+            user_id: profilOuvert,
+            first_name: profileMap[profilOuvert].first_name,
+            age: profileMap[profilOuvert].age,
+            city: profileMap[profilOuvert].city,
+            job: profileMap[profilOuvert].job,
+            bio: profileMap[profilOuvert].bio,
+            photo_url: profileMap[profilOuvert].photo_url,
+            photos: profileMap[profilOuvert].photos,
+            interests: profileMap[profilOuvert].interests,
+            intentions: (profileMap[profilOuvert].intentions ?? []) as any,
+          }}
+          onClose={() => setProfilOuvert(null)}
+        />
+      )}
     </main>
   );
 }

@@ -42,7 +42,7 @@ export default async function MatchesPage() {
   const { data: profiles } = otherIds.length
     ? await supabase
         .from('profiles')
-        .select('id, first_name, photo_url, age, city, job, bio, intentions')
+        .select('id, first_name, photo_url, photos, age, city, job, bio, intentions, interests')
         .in('id', otherIds)
     : { data: [] };
 
