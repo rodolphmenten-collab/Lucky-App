@@ -25,25 +25,10 @@ export default async function MatchesPage() {
     .maybeSingle();
   const activeVenue = (activeCheckIn as any)?.venues ?? null;
 
-  const matchedPartnerIds = new Set(
-    (matches ?? []).map((m: any) => (m.user_a === user.id ? m.user_b : m.user_a))
-  );
-
-  // Waves someone sent you that you haven't matched with yet.
-  const { data: incomingWaves } = await supabase
-    .from('waves')
-    .select('from_user, venue_id, created_at, venues(name)')
-    .eq('to_user', user.id)
-    .order('created_at', { ascending: false });
-
   // Un blocage doit effacer la personne partout, pas seulement de la salle :
   // un match deja noue restait visible et joignable, ce qui vidait le blocage
   // de son sens dans le cas qui compte — quelqu'un de deplace apres le match.
   const bloques = await blockedUserIds(user.id);
-
-  const pendingWaves = (incomingWaves ?? []).filter(
-    (w: any) => !matchedPartnerIds.has(w.from_user) && !bloques.has(w.from_user)
-  );
 
   const matchesWithOtherId = (matches ?? [])
     .map((m: any) => ({
@@ -53,7 +38,7 @@ export default async function MatchesPage() {
     }))
     .filter((m) => !bloques.has(m.otherId));
 
-  const otherIds = [...matchesWithOtherId.map((m) => m.otherId), ...pendingWaves.map((w: any) => w.from_user)];
+  const otherIds = matchesWithOtherId.map((m) => m.otherId);
   const { data: profiles } = otherIds.length
     ? await supabase
         .from('profiles')
@@ -66,7 +51,6 @@ export default async function MatchesPage() {
   return (
     <MatchesView
       activeVenue={activeVenue}
-      pendingWaves={pendingWaves as any}
       matches={matchesWithOtherId}
       profileMap={profileMap}
     />
