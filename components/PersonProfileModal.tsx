@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { INTENTION_META } from '@/lib/intentions';
 import { INTEREST_LABELS, type InterestKey } from '@/lib/interests';
@@ -35,6 +35,27 @@ export function PersonProfileModal({
   const { t, lang } = useLanguage();
   const allPhotos = [person.photo_url, ...(person.photos ?? [])].filter(Boolean) as string[];
   const [photoIndex, setPhotoIndex] = useState(0);
+
+  // On fait défiler les photos au doigt, pas en tapant sur l'écran : taper
+  // servait déjà à ouvrir le profil, et les deux gestes se confondaient.
+  const departX = useRef<number | null>(null);
+
+  function debutGeste(e: React.TouchEvent) {
+    departX.current = e.touches[0]?.clientX ?? null;
+  }
+
+  function finGeste(e: React.TouchEvent) {
+    const depart = departX.current;
+    departX.current = null;
+    if (depart === null) return;
+    const ecart = (e.changedTouches[0]?.clientX ?? depart) - depart;
+    // 40 px : assez pour ne pas déclencher sur un simple appui, assez peu pour
+    // que le geste reste naturel au pouce.
+    if (Math.abs(ecart) < 40) return;
+    setPhotoIndex((i) =>
+      ecart < 0 ? Math.min(allPhotos.length - 1, i + 1) : Math.max(0, i - 1)
+    );
+  }
   const [waveState, setWaveState] = useState<'idle' | 'sending' | 'sent'>('idle');
 
   async function handleWave() {
@@ -51,39 +72,29 @@ export function PersonProfileModal({
   return createPortal(
     <div className="fixed inset-0 z-30 flex items-end justify-center bg-black/70 p-0 sm:items-center sm:p-6">
       <div className="max-h-[90vh] w-full max-w-sm overflow-y-auto rounded-t-3xl border hairline bg-ink-900 sm:rounded-3xl">
-        <div className="relative aspect-[4/5] w-full overflow-hidden bg-ink-800">
+        <div
+          className="relative aspect-[4/5] w-full touch-pan-y select-none overflow-hidden bg-ink-800"
+          onTouchStart={debutGeste}
+          onTouchEnd={finGeste}
+        >
           {allPhotos.length > 0 && (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={allPhotos[photoIndex]} alt="" className="h-full w-full object-cover" />
           )}
 
           {allPhotos.length > 1 && (
-            <div className="absolute inset-x-3 top-3 flex gap-1.5">
+            <div className="absolute inset-x-0 bottom-4 flex items-center justify-center gap-2">
               {allPhotos.map((_, i) => (
                 <button
                   key={i}
                   onClick={() => setPhotoIndex(i)}
-                  className={`h-1 flex-1 rounded-full transition-colors ${
-                    i === photoIndex ? 'bg-bone' : 'bg-bone/30'
+                  aria-label={`Photo ${i + 1}`}
+                  className={`h-2 w-2 rounded-full shadow-[0_0_6px_rgba(0,0,0,0.6)] transition-colors ${
+                    i === photoIndex ? 'bg-bone' : 'bg-bone/40'
                   }`}
                 />
               ))}
             </div>
-          )}
-
-          {allPhotos.length > 1 && (
-            <>
-              <button
-                onClick={() => setPhotoIndex((i) => Math.max(0, i - 1))}
-                className="absolute inset-y-0 left-0 w-1/3"
-                aria-label="Previous photo"
-              />
-              <button
-                onClick={() => setPhotoIndex((i) => Math.min(allPhotos.length - 1, i + 1))}
-                className="absolute inset-y-0 right-0 w-1/3"
-                aria-label="Next photo"
-              />
-            </>
           )}
 
           <button
