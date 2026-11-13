@@ -17,7 +17,6 @@ function CountBadge({ count }: { count: number }) {
 export function RoomNav() {
   const { t } = useLanguage();
   const [unreadCount, setUnreadCount] = useState(0);
-  const [waveCount, setWaveCount] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -31,7 +30,7 @@ export function RoomNav() {
 
       const { data: matches } = await supabase
         .from('matches')
-        .select('id, user_a, user_b')
+        .select('id')
         .or(`user_a.eq.${user.id},user_b.eq.${user.id}`);
 
       // Messages non lus : conversations dont le dernier message n'est pas de
@@ -70,17 +69,6 @@ export function RoomNav() {
           if (!cancelled) setUnreadCount(count);
         }
       }
-
-      // Pending waves: people who waved at you that you haven't waved back (and
-      // haven't already matched with).
-      const matchedPartnerIds = new Set(
-        (matches ?? []).map((m) => (m.user_a === user.id ? m.user_b : m.user_a))
-      );
-      const { data: waves } = await supabase.from('waves').select('from_user').eq('to_user', user.id);
-      if (waves) {
-        const pending = new Set(waves.map((w) => w.from_user).filter((id) => !matchedPartnerIds.has(id)));
-        if (!cancelled) setWaveCount(pending.size);
-      }
     }
 
     checkActivity();
@@ -95,11 +83,10 @@ export function RoomNav() {
     document.addEventListener('visibilitychange', auRetour);
     window.addEventListener('focus', auRetour);
 
-    // Real-time: refresh the badge the instant a wave or message arrives,
-    // instead of waiting up to 20s for the next poll.
+    // Temps reel : le badge bouge des qu'un message arrive, sans attendre les
+    // vingt secondes du prochain sondage.
     const channel = supabase
       .channel('room-nav-activity')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'waves' }, () => checkActivity())
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, () => checkActivity())
       .subscribe();
 
@@ -114,13 +101,6 @@ export function RoomNav() {
 
   return (
     <div className="mb-6 flex items-center gap-3 border-b hairline pb-5">
-      <Link
-        href="/matches"
-        className="relative flex flex-1 items-center justify-center gap-2 rounded-full border border-white/20 bg-ink-800 py-3 text-sm font-medium tracking-wide text-bone shadow-sm transition-colors hover:border-brass hover:text-brass"
-      >
-        {t.nav.waves}
-        <CountBadge count={waveCount} />
-      </Link>
       <Link
         href="/matches"
         className="relative flex flex-1 items-center justify-center gap-2 rounded-full border border-white/20 bg-ink-800 py-3 text-sm font-medium tracking-wide text-bone shadow-sm transition-colors hover:border-brass hover:text-brass"
