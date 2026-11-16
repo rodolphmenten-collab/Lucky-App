@@ -34,6 +34,8 @@ export function OnboardingForm({
 
   const [firstName, setFirstName] = useState(existingProfile?.first_name ?? '');
   const [age, setAge] = useState(existingProfile?.age ? String(existingProfile.age) : '');
+  // Vrai dès qu'un âge est saisi et qu'il est hors des bornes autorisées.
+  const ageRefuse = age !== '' && (Number.isNaN(Number(age)) || Number(age) < 18 || Number(age) > 100);
   const [city, setCity] = useState(existingProfile?.city ?? '');
   const [job, setJob] = useState(existingProfile?.job ?? '');
   const [bio, setBio] = useState(existingProfile?.bio ?? '');
@@ -340,16 +342,25 @@ export function OnboardingForm({
         {/* L'âge n'est pas une coquetterie de profil : le service est réservé
             aux majeurs. Le champ est donc obligatoire, et la valeur est
             revérifiée côté serveur — le navigateur ne protège personne. */}
-        <input
-          placeholder={t.onboarding.age}
-          type="number"
-          min={18}
-          max={100}
-          value={age}
-          onChange={(e) => setAge(e.target.value)}
-          className="w-full rounded-full border hairline bg-transparent px-5 py-3 text-sm text-bone placeholder:text-bone-faint focus:border-brass"
-          required
-        />
+        <div>
+          <input
+            placeholder={t.onboarding.age}
+            type="number"
+            min={18}
+            max={100}
+            value={age}
+            onChange={(e) => setAge(e.target.value)}
+            className={`w-full rounded-full border bg-transparent px-5 py-3 text-sm text-bone placeholder:text-bone-faint focus:border-brass ${
+              ageRefuse ? 'border-red-400' : 'hairline'
+            }`}
+            required
+          />
+          {/* Le refus doit se lire dans la page : l'infobulle du navigateur
+              disparaît au premier clic et ne dit pas pourquoi. */}
+          {ageRefuse && (
+            <p className="mt-2 px-5 text-xs leading-relaxed text-red-400">{t.onboarding.ageInvalide}</p>
+          )}
+        </div>
         <input
           placeholder={t.onboarding.city}
           value={city}
