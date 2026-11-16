@@ -469,6 +469,8 @@ export async function removeAdmin(formData: FormData) {
 }
 
 export async function reviewReport(formData: FormData) {
+  const user = await requireAdmin();
+  if (!user) return;
   const id = formData.get('reportId') as string;
   const service = createServiceClient();
   await service.from('reports').update({ status: 'reviewed' }).eq('id', id);
@@ -476,9 +478,155 @@ export async function reviewReport(formData: FormData) {
 }
 
 export async function dismissReport(formData: FormData) {
+  const user = await requireAdmin();
+  if (!user) return;
   const id = formData.get('reportId') as string;
   const service = createServiceClient();
   await service.from('reports').update({ status: 'dismissed' }).eq('id', id);
+  revalidatePath('/admin/moderation');
+}
+
+/**
+ * Sanctions de modération.
+ *
+ * Trois gestes, et un seul principe : la sanction est portée par la base —
+ * un compte suspendu disparaît des salles, ne peut plus se pointer dans un
+ * lieu ni écrire, même en contournant l'interface. Chaque décision laisse une
+ * ligne dans moderation_actions, parce qu'il faudra pouvoir dire six mois plus
+ * tard qui a coupé quoi, et pourquoi : à une autorité qui le demande, ou à la
+ * personne sanctionnée qui conteste dans les trente jours.
+ */
+async function journaliserModeration(
+  service: ReturnType<typeof createServiceClient>,
+  entree: {
+    targetUser: string;
+    action: 'suspend' | 'unsuspend' | 'delete';
+    reason: string | null;
+    reportId: string | null;
+    actorEmail: string;
+  }
+) {
+  const { error } = await service.from('moderation_actions').insert({
+    target_user: entree.targetUser,
+    action: entree.action,
+    reason: entree.reason,
+    report_id: entree.reportId,
+    actor_email: entree.actorEmail,
+  });
+  if (error) console.error('Modération : journal non écrit —', error.message);
+}
+
+export async function suspendAccount(formData: FormData) {
+  const user = await requireAdmin();
+  if (!user) return;
+
+  const targetUser = formData.get('targetUser') as string;
+  const reportId = (formData.get('reportId') as string) || null;
+  const reason = ((formData.get('reason') as string) || '').trim() || null;
+  if (!targetUser) return;
+
+  const service = createServiceClient();
+  const { error } = await service
+    .from('profiles')
+    .update({
+      suspended_at: new Date().toISOString(),
+      suspended_reason: reason,
+      suspended_by: user.email ?? null,
+      visible: false,
+    })
+    .eq('id', targetUser);
+  if (error) {
+    console.error('Modération : suspension impossible —', error.message);
+    return;
+  }
+
+  // Les présences en cours sont coupées tout de suite : sans cela, la personne
+  // resterait dans la salle de ce soir jusqu'à l'expiration de son check-in.
+  await service
+    .from('check_ins')
+    .update({ presence_status: 'checked_out' })
+    .eq('user_id', targetUser)
+    .in('presence_status', ['verified_now', 'recently_verified']);
+
+  if (reportId) {
+    await service.from('reports').update({ status: 'reviewed' }).eq('id', reportId);
+  }
+
+  await journaliserModeration(service, {
+    targetUser,
+    action: 'suspend',
+    reason,
+    reportId,
+    actorEmail: user.email ?? 'inconnu',
+  });
+
+  revalidatePath('/admin/moderation');
+}
+
+export async function unsuspendAccount(formData: FormData) {
+  const user = await requireAdmin();
+  if (!user) return;
+
+  const targetUser = formData.get('targetUser') as string;
+  if (!targetUser) return;
+
+  const service = createServiceClient();
+  const { error } = await service
+    .from('profiles')
+    .update({ suspended_at: null, suspended_reason: null, suspended_by: null, visible: true })
+    .eq('id', targetUser);
+  if (error) {
+    console.error('Modération : levée de suspension impossible —', error.message);
+    return;
+  }
+
+  await journaliserModeration(service, {
+    targetUser,
+    action: 'unsuspend',
+    reason: null,
+    reportId: null,
+    actorEmail: user.email ?? 'inconnu',
+  });
+
+  revalidatePath('/admin/moderation');
+}
+
+/**
+ * Suppression définitive. Irréversible, et volontairement séparée de la
+ * suspension : on supprime l'utilisateur dans auth, et le profil ainsi que
+ * tout ce qui en dépend part en cascade.
+ */
+export async function deleteAccount(formData: FormData) {
+  const user = await requireAdmin();
+  if (!user) return;
+
+  const targetUser = formData.get('targetUser') as string;
+  const reportId = (formData.get('reportId') as string) || null;
+  const reason = ((formData.get('reason') as string) || '').trim() || null;
+  if (!targetUser) return;
+
+  const service = createServiceClient();
+
+  // Le journal est écrit avant la suppression : après, la ligne de profil
+  // n'existe plus, et c'est précisément la trace qu'on veut conserver.
+  await journaliserModeration(service, {
+    targetUser,
+    action: 'delete',
+    reason,
+    reportId,
+    actorEmail: user.email ?? 'inconnu',
+  });
+
+  const { error } = await service.auth.admin.deleteUser(targetUser);
+  if (error) {
+    console.error('Modération : suppression impossible —', error.message);
+    return;
+  }
+
+  if (reportId) {
+    await service.from('reports').update({ status: 'reviewed' }).eq('id', reportId);
+  }
+
   revalidatePath('/admin/moderation');
 }
 
