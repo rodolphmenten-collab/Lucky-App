@@ -53,8 +53,19 @@ export default function CGUUtilisateurs() {
           <p className="mt-2">
             Lucky permet à l'Utilisateur, une fois sa présence physique vérifiée par signal de localisation au
             sein d'un établissement partenaire, de consulter les profils des autres Utilisateurs également
-            présents et ayant choisi de rendre leur profil visible, de leur manifester un intérêt (« Wave »), et,
-            en cas d'intérêt réciproque, d'échanger par messagerie au sein de l'application.
+            présents et ayant choisi de rendre leur profil visible, et de leur adresser directement un message
+            au sein de l'application. Le destinataire est libre de répondre ou de ne pas répondre.
+          </p>
+          <p className="mt-2">
+            Tant qu'il n'a pas obtenu de réponse, l'Utilisateur ne peut adresser qu'un seul message à une même
+            personne. Cette limite est appliquée côté serveur. Elle a pour objet d'empêcher toute insistance et
+            ne peut être contournée.
+          </p>
+          <p className="mt-2">
+            L'Utilisateur peut à tout moment bloquer une autre personne, qui cesse alors de lui être visible et
+            de pouvoir le joindre, ou la signaler à l'équipe de Lucky. Les règles de comportement applicables
+            sont détaillées dans la Politique d'usage acceptable, accessible à l'adresse
+            lucky-app.io/legal/usage.
           </p>
           <p className="mt-2">
             La vérification de présence repose sur les données de localisation transmises par l'appareil de
@@ -65,7 +76,14 @@ export default function CGUUtilisateurs() {
 
         <section>
           <h2 className="text-base font-semibold text-bone">Article 4 — Comportement de l'Utilisateur</h2>
-          <p className="mt-2">L'Utilisateur s'engage à ne pas, à l'occasion de l'utilisation du Service :</p>
+          <p className="mt-2">
+            Les règles d'usage sont détaillées dans la{' '}
+            <Link href="/legal/usage" className="text-brass underline">
+              Politique d'usage acceptable
+            </Link>
+            , qui fait partie intégrante des présentes CGU. En synthèse, l'Utilisateur s'engage à ne pas, à
+            l'occasion de l'utilisation du Service :
+          </p>
           <ul className="mt-2 list-disc space-y-1.5 pl-5">
             <li>Harceler, menacer, injurier ou importuner un autre Utilisateur ;</li>
             <li>Publier ou transmettre un contenu à caractère illicite, violent, pornographique, discriminatoire ou diffamatoire ;</li>
