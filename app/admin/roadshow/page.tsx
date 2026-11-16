@@ -18,7 +18,7 @@ export const dynamic = 'force-dynamic';
 export default async function RoadshowPage({
   searchParams,
 }: {
-  searchParams?: { jour?: string };
+  searchParams?: { jour?: string; agent?: string };
 }) {
   const supabase = createClient();
   const {
@@ -43,7 +43,39 @@ export default async function RoadshowPage({
 
   // Le select est assez large pour que l'inference de Supabase abandonne ;
   // on type la ligne nous-memes plutot que de propager des `unknown`.
-  const rows: any[] = (all as any[] | null) ?? [];
+  const toutes: any[] = (all as any[] | null) ?? [];
+
+  // Les personnes qui ont des lieux en tournée. La liste se construit depuis les
+  // données : un agent apparaît quand on lui confie des lieux, et disparaît le
+  // jour où on les lui retire. Rien à coder pour ouvrir ou fermer une section.
+  const agents: string[] = Array.from(
+    new Set(toutes.map((r: any) => (r.owner_email ?? '').toLowerCase()).filter(Boolean))
+  ).sort();
+
+  // Par défaut, chacun arrive sur sa propre tournée. Cédric ouvre le
+  // back-office et voit ses lieux du jour, pas ceux de toute l'équipe.
+  const agentChoisi: string | null =
+    searchParams?.agent === 'tous'
+      ? null
+      : searchParams?.agent && agents.includes(searchParams.agent.toLowerCase())
+        ? searchParams.agent.toLowerCase()
+        : agents.includes(me)
+          ? me
+          : null;
+
+  const rows: any[] = agentChoisi
+    ? toutes.filter((r: any) => (r.owner_email ?? '').toLowerCase() === agentChoisi)
+    : toutes;
+
+  const lien = (params: Record<string, string>) => {
+    const q = new URLSearchParams(params);
+    return `/admin/roadshow?${q.toString()}`;
+  };
+
+  const nomAgent = (e: string) => {
+    const brut = e.split('@')[0].replace(/[._-]+/g, ' ').trim();
+    return brut.charAt(0).toUpperCase() + brut.slice(1);
+  };
 
   // Une journée = une date. Le libellé vient des lieux eux-mêmes, donc
   // déplacer un lieu d'un jour à l'autre suffit à réorganiser la tournée.
@@ -118,10 +150,46 @@ export default async function RoadshowPage({
       <div className="mx-auto max-w-3xl">
         <AdminNav current="roadshow" pendingReports={pendingReports ?? 0} />
 
+        {agents.length > 1 && (
+          <nav className="mt-6 flex flex-wrap gap-2" aria-label="Tournées par personne">
+            <Link
+              href={lien({ agent: 'tous' })}
+              className={`rounded-full border px-4 py-2 text-xs transition-colors ${
+                agentChoisi === null
+                  ? 'border-brass bg-brass/10 text-brass'
+                  : 'hairline text-bone-dim hover:border-white/30'
+              }`}
+            >
+              Toute l&rsquo;équipe
+            </Link>
+            {agents.map((a) => {
+              const n = toutes.filter(
+                (r: any) => (r.owner_email ?? '').toLowerCase() === a
+              ).length;
+              const on = agentChoisi === a;
+              return (
+                <Link
+                  key={a}
+                  href={lien({ agent: a })}
+                  className={`rounded-full border px-4 py-2 text-xs transition-colors ${
+                    on ? 'border-brass bg-brass/10 text-brass' : 'hairline text-bone-dim hover:border-white/30'
+                  }`}
+                >
+                  Roadshow {nomAgent(a)}
+                  <span className="ml-2 text-bone-faint">{n}</span>
+                </Link>
+              );
+            })}
+          </nav>
+        )}
+
         {days.length === 0 ? (
           <p className="mt-10 rounded-2xl border hairline px-5 py-12 text-center text-sm text-bone-faint">
-            Aucune journée de tournée. Depuis la fiche d&rsquo;un lieu, donne-lui une date de
-            tournée et elle apparaîtra ici.
+            {agentChoisi
+              ? `Aucune journée de tournée pour ${nomAgent(agentChoisi)}.`
+              : 'Aucune journée de tournée.'}{' '}
+            Depuis la fiche d&rsquo;un lieu, donne-lui une date de tournée et un responsable,
+            et elle apparaîtra ici.
           </p>
         ) : (
           <>
@@ -136,7 +204,7 @@ export default async function RoadshowPage({
                 return (
                   <Link
                     key={d}
-                    href={`/admin/roadshow?jour=${d}`}
+                    href={lien(agentChoisi ? { jour: d, agent: agentChoisi } : { jour: d, agent: 'tous' })}
                     className={`min-h-[56px] shrink-0 rounded-xl border px-4 py-2 text-left transition-colors ${
                       on ? 'border-brass bg-brass/10' : 'hairline hover:border-white/30'
                     }`}
