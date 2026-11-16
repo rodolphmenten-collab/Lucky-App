@@ -72,10 +72,31 @@ export default async function RoadshowPage({
     return `/admin/roadshow?${q.toString()}`;
   };
 
-  const nomAgent = (e: string) => {
+  /**
+   * Le nom affiché pour une personne.
+   *
+   * On le prend dans le libellé de tournée — « Roadshow Cédric — Paris 16e »
+   * donne « Roadshow Cédric » — parce que c'est le nom que l'équipe a écrit
+   * elle-même. L'adresse e-mail ne sert que de dernier recours : découper
+   * descouturescedric@ donne « Descouturescedric », ce que personne n'appelle
+   * personne.
+   */
+  const titreAgent = (e: string) => {
+    const libelles = toutes
+      .filter((r: any) => (r.owner_email ?? '').toLowerCase() === e)
+      .map((r: any) => String(r.roadshow_label ?? '').split('—')[0].trim())
+      .filter((l: string) => l.length > 0);
+    const frequences = libelles.reduce((acc: Map<string, number>, l: string) => {
+      acc.set(l, (acc.get(l) ?? 0) + 1);
+      return acc;
+    }, new Map<string, number>());
+    const [meilleur] = [...frequences.entries()].sort((a, b) => b[1] - a[1]);
+    if (meilleur) return meilleur[0];
     const brut = e.split('@')[0].replace(/[._-]+/g, ' ').trim();
-    return brut.charAt(0).toUpperCase() + brut.slice(1);
+    return `Roadshow ${brut.charAt(0).toUpperCase() + brut.slice(1)}`;
   };
+
+  const nomAgent = (e: string) => titreAgent(e).replace(/^Roadshow\s+/i, '');
 
   // Une journée = une date. Le libellé vient des lieux eux-mêmes, donc
   // déplacer un lieu d'un jour à l'autre suffit à réorganiser la tournée.
@@ -175,7 +196,7 @@ export default async function RoadshowPage({
                     on ? 'border-brass bg-brass/10 text-brass' : 'hairline text-bone-dim hover:border-white/30'
                   }`}
                 >
-                  Roadshow {nomAgent(a)}
+                  {titreAgent(a)}
                   <span className="ml-2 text-bone-faint">{n}</span>
                 </Link>
               );
