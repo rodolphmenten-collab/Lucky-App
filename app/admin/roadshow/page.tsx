@@ -36,7 +36,10 @@ export default async function RoadshowPage({
       .select('*')
       .not('roadshow_date', 'is', null)
       .order('roadshow_date', { ascending: true })
-      .order('city', { ascending: true })
+      // L'ordre de marche d'abord : une journée se lit dans l'ordre où on
+      // pousse les portes, pas dans l'ordre alphabétique. Les lieux sans
+      // ordre défini retombent derrière, triés par nom.
+      .order('roadshow_order', { ascending: true, nullsFirst: false })
       .order('name', { ascending: true }),
     service.from('reports').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
   ]);
