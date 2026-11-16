@@ -136,10 +136,18 @@ export function OnboardingForm({
         }
       }
 
+      // Majorité : vérifiée ici en plus de l'attribut du formulaire, que
+      // n'importe quel navigateur peut ignorer, et de la contrainte en base,
+      // qui refuserait l'enregistrement sans rien expliquer à la personne.
+      const ageSaisi = Number(age);
+      if (!age || Number.isNaN(ageSaisi) || ageSaisi < 18 || ageSaisi > 100) {
+        return { error: t.onboarding.ageInvalide };
+      }
+
       const payload = {
         id: uid,
         first_name: firstName,
-        age: age ? Number(age) : null,
+        age: ageSaisi,
         city: city || null,
         job: job || null,
         bio: bio || null,
@@ -329,6 +337,9 @@ export function OnboardingForm({
       />
 
       <div className="grid grid-cols-2 gap-4">
+        {/* L'âge n'est pas une coquetterie de profil : le service est réservé
+            aux majeurs. Le champ est donc obligatoire, et la valeur est
+            revérifiée côté serveur — le navigateur ne protège personne. */}
         <input
           placeholder={t.onboarding.age}
           type="number"
@@ -337,6 +348,7 @@ export function OnboardingForm({
           value={age}
           onChange={(e) => setAge(e.target.value)}
           className="w-full rounded-full border hairline bg-transparent px-5 py-3 text-sm text-bone placeholder:text-bone-faint focus:border-brass"
+          required
         />
         <input
           placeholder={t.onboarding.city}
