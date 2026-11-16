@@ -230,6 +230,18 @@ export default function LandingPage() {
           <Link href="/legal/utilisateurs" className="text-xs text-bone-faint hover:text-bone-dim">
             {lang === 'fr' ? "CGU Utilisateurs" : 'User Terms'}
           </Link>
+          <Link href="/legal/usage" className="text-xs text-bone-faint hover:text-bone-dim">
+            {lang === 'fr' ? "Règles d'usage" : 'Acceptable Use'}
+          </Link>
+          <Link href="/legal/confidentialite" className="text-xs text-bone-faint hover:text-bone-dim">
+            {lang === 'fr' ? 'Confidentialité' : 'Privacy'}
+          </Link>
+          <Link href="/legal/remboursement" className="text-xs text-bone-faint hover:text-bone-dim">
+            {lang === 'fr' ? 'Remboursement' : 'Refunds'}
+          </Link>
+          <Link href="/legal/autorites" className="text-xs text-bone-faint hover:text-bone-dim">
+            {lang === 'fr' ? 'Autorités' : 'Law Enforcement'}
+          </Link>
         </div>
       </footer>
     </main>
