@@ -98,7 +98,16 @@ export default async function ContratPage({ params }: { params: { id: string } }
                     }
                   />
                   <Ligne libelle="Supports personnalisés" valeur={k.supports.personnalises ? 'Oui' : 'Non'} />
-                  <Ligne libelle="Montant HT" valeur={k.soiree.montantHT} />
+                  {k.soiree.remise > 0 && (
+                    <>
+                      <Ligne libelle="Tarif public HT" valeur={k.soiree.plein} />
+                      <Ligne libelle="Remise consentie" valeur={`${k.soiree.remise} %`} />
+                    </>
+                  )}
+                  <Ligne
+                    libelle={k.soiree.remise > 0 ? 'Montant HT après remise' : 'Montant HT'}
+                    valeur={k.soiree.montantHT}
+                  />
                   <Ligne libelle={`TVA (${k.engagement.tauxTva} %)`} valeur={k.soiree.tva} />
                   <Ligne libelle="Montant TTC à régler" valeur={k.soiree.ttc} />
                   <Ligne
