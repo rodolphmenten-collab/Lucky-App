@@ -47,21 +47,81 @@ export default async function SignerPage({
   const pdf = `/api/signer/${params.token}/pdf`;
 
   if (s.signe_le) {
+    const quand = new Date(s.signe_le).toLocaleString('fr-FR', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZone: 'Europe/Paris',
+    });
+
     return (
       <Cadre>
-        <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-emerald-400">Signé</p>
-        <h1 className="mt-3 text-xl font-semibold text-bone">C’est fait, merci.</h1>
-        <p className="mt-3 text-sm text-bone-dim">
-          Contrat signé par {s.signe_par} le{' '}
-          {new Date(s.signe_le).toLocaleDateString('fr-FR')}. Une copie est partie à{' '}
-          {s.destinataire_email}.
+        <div className="flex h-14 w-14 items-center justify-center rounded-full border-2 border-emerald-400/70">
+          <svg viewBox="0 0 24 24" fill="none" className="h-7 w-7" aria-hidden>
+            <path
+              d="M4.5 12.5l5 5 10-11"
+              stroke="currentColor"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="text-emerald-400"
+            />
+          </svg>
+        </div>
+
+        <h1 className="mt-6 font-display text-3xl italic text-bone">Votre contrat est signé.</h1>
+        <p className="mt-3 text-sm leading-relaxed text-bone-dim">
+          {c?.name} est désormais partenaire Lucky. Vous n’avez plus rien à faire.
         </p>
+
+        <dl className="mt-7 divide-y hairline rounded-2xl border hairline text-sm">
+          <div className="flex items-baseline justify-between gap-4 px-5 py-3.5">
+            <dt className="text-bone-faint">Signé par</dt>
+            <dd className="text-right text-bone">{s.signe_par}</dd>
+          </div>
+          <div className="flex items-baseline justify-between gap-4 px-5 py-3.5">
+            <dt className="text-bone-faint">Le</dt>
+            <dd className="text-right text-bone">{quand}</dd>
+          </div>
+          <div className="flex items-baseline justify-between gap-4 px-5 py-3.5">
+            <dt className="text-bone-faint">Copie envoyée à</dt>
+            <dd className="break-all text-right text-bone">{s.destinataire_email}</dd>
+          </div>
+        </dl>
+
         <a
           href={pdf}
-          className="mt-6 inline-flex min-h-[44px] items-center rounded-full bg-bone px-5 text-sm font-medium text-ink"
+          className="mt-6 inline-flex min-h-[48px] w-full items-center justify-center rounded-full bg-bone px-5 text-sm font-medium text-ink"
         >
           Télécharger le contrat signé
         </a>
+
+        <div className="mt-8 border-t hairline pt-6">
+          <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-brass">La suite</p>
+          <ol className="mt-3 space-y-3 text-sm leading-relaxed text-bone-dim">
+            <li>
+              <span className="text-bone">Vous recevez le contrat par e-mail.</span> Il porte la page
+              de preuve de votre signature — horodatage et empreinte du document. Conservez-le.
+            </li>
+            <li>
+              <span className="text-bone">Nous préparons vos supports.</span> Les plaques au nom de
+              votre établissement sont fabriquées et installées avec vous.
+            </li>
+            <li>
+              <span className="text-bone">Nous vous recontactons</span> pour caler la mise en route et
+              répondre à vos questions.
+            </li>
+          </ol>
+          <p className="mt-6 text-xs leading-relaxed text-bone-faint">
+            Une question, une erreur dans le contrat ? Écrivez-nous à{' '}
+            <a href={`mailto:${contact}`} className="text-brass underline">
+              {contact}
+            </a>
+            .
+          </p>
+        </div>
       </Cadre>
     );
   }
