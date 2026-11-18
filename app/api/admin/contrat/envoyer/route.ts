@@ -47,7 +47,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const pdf = await construireContratPdf(c);
+  const { pdf, cadreLieu } = await construireContratPdf(c);
   const token = nouveauToken();
 
   // Un seul lien vivant à la fois : les précédents, non signés, sont annulés.
@@ -70,6 +70,7 @@ export async function POST(request: Request) {
     signataire_attendu: c.signer_name,
     pdf_base64: Buffer.from(pdf).toString('base64'),
     pdf_sha256: empreinte(pdf),
+    cadre_lieu: cadreLieu,
     envoye_par: user.email,
   });
   if (erreurInsert) {
