@@ -2,6 +2,10 @@ import { createServiceClient } from '@/lib/supabase/server';
 import { LUCKY_SIGNATAIRES } from '@/lib/contrat';
 
 export const dynamic = 'force-dynamic';
+// Aucune lecture ne doit venir d'un cache : entre deux affichages de cette
+// page, le gérant a pu signer.
+export const fetchCache = 'force-no-store';
+export const revalidate = 0;
 
 /**
  * La page que voit le gérant quand il clique sur le lien reçu par e-mail.
@@ -14,7 +18,7 @@ export default async function SignerPage({
   searchParams,
 }: {
   params: { token: string };
-  searchParams: { err?: string };
+  searchParams: { err?: string; t?: string };
 }) {
   const service = createServiceClient();
   const { data: s } = await service
