@@ -248,7 +248,10 @@ export async function construireContratPdf(
   }
   espace(18);
 
-  ecrire(`Fait à ______________________, le ${k.dates.fait}, en deux exemplaires.`, { taille: 10 });
+  ecrire(
+    `Fait à ${k.lieu.ville ?? '______________________'}, le ${k.dates.fait}, en deux exemplaires.`,
+    { taille: 10 }
+  );
   espace(30);
 
   // ---- signatures ----

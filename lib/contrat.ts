@@ -93,6 +93,7 @@ export interface Contrat {
     signataire: string;
     qualite: string;
     contactOperationnel: string;
+    ville: string | null;
   };
   formule: { cle: PlanKey; label: string; mensuelHT: string };
   /** Vrai pour la formule Soirée : prestation ponctuelle, pas d'abonnement.
@@ -181,6 +182,10 @@ export function preparerContrat(c: any, debutEssai = new Date()): Contrat {
       signataire: ou(c.signer_name, manquants, 'le nom du signataire'),
       qualite: ou(c.signer_role, manquants, 'la qualité du signataire'),
       contactOperationnel: contact || ou(null, manquants, 'le contact opérationnel'),
+      // « Fait à ____ » : la ville de l'établissement. Laisser le trait à
+      // remplir à la main n'a aucun sens dans un contrat signé en ligne — il
+      // n'y a pas de stylo au bout.
+      ville: (c.city ?? '').trim() || null,
     },
     formule: {
       cle: clePlan,
