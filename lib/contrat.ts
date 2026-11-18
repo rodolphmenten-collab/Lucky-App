@@ -102,7 +102,17 @@ export interface Contrat {
   /** Renseigné seulement quand estSoiree. Montants d'une vente unique.
    *  `offerte` met tout à zéro : le contrat part quand même, avec les mêmes
    *  conditions générales — c'est ce qui le distingue d'une poignée de main. */
-  soiree: { date: string; montantHT: string; tva: string; ttc: string; offerte: boolean };
+  soiree: {
+    date: string;
+    montantHT: string;
+    tva: string;
+    ttc: string;
+    offerte: boolean;
+    /** Remise consentie sur la soirée, en pourcentage. */
+    remise: number;
+    /** Le prix public, pour pouvoir afficher la remise. */
+    plein: string;
+  };
   engagement: {
     mois: number;
     label: string;
@@ -167,7 +177,13 @@ export function preparerContrat(c: any, debutEssai = new Date()): Contrat {
   // montant à zéro. C'est ce qui protège les deux parties si la soirée se
   // passe mal, et ce qu'une simple promesse orale ne fait pas.
   const offerte = soiree && Boolean(c.soiree_offerte);
-  const montantSoiree = offerte ? 0 : plan.monthlyCentsExclTax;
+  // Une soirée se négocie. La remise est portée par un coupon Stripe du même
+  // pourcentage : le contrat et le lien de paiement disent donc le même
+  // montant, ce qui est tout l'intérêt de ne pas la saisir à la main.
+  const remiseSoiree = offerte ? 0 : Math.max(0, Math.min(50, Number(c.soiree_remise_pct ?? 0) || 0));
+  const montantSoiree = offerte
+    ? 0
+    : Math.round((plan.monthlyCentsExclTax * (100 - remiseSoiree)) / 100);
 
   const dateSoiree = soiree
     ? ou(
@@ -215,6 +231,8 @@ export function preparerContrat(c: any, debutEssai = new Date()): Contrat {
       tva: formatCentsExclTax(centsTva(montantSoiree)),
       ttc: formatCentsExclTax(montantSoiree + centsTva(montantSoiree)),
       offerte: offerte,
+      remise: remiseSoiree,
+      plein: formatCentsExclTax(plan.monthlyCentsExclTax),
     },
     engagement: {
       mois: engagement.months,

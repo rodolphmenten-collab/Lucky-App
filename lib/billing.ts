@@ -4,6 +4,7 @@ import {
   isOneShot,
   priceIdForPlan,
   couponIdForCommitment,
+  couponIdForRemiseSoiree,
   automaticTaxEnabled,
   TRIAL_DAYS,
   DEFAULT_COMMITMENT,
@@ -29,12 +30,54 @@ export interface VenueBillingRow {
  *  - le client Stripe est réutilisé s'il existe déjà, pour qu'un lieu n'ait pas
  *    deux fiches client après un lien renvoyé.
  */
+/**
+ * Le coupon Stripe d'une remise de soirée, créé au premier usage.
+ *
+ * Les remises d'engagement ont leurs coupons posés une fois pour toutes par le
+ * script d'installation. Pour les soirées, la remise se décide en rendez-vous :
+ * demander à quelqu'un d'aller d'abord créer un coupon dans Stripe, c'est
+ * garantir qu'un jour le lien partira au prix fort. On le crée donc ici s'il
+ * manque, et on le réutilise ensuite.
+ */
+async function couponSoiree(stripe: Stripe, pct: number): Promise<string | null> {
+  const id = couponIdForRemiseSoiree(pct);
+  if (!id) return null;
+
+  try {
+    await stripe.coupons.retrieve(id);
+    return id;
+  } catch {
+    // Absent : on le crée. Une course entre deux envois simultanés ferait
+    // échouer la création — on retente alors la lecture.
+  }
+
+  try {
+    await stripe.coupons.create({
+      id,
+      percent_off: pct,
+      duration: 'once',
+      name: `Soirée Lucky — remise ${pct} %`,
+    });
+    return id;
+  } catch (err) {
+    try {
+      await stripe.coupons.retrieve(id);
+      return id;
+    } catch {
+      console.error('billing : coupon de remise soirée indisponible —', err);
+      return null;
+    }
+  }
+}
+
 export async function createVenueCheckoutSession(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   service: any,
   venue: VenueBillingRow,
   plan: PlanKey,
-  commitmentMonths: CommitmentMonths = DEFAULT_COMMITMENT
+  commitmentMonths: CommitmentMonths = DEFAULT_COMMITMENT,
+  /** Remise consentie sur une soirée, en pourcentage. Ignorée hors soirée. */
+  remiseSoireePct: number = 0
 ): Promise<{ url?: string; error?: string }> {
   const stripe = getStripe();
   if (!stripe) return { error: 'STRIPE_SECRET_KEY absente — facturation non configurée.' };
@@ -124,10 +167,13 @@ export async function createVenueCheckoutSession(
     };
   }
 
-  // La remise d'engagement est portée par un coupon. Sans lui, le lieu signe
-  // un contrat à 134,10 € et se fait prelever 149 € : l'ecart ne se voit qu'a
-  // la premiere facture, c'est-a-dire trente jours trop tard.
-  const couponId = soiree ? null : couponIdForCommitment(commitmentMonths);
+  // La remise est portée par un coupon. Sans lui, le lieu signe un contrat à
+  // 134,10 € et se fait prelever 149 € : l'ecart ne se voit qu'a la premiere
+  // facture, c'est-a-dire trente jours trop tard. Même principe pour une
+  // soirée négociée.
+  const couponId = soiree
+    ? await couponSoiree(stripe, remiseSoireePct)
+    : couponIdForCommitment(commitmentMonths);
   if (couponId) {
     params.discounts = [{ coupon: couponId }];
   }

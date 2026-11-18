@@ -158,7 +158,13 @@ export async function construireContratPdf(
         ['Date de la soirée', k.soiree.date],
         ['Nombre de supports installés', libelleSupports(k)],
         ['Supports personnalisés', k.supports.personnalises ? 'Oui' : 'Non'],
-        ['Montant HT', k.soiree.montantHT],
+        ...(k.soiree.remise > 0
+          ? ([
+              ['Tarif public HT', k.soiree.plein],
+              ['Remise consentie', `${k.soiree.remise} %`],
+            ] as [string, string][])
+          : []),
+        [k.soiree.remise > 0 ? 'Montant HT après remise' : 'Montant HT', k.soiree.montantHT],
         [`TVA (${k.engagement.tauxTva} %)`, k.soiree.tva],
         ['Montant TTC à régler', k.soiree.ttc],
         [

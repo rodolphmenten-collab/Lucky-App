@@ -154,6 +154,39 @@ export function monthlyCentsAfterDiscount(plan: PlanKey, months: CommitmentMonth
   return Math.round((base * (100 - pct)) / 100);
 }
 
+/**
+ * Les remises consenties sur une soirée.
+ *
+ * Volontairement une liste fermée et non un champ libre : une remise saisie à
+ * la main finit par ne plus correspondre au coupon Stripe, et c'est le lieu
+ * qui découvre l'écart sur sa facture. Chaque valeur a son coupon, créé à la
+ * demande et réutilisé ensuite.
+ */
+export const REMISES_SOIREE = [0, 10, 15, 20, 25, 30, 50] as const;
+export type RemiseSoiree = (typeof REMISES_SOIREE)[number];
+
+export function isRemiseSoiree(value: unknown): value is RemiseSoiree {
+  return typeof value === 'number' && (REMISES_SOIREE as readonly number[]).includes(value);
+}
+
+/** L'identifiant du coupon Stripe correspondant à une remise de soirée. */
+export function couponIdForRemiseSoiree(pct: number): string | null {
+  if (!pct) return null;
+  return `soiree-remise-${pct}`;
+}
+
+/**
+ * Montant HT d'une soirée après remise, en centimes.
+ *
+ * Affichage et contrat : ce qui est encaissé reste le prix Stripe diminué du
+ * coupon. Les deux doivent concorder.
+ */
+export function soireeCentsAfterDiscount(pct: number | null | undefined): number {
+  const base = PLANS.soiree.monthlyCentsExclTax;
+  if (!pct) return base;
+  return Math.round((base * (100 - pct)) / 100);
+}
+
 export function formatCentsExclTax(cents: number): string {
   return (cents / 100).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
 }
