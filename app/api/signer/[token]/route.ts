@@ -86,7 +86,21 @@ export async function POST(request: Request, { params }: { params: { token: stri
   });
 
   const piece = [{ filename: `Contrat Lucky - ${c.name}.pdf`, content: Buffer.from(pdfSigne).toString('base64') }];
-  const destinataires = [s.destinataire_email, ...LUCKY_SIGNATAIRES.map((x) => x.email.trim())];
+
+  // Côté Lucky, les adresses des signataires viennent de variables
+  // d'environnement qui peuvent être vides. Une adresse vide ferait
+  // silencieusement disparaître la notification : le lieu recevrait son
+  // contrat signé, et nous ne saurions pas qu'il l'a signé. On replie donc sur
+  // les administrateurs de la plateforme, qui existent toujours.
+  const cotLucky = LUCKY_SIGNATAIRES.map((x) => x.email.trim()).filter(Boolean);
+  if (cotLucky.length === 0) {
+    const { data: admins } = await service.from('platform_admins').select('email');
+    for (const a of admins ?? []) {
+      const e = String(a.email ?? '').trim();
+      if (e) cotLucky.push(e);
+    }
+  }
+  const destinataires = [s.destinataire_email, ...cotLucky].filter(Boolean);
 
   const envoi = await sendEmail({
     to: destinataires,
