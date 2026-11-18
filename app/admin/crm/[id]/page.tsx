@@ -588,6 +588,7 @@ export default async function CrmVenuePage({
                 soireePaidAt={venue.soiree_paid_at ?? null}
                 soireeAmountCents={venue.soiree_amount_cents ?? null}
                 soireeOfferte={Boolean(c.soiree_offerte)}
+                soireeRemisePct={venue?.soiree_remise_pct ?? c.soiree_remise_pct ?? 0}
                 contactEmail={venue.contact_email ?? c.contact_email ?? null}
                 trialEndsAt={venue.trial_ends_at ?? null}
                 currentPeriodEnd={venue.current_period_end ?? null}
