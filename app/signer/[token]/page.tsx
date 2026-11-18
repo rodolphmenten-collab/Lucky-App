@@ -48,7 +48,13 @@ export default async function SignerPage({
     .eq('id', s.crm_venue_id)
     .maybeSingle();
 
-  const pdf = `/api/signer/${params.token}/pdf`;
+  // Avant signature et après, ce n'est pas le même document. L'URL porte donc
+  // l'horodatage de la signature : sans lui, le lien de téléchargement renvoie
+  // la version qu'un cache a retenue pendant la relecture — le contrat non
+  // signé, servi au signataire qui vient justement de le signer.
+  const pdf = s.signe_le
+    ? `/api/signer/${params.token}/pdf?signe=${encodeURIComponent(s.signe_le)}`
+    : `/api/signer/${params.token}/pdf`;
 
   if (s.signe_le) {
     const quand = new Date(s.signe_le).toLocaleString('fr-FR', {
