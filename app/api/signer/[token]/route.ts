@@ -14,8 +14,15 @@ export const dynamic = 'force-dynamic';
  */
 export async function POST(request: Request, { params }: { params: { token: string } }) {
   const service = createServiceClient();
+
+  // La base vient de la variable publique, pas de request.url : sur Netlify,
+  // l'URL de la requête porte parfois le nom d'hôte interne du déploiement, et
+  // le gérant se retrouvait renvoyé ailleurs que sur sa page de signature —
+  // avec l'impression que rien ne s'était passé, alors que tout était
+  // enregistré.
+  const base = process.env.NEXT_PUBLIC_SITE_URL || new URL(request.url).origin;
   const retour = (q: string) =>
-    NextResponse.redirect(new URL(`/signer/${params.token}${q}`, request.url), 303);
+    NextResponse.redirect(new URL(`/signer/${params.token}${q}`, base), 303);
 
   const { data: s } = await service
     .from('contrat_signatures')
@@ -52,6 +59,7 @@ export async function POST(request: Request, { params }: { params: { token: stri
     destinataire: s.destinataire_email,
     sha256: s.pdf_sha256,
     lieu: c.name,
+    cadreLieu: s.cadre_lieu ?? null,
   });
 
   // La trace d'abord : si l'e-mail échoue ensuite, la signature existe quand
