@@ -153,13 +153,28 @@ export default async function ContratPage({ params }: { params: { id: string } }
               </p>
             </>
           ) : (
-            <p className="mt-10">
-              Le Lieu reconnaît avoir pris connaissance des conditions générales d&rsquo;abonnement,
-              annexées au présent contrat et consultables à l&rsquo;adresse{' '}
-              <span className="font-medium">lucky-app.io/legal/etablissements</span>, et les accepter sans
-              réserve. Les trente premiers jours sont gratuits et le Lieu peut mettre fin au contrat à tout
-              moment pendant cette période, par simple email, sans justification ni frais.
-            </p>
+            <>
+              <p className="mt-10">
+                Le Lieu reconnaît avoir pris connaissance des conditions générales d&rsquo;abonnement,
+                annexées au présent contrat et consultables à l&rsquo;adresse{' '}
+                <span className="font-medium">lucky-app.io/legal/etablissements</span>, et les accepter
+                sans réserve.
+              </p>
+              <p className="mt-4">
+                Les trente premiers jours ne sont pas facturés. Cette gratuité est consentie en
+                contrepartie de l&rsquo;engagement de {k.engagement.label} souscrit ci-dessus : elle ne
+                constitue pas une période d&rsquo;essai libre et n&rsquo;ouvre pas de droit de
+                rétractation. Le Service est pleinement actif pendant cette période et le premier
+                prélèvement intervient à son issue.
+              </p>
+              <p className="mt-4">
+                Le contrat ne peut être résilié avant le terme de l&rsquo;engagement. En cas de rupture
+                par le Lieu avant ce terme, y compris pendant les trente premiers jours, les mensualités
+                restant à courir deviennent exigibles, déduction faite des sommes déjà réglées. Cette
+                clause ne joue pas si la rupture est imputable à Lucky, ni en cas de cessation
+                d&rsquo;activité justifiée du Lieu.
+              </p>
+            </>
           )}
 
           <p className="mt-8">
