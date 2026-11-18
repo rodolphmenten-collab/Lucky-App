@@ -129,6 +129,22 @@ function jour(d: Date): string {
   return d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
 }
 
+/**
+ * La ville telle qu'on l'écrit dans un contrat.
+ *
+ * Les villes sont saisies à la volée sur une tablette, souvent en minuscules.
+ * « Fait à reims » dans un document signé fait amateur, et c'est le genre de
+ * détail qu'un gérant remarque avant le reste.
+ */
+function villeLisible(brut: string | null | undefined): string | null {
+  const v = (brut ?? '').trim();
+  if (!v) return null;
+  return v
+    .split(/(\s|-)/)
+    .map((m) => (/^[\s-]$/.test(m) || !m ? m : m.charAt(0).toUpperCase() + m.slice(1)))
+    .join('');
+}
+
 export function preparerContrat(c: any, debutEssai = new Date()): Contrat {
   const manquants: string[] = [];
 
@@ -185,7 +201,7 @@ export function preparerContrat(c: any, debutEssai = new Date()): Contrat {
       // « Fait à ____ » : la ville de l'établissement. Laisser le trait à
       // remplir à la main n'a aucun sens dans un contrat signé en ligne — il
       // n'y a pas de stylo au bout.
-      ville: (c.city ?? '').trim() || null,
+      ville: villeLisible(c.city),
     },
     formule: {
       cle: clePlan,
