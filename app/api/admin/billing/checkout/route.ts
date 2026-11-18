@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { isPlatformAdminEmail } from '@/lib/admin';
-import { isPlanKey, isCommitmentMonths, DEFAULT_COMMITMENT } from '@/lib/stripe';
+import { isPlanKey, isCommitmentMonths, isRemiseSoiree, isOneShot, DEFAULT_COMMITMENT } from '@/lib/stripe';
 import { createVenueCheckoutSession } from '@/lib/billing';
 import { sendEmail, emailShell } from '@/lib/email';
 
@@ -20,7 +20,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
   }
 
-  const { venueId, plan, send, commitmentMonths } = await request.json();
+  const { venueId, plan, send, commitmentMonths, soireeRemisePct } = await request.json();
   if (!venueId || !isPlanKey(plan)) {
     return NextResponse.json({ error: 'venueId ou plan invalide' }, { status: 400 });
   }
@@ -30,6 +30,13 @@ export async function POST(request: Request) {
   const months = commitmentMonths ?? DEFAULT_COMMITMENT;
   if (!isCommitmentMonths(months)) {
     return NextResponse.json({ error: 'Durée d’engagement invalide (3, 6 ou 12 mois).' }, { status: 400 });
+  }
+
+  // Une remise inconnue ne devient pas « pas de remise » en silence : le lieu
+  // a vu un montant en rendez-vous, c'est celui-là qui doit partir.
+  const remise = isOneShot(plan) ? (soireeRemisePct ?? 0) : 0;
+  if (!isRemiseSoiree(remise)) {
+    return NextResponse.json({ error: 'Remise de soirée invalide.' }, { status: 400 });
   }
 
   const service = createServiceClient();
@@ -47,7 +54,7 @@ export async function POST(request: Request) {
   // un lien que de vendre une formule que la base n'enregistre pas.
   const { error: erreurPlan } = await service
     .from('venues')
-    .update({ commitment_months: months, plan })
+    .update({ commitment_months: months, plan, soiree_remise_pct: remise })
     .eq('id', venueId);
 
   if (erreurPlan) {
@@ -57,7 +64,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const { url, error } = await createVenueCheckoutSession(service, venue, plan, months);
+  const { url, error } = await createVenueCheckoutSession(service, venue, plan, months, remise);
   if (error || !url) return NextResponse.json({ error: error ?? 'Échec' }, { status: 400 });
 
   if (!send) return NextResponse.json({ url, emailed: false });
