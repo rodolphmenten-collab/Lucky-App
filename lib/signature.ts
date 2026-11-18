@@ -1,5 +1,5 @@
 import { createHash, randomBytes } from 'crypto';
-import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
+import { PDFDocument, StandardFonts, rgb, type PDFFont } from 'pdf-lib';
 
 /**
  * Signature électronique simple, tenue en interne.
@@ -40,6 +40,15 @@ export function ipDepuisEntetes(headers: Headers): string {
   return 'inconnue';
 }
 
+/** Le cadre réservé au Lieu dans le contrat, tel que mémorisé à l'envoi. */
+export interface CadreLieu {
+  page: number;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
 export interface Preuve {
   signePar: string;
   signeLe: string;
@@ -48,6 +57,8 @@ export interface Preuve {
   destinataire: string;
   sha256: string;
   lieu: string;
+  /** Où apposer la signature dans le contrat. Absent sur les anciens envois. */
+  cadreLieu?: CadreLieu | null;
 }
 
 /**
@@ -65,6 +76,11 @@ export async function ajouterPagePreuve(pdfOrigine: Uint8Array, p: Preuve): Prom
   const MARGE = 56;
   const NOIR = rgb(0.1, 0.1, 0.1);
   const GRIS = rgb(0.45, 0.45, 0.45);
+
+  // D'abord le cadre du contrat lui-même. Une page de preuve en fin de
+  // document ne suffit pas : ce que les deux parties regardent, c'est le bas
+  // de la première page, et un cadre vide s'y lit comme un contrat non signé.
+  apposerDansLeCadre(doc, p, normal, gras);
 
   const page = doc.addPage([A4.l, A4.h]);
   let y = A4.h - MARGE;
@@ -125,4 +141,76 @@ export async function ajouterPagePreuve(pdfOrigine: Uint8Array, p: Preuve): Prom
   }
 
   return doc.save();
+}
+
+/**
+ * Écrit le nom du signataire dans le cadre prévu, sur la page du contrat.
+ *
+ * Le document n'est pas regénéré — on dessine par-dessus celui qui a été lu,
+ * dans l'espace laissé vide pour cela. Si les coordonnées manquent (contrats
+ * envoyés avant cette version), on ne touche à rien : la page de preuve reste
+ * la seule trace, ce qui était le comportement d'avant.
+ */
+function apposerDansLeCadre(
+  doc: PDFDocument,
+  p: Preuve,
+  normal: PDFFont,
+  gras: PDFFont
+) {
+  const cadre = p.cadreLieu;
+  if (!cadre || !cadre.w || !cadre.h) return;
+
+  const pages = doc.getPages();
+  const page = pages[cadre.page];
+  if (!page) return;
+
+  const NOIR = rgb(0.1, 0.1, 0.1);
+  const GRIS = rgb(0.45, 0.45, 0.45);
+
+  // Le cadre porte déjà la mention « Signature électronique — voir la page de
+  // preuve ». On la recouvre avant d'écrire, sinon les deux textes se
+  // superposent et le cadre devient illisible. Le liseré du cadre est préservé.
+  page.drawRectangle({
+    x: cadre.x + 1,
+    y: cadre.y + 1,
+    width: cadre.w - 2,
+    height: cadre.h - 2,
+    color: rgb(1, 1, 1),
+  });
+
+  // Le nom peut être long : on réduit jusqu'à ce qu'il tienne dans le cadre
+  // plutôt que de le laisser déborder sur le cadre voisin.
+  let taille = 9;
+  while (taille > 6 && gras.widthOfTextAtSize(p.signePar, taille) > cadre.w - 16) {
+    taille -= 0.5;
+  }
+
+  page.drawText(p.signePar, {
+    x: cadre.x + 8,
+    y: cadre.y + 46,
+    size: taille,
+    font: gras,
+    color: NOIR,
+  });
+  page.drawText('Signé électroniquement', {
+    x: cadre.x + 8,
+    y: cadre.y + 31,
+    size: 7.5,
+    font: normal,
+    color: GRIS,
+  });
+  page.drawText(`le ${p.signeLe.split(' ')[0]}`, {
+    x: cadre.x + 8,
+    y: cadre.y + 20,
+    size: 7.5,
+    font: normal,
+    color: GRIS,
+  });
+  page.drawText('voir la preuve en fin de document', {
+    x: cadre.x + 8,
+    y: cadre.y + 9,
+    size: 6.5,
+    font: normal,
+    color: GRIS,
+  });
 }

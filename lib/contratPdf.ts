@@ -6,6 +6,24 @@ import {
   representantsLucky,
   type Contrat,
 } from '@/lib/contrat';
+import { CGV_ETABLISSEMENTS } from '@/lib/cgvEtablissements';
+
+/**
+ * Où se trouve le cadre réservé à la signature du Lieu.
+ *
+ * On le renvoie avec le document parce que le PDF signé doit porter le nom du
+ * signataire dans ce cadre, et non dans la seule page de preuve : un cadre
+ * resté vide se lit comme un contrat non signé, quoi qu'en dise l'annexe.
+ * Recalculer ces coordonnées au moment de la signature serait fragile — la
+ * mise en page dépend du contenu. On les mémorise donc à la construction.
+ */
+export interface CadreLieu {
+  page: number;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
 
 /**
  * Les conditions particulières, en PDF.
@@ -56,7 +74,9 @@ function libelleSupports(k: Contrat): string {
   return `${n} (${k.supports.inclus} inclus, ${n - k.supports.inclus} facturés en plus)`;
 }
 
-export async function construireContratPdf(crm: any): Promise<Uint8Array> {
+export async function construireContratPdf(
+  crm: any
+): Promise<{ pdf: Uint8Array; cadreLieu: CadreLieu }> {
   const k: Contrat = preparerContrat(crm);
 
   const doc = await PDFDocument.create();
@@ -206,8 +226,24 @@ export async function construireContratPdf(crm: any): Promise<Uint8Array> {
     ecrire(
       "Le Lieu reconnaît avoir pris connaissance des conditions générales d'abonnement, annexées au " +
       "présent contrat et consultables à l'adresse lucky-app.io/legal/etablissements, et les accepter " +
-      "sans réserve. Les trente premiers jours sont gratuits : le Lieu peut mettre fin au contrat à " +
-      "tout moment pendant cette période, par simple email, sans justification ni frais."
+      "sans réserve."
+    );
+    espace(10);
+    // La gratuité des trente premiers jours est la contrepartie de
+    // l'engagement, pas un essai libre : le dire ici, en toutes lettres, est
+    // ce qui évite qu'un lieu enchaîne les soirées offertes puis s'en aille.
+    ecrire(
+      `Les trente premiers jours ne sont pas facturés. Cette gratuité est consentie en contrepartie ` +
+      `de l'engagement de ${k.engagement.label} souscrit ci-dessus : elle ne constitue pas une ` +
+      `période d'essai libre et n'ouvre pas de droit de rétractation. Le Service est pleinement actif ` +
+      `pendant cette période et le premier prélèvement intervient à son issue.`
+    );
+    espace(10);
+    ecrire(
+      "Le contrat ne peut être résilié avant le terme de l'engagement. En cas de rupture par le Lieu " +
+      "avant ce terme, y compris pendant les trente premiers jours, les mensualités restant à courir " +
+      "deviennent exigibles, déduction faite des sommes déjà réglées. Cette clause ne joue pas si la " +
+      "rupture est imputable à Lucky, ni en cas de cessation d'activité justifiée du Lieu."
     );
   }
   espace(18);
@@ -241,10 +277,33 @@ export async function construireContratPdf(crm: any): Promise<Uint8Array> {
 
   const ECART = 18;
   const largeurCadre = (LARGEUR - ECART * (CADRES.length - 1)) / CADRES.length;
+
+  // Le bloc de signatures ne se coupe pas : titre, sous-titre, cadre de 72
+  // points et la ligne de rappel en dessous. S'il ne tient pas dans ce qui
+  // reste, il part sur la page suivante en entier — sinon les cadres
+  // débordent sous le bord de la page, ce qui est passé inaperçu jusqu'au
+  // jour où le texte au-dessus s'est allongé.
+  const HAUTEUR_SIGNATURES = 150;
+  if (c.y - HAUTEUR_SIGNATURES < MARGE) {
+    c.page = doc.addPage([A4.l, A4.h]);
+    c.y = A4.h - MARGE;
+  }
+
   const yCadre = c.y - 90;
+
+  let cadreLieu: CadreLieu | null = null;
 
   CADRES.forEach((cadre, i) => {
     const x = MARGE + i * (largeurCadre + ECART);
+    if (i === 0) {
+      cadreLieu = {
+        page: doc.getPages().indexOf(c.page),
+        x,
+        y: yCadre,
+        w: largeurCadre,
+        h: 72,
+      };
+    }
 
     if (cadre.titre.trim()) {
       c.page.drawText(cadre.titre, { x, y: c.y, size: 9.5, font: gras, color: NOIR });
@@ -287,5 +346,85 @@ export async function construireContratPdf(crm: any): Promise<Uint8Array> {
     { taille: 7.5, couleur: GRIS }
   );
 
-  return doc.save();
+  annexerCgv(doc, normal, gras);
+
+  return {
+    pdf: await doc.save(),
+    cadreLieu: cadreLieu ?? { page: 0, x: MARGE, y: 0, w: 0, h: 0 },
+  };
+}
+
+/**
+ * Les conditions générales, annexées au contrat.
+ *
+ * Renvoyer à une URL ne suffit pas : le document signé doit contenir ce que le
+ * signataire a accepté, y compris si la page publique change ensuite.
+ */
+function annexerCgv(doc: PDFDocument, normal: PDFFont, gras: PDFFont) {
+  const BAS = 64;
+  let page = doc.addPage([A4.l, A4.h]);
+  let y = A4.h - MARGE;
+
+  const sautSiBesoin = (hauteur: number) => {
+    if (y - hauteur < BAS) {
+      page = doc.addPage([A4.l, A4.h]);
+      y = A4.h - MARGE;
+    }
+  };
+
+  const bloc = (
+    texte: string,
+    { taille = 8.5, font = normal, interligne = 11.5, retrait = 0, couleur = NOIR } = {}
+  ) => {
+    const lignes = mots(texte, font, taille, LARGEUR - retrait);
+    sautSiBesoin(lignes.length * interligne);
+    for (const ligne of lignes) {
+      page.drawText(ligne, { x: MARGE + retrait, y, size: taille, font, color: couleur });
+      y -= interligne;
+    }
+  };
+
+  bloc('ANNEXE — CONDITIONS GÉNÉRALES DE VENTE ET D\'UTILISATION', { taille: 11, font: gras, interligne: 16 });
+  y -= 4;
+  bloc(
+    "Les présentes conditions font partie intégrante du contrat. En cas de divergence, les conditions " +
+    "particulières qui précèdent prévalent.",
+    { taille: 8, couleur: GRIS }
+  );
+  y -= 14;
+
+  for (const article of CGV_ETABLISSEMENTS) {
+    sautSiBesoin(40);
+    y -= 6;
+    bloc(article.titre, { taille: 9.5, font: gras, interligne: 13 });
+    y -= 3;
+
+    for (const b of article.blocs) {
+      if (b.sous) {
+        y -= 4;
+        bloc(b.sous, { taille: 8.5, font: gras, interligne: 12 });
+        y -= 2;
+      } else if (b.fort) {
+        bloc(b.fort, { font: gras });
+        y -= 5;
+      } else if (b.liste) {
+        for (const item of b.liste) {
+          const lignes = mots(item, normal, 8.5, LARGEUR - 14);
+          sautSiBesoin(lignes.length * 11.5);
+          lignes.forEach((ligne, i) => {
+            if (i === 0) {
+              page.drawText('—', { x: MARGE, y, size: 8.5, font: normal, color: GRIS });
+            }
+            page.drawText(ligne, { x: MARGE + 14, y, size: 8.5, font: normal, color: NOIR });
+            y -= 11.5;
+          });
+          y -= 2;
+        }
+        y -= 3;
+      } else if (b.p) {
+        bloc(b.p);
+        y -= 5;
+      }
+    }
+  }
 }
