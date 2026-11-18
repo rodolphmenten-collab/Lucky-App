@@ -19,7 +19,7 @@ export default function PolitiqueRemboursement() {
       <h1 className="mt-2 font-display text-3xl italic text-bone">
         Remboursement, annulation et litiges
       </h1>
-      <p className="mt-3 text-xs text-bone-faint">Dernière mise à jour : 16/11/2026</p>
+      <p className="mt-3 text-xs text-bone-faint">Dernière mise à jour : 18/11/2026</p>
 
       <div className="prose-legal mt-10 space-y-8 text-sm leading-relaxed text-bone-dim">
         <section>
@@ -43,9 +43,18 @@ export default function PolitiqueRemboursement() {
         <section>
           <h2 className="text-base font-semibold text-bone">Abonnement : essai, facturation, annulation</h2>
           <p className="mt-2">
-            Les trente (30) premiers jours sont gratuits. Pendant cette période, l'établissement peut mettre
-            fin au contrat à tout moment, par simple e-mail, sans justification ni frais, et aucun
-            prélèvement n'intervient.
+            Les trente (30) premiers jours ne sont pas facturés. Cette gratuité est la contrepartie de
+            l&rsquo;engagement minimum souscrit — trois (3) mois sauf mention contraire au contrat : ce
+            n&rsquo;est pas une période d&rsquo;essai libre, et elle n&rsquo;ouvre pas de droit de
+            rétractation. Le service est pleinement actif pendant ces trente jours, et le premier
+            prélèvement intervient à leur issue.
+          </p>
+          <p className="mt-2">
+            Le contrat ne peut pas être résilié avant le terme de l&rsquo;engagement. Si
+            l&rsquo;établissement y met fin avant ce terme, y compris pendant les trente premiers jours,
+            les mensualités restant à courir deviennent exigibles, déduction faite des sommes déjà
+            réglées. Cette clause ne s&rsquo;applique pas lorsque la rupture nous est imputable, ni en cas
+            de cessation d&rsquo;activité justifiée.
           </p>
           <p className="mt-2">
             Passé l'essai, l'abonnement est facturé mensuellement d'avance, aux tarifs publics affichés sur{' '}
@@ -55,8 +64,8 @@ export default function PolitiqueRemboursement() {
             , en euros, hors taxes, la TVA au taux en vigueur s'ajoutant sur la facture.
           </p>
           <p className="mt-2">
-            L'établissement peut résilier à tout moment, avec un préavis de trente (30) jours notifié par
-            écrit à{' '}
+            Passé la période d'engagement, l'établissement peut résilier à tout moment, avec un préavis
+            de trente (30) jours notifié par écrit à{' '}
             <a href="mailto:hello@lucky-app.io" className="text-brass underline">
               hello@lucky-app.io
             </a>
