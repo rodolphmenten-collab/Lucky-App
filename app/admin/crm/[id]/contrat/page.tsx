@@ -179,7 +179,8 @@ export default async function ContratPage({ params }: { params: { id: string } }
           )}
 
           <p className="mt-8">
-            Fait à ______________________, le {k.dates.fait}, en deux exemplaires.
+            Fait à {k.lieu.ville ?? '______________________'}, le {k.dates.fait}, en deux
+            exemplaires.
           </p>
 
           <div className="mt-12 grid grid-cols-3 gap-6">
