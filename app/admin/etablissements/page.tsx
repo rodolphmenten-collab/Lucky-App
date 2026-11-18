@@ -2,10 +2,9 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { isPlatformAdminEmail } from '@/lib/admin';
-import { subscriptionStatusLabel } from '@/lib/billing';
+import { etiquetteLieu } from '@/lib/etiquetteLieu';
 import { ImpersonateButton } from '@/components/ImpersonateButton';
 import { AdminNav } from '@/components/admin/AdminNav';
-import { daysUntil } from '@/lib/crm';
 import { sendVenueInvite } from '../actions';
 
 export const dynamic = 'force-dynamic';
@@ -27,7 +26,9 @@ export default async function VenuesPage() {
     service
       .from('venues')
       .select(
-        'id, slug, name, city, type, plan, contact_name, contact_email, invited_at, created_at, subscription_status, trial_ends_at, crm_venues(id)'
+        'id, slug, name, city, type, plan, contact_name, contact_email, invited_at, created_at, ' +
+          'subscription_status, trial_ends_at, commitment_months, soiree_paid_at, soiree_amount_cents, ' +
+          'crm_venues(id, contract_signed_at, commitment_months, soiree_offerte)'
       )
       .order('created_at', { ascending: false }),
     service.from('reports').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
@@ -63,7 +64,7 @@ export default async function VenuesPage() {
                 )}
               </div>
               <div className="flex shrink-0 flex-wrap items-center gap-3">
-                <SubscriptionBadge status={v.subscription_status ?? 'none'} trialEndsAt={v.trial_ends_at ?? null} />
+                <EtatBadge venue={v} />
                 {v.invited_at && (
                   <span className="text-[11px] text-signal-live">
                     Invité le {new Date(v.invited_at).toLocaleDateString('fr-FR')}
@@ -108,20 +109,36 @@ function ficheHref(v: any): string {
   return crmId ? `/admin/crm/${crmId}` : `/admin/venues/${v.id}`;
 }
 
-function SubscriptionBadge({ status, trialEndsAt }: { status: string; trialEndsAt: string | null }) {
-  const tone =
-    status === 'active'
-      ? 'border-brass/50 text-brass'
-      : status === 'trialing'
-        ? 'border-brass/30 text-brass/80'
-        : status === 'past_due' || status === 'unpaid'
-          ? 'border-red-400/40 text-red-400'
-          : 'hairline text-bone-faint';
-  const d = status === 'trialing' ? daysUntil(trialEndsAt) : null;
+/** La fiche CRM d'un établissement, quand elle existe. */
+function fiche(v: any): any {
+  return Array.isArray(v.crm_venues) ? v.crm_venues[0] : v.crm_venues;
+}
+
+function EtatBadge({ venue }: { venue: any }) {
+  const crm = fiche(venue);
+  const e = etiquetteLieu({
+    contratSigneLe: crm?.contract_signed_at ?? null,
+    plan: venue.plan ?? null,
+    // L'engagement enregistré à l'encaissement fait foi ; celui de la fiche ne
+    // sert que tant que rien n'a été payé.
+    engagementMois: venue.commitment_months ?? crm?.commitment_months ?? null,
+    soireeOfferte: crm?.soiree_offerte ?? null,
+    soireePayeeLe: venue.soiree_paid_at ?? null,
+    soireeMontantCents: venue.soiree_amount_cents ?? null,
+    statutAbonnement: venue.subscription_status ?? null,
+  });
+
+  if (!e) {
+    return (
+      <span className="rounded-full border border-dashed border-white/15 px-3 py-1 text-[10px] uppercase tracking-[0.15em] text-bone-faint/60">
+        Contrat non signé
+      </span>
+    );
+  }
+
   return (
-    <span className={`rounded-full border px-3 py-1 text-[10px] uppercase tracking-[0.15em] ${tone}`}>
-      {subscriptionStatusLabel(status)}
-      {d !== null ? ` · J-${Math.max(0, d)}` : ''}
+    <span className={`rounded-full border px-3 py-1 text-[10px] uppercase tracking-[0.15em] ${e.classe}`}>
+      {e.libelle}
     </span>
   );
 }
