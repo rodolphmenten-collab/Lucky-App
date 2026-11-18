@@ -22,7 +22,7 @@ export async function GET(request: Request) {
   const { data: c } = await service.from('crm_venues').select('*').eq('id', id).maybeSingle();
   if (!c) return NextResponse.json({ error: 'Introuvable' }, { status: 404 });
 
-  const pdf = await construireContratPdf(c);
+  const { pdf } = await construireContratPdf(c);
 
   // Un en-tete HTTP est une suite d'octets : un seul caractere au-dela de 255
   // — un tiret cadratin, par exemple — fait rejeter la reponse entiere, pas
