@@ -19,7 +19,7 @@ export default function PolitiqueUsage() {
       </Link>
       <p className="mt-6 font-mono text-xs uppercase tracking-[0.3em] text-brass">Règles d'usage</p>
       <h1 className="mt-2 font-display text-3xl italic text-bone">Politique d'usage acceptable</h1>
-      <p className="mt-3 text-xs text-bone-faint">Dernière mise à jour : 16/11/2026</p>
+      <p className="mt-3 text-xs text-bone-faint">Dernière mise à jour : 18/11/2026</p>
 
       <div className="prose-legal mt-10 space-y-8 text-sm leading-relaxed text-bone-dim">
         <section>
@@ -53,6 +53,11 @@ export default function PolitiqueUsage() {
           <h2 className="text-base font-semibold text-bone">2. Ce qui est interdit</h2>
           <p className="mt-2">Il est interdit, sur Lucky :</p>
           <ul className="mt-2 list-disc space-y-1.5 pl-5">
+            <li>
+              d&rsquo;utiliser le Service à des fins de traite des êtres humains, y compris l&rsquo;exploitation
+              sexuelle, ou pour aider, encourager, faciliter ou favoriser de tels agissements ou toute
+              forme d&rsquo;abus ;
+            </li>
             <li>de harceler, menacer, injurier, intimider ou importuner une autre personne ;</li>
             <li>
               d'insister auprès de quelqu'un qui ne répond pas, ou de reprendre contact après un blocage ;
@@ -86,6 +91,24 @@ export default function PolitiqueUsage() {
               informations d'une autre personne sans son accord.
             </li>
           </ul>
+        </section>
+
+        <section>
+          <div className="rounded-xl border border-brass/40 bg-brass/5 p-4">
+            <p className="text-bone">
+              <strong className="text-bone">
+                Lucky ne peut en aucun cas être utilisé à des fins de traite des êtres humains, y compris
+                l&rsquo;exploitation sexuelle, ni pour aider, encourager ou favoriser un abus.
+              </strong>{' '}
+              Tout compte pour lequel nous avons des raisons sérieuses de penser qu&rsquo;il sert à de telles
+              fins est supprimé immédiatement, sans préavis, et signalé aux autorités compétentes.
+            </p>
+            <p className="mt-2 italic text-bone-faint">
+              Lucky may not be used for human trafficking, including sexual exploitation, or to aid, abet
+              or encourage abuse. Any account we have serious reason to believe is used for such purposes
+              is deleted immediately, without notice, and reported to the competent authorities.
+            </p>
+          </div>
         </section>
 
         <section>
