@@ -8,9 +8,13 @@ import Link from 'next/link';
  *
  * « Envoyer pour signature » fige le PDF côté serveur et envoie au signataire
  * un lien vers la page de signature de Lucky. Le bouton reste désactivé tant
- * qu'un champ manque d'un côté ou de l'autre : une fois la demande partie, la
- * seule façon de corriger une coquille est de renvoyer le contrat, ce qui
- * annule le lien précédent.
+ * qu'un champ manque d'un côté ou de l'autre.
+ *
+ * Tant que le Lieu n'a pas signé, on peut renvoyer : une coquille dans une
+ * raison sociale ou une adresse se corrige, et le contrat doit repartir. Le
+ * renvoi annule le lien précédent — il n'existe jamais deux liens valides
+ * pour le même contrat. Le bouton se ferme à la signature, pour ne pas
+ * remplacer par inadvertance un document déjà signé.
  */
 export function BarreContrat({
   crmId,
@@ -19,6 +23,7 @@ export function BarreContrat({
   manquants,
   manquantsLucky,
   envoyeLe,
+  signeLe,
 }: {
   crmId: string;
   nomLieu: string;
@@ -26,15 +31,20 @@ export function BarreContrat({
   manquants: string[];
   manquantsLucky: string[];
   envoyeLe: string | null;
+  signeLe: string | null;
 }) {
   const [etat, setEtat] = useState<'repos' | 'envoi' | 'parti'>(envoyeLe ? 'parti' : 'repos');
   const [erreur, setErreur] = useState<string | null>(null);
 
   const complet = manquants.length === 0 && manquantsLucky.length === 0;
-  const peutEnvoyer = complet && !!emailContact && etat === 'repos';
+  const dejaParti = etat === 'parti';
+  const peutEnvoyer = complet && !!emailContact && !signeLe && etat !== 'envoi';
 
   async function envoyer() {
-    if (!confirm(`Envoyer le contrat à ${emailContact} pour signature ?`)) return;
+    const question = dejaParti
+      ? `Renvoyer le contrat à ${emailContact} ?\n\nLe lien envoyé précédemment cessera de fonctionner.`
+      : `Envoyer le contrat à ${emailContact} pour signature ?`;
+    if (!confirm(question)) return;
     setEtat('envoi');
     setErreur(null);
     try {
@@ -69,7 +79,13 @@ export function BarreContrat({
             title={raisonBlocage(complet, emailContact, etat)}
             className="min-h-[44px] rounded-full bg-brass px-5 text-sm font-medium text-ink hover:bg-brass-bright disabled:cursor-not-allowed disabled:bg-brass/25 disabled:text-bone-faint"
           >
-            {etat === 'envoi' ? 'Envoi…' : etat === 'parti' ? 'Envoyé pour signature' : 'Envoyer pour signature'}
+            {signeLe
+              ? 'Contrat signé'
+              : etat === 'envoi'
+                ? 'Envoi…'
+                : dejaParti
+                  ? 'Renvoyer pour signature'
+                  : 'Envoyer pour signature'}
           </button>
           <a
             href={`/api/admin/contrat/pdf?id=${crmId}`}

@@ -47,6 +47,7 @@ export default async function ContratPage({ params }: { params: { id: string } }
           manquants={k.manquants}
           manquantsLucky={trousLucky}
           envoyeLe={c.contract_sent_at ?? null}
+          signeLe={c.contract_signed_at ?? null}
         />
 
         {/* La feuille. Fond blanc et texte noir : un contrat se lit et s'imprime. */}
