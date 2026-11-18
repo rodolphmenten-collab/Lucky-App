@@ -1,0 +1,11 @@
+-- Où apposer la signature du Lieu dans le contrat.
+--
+-- Le PDF envoyé laisse un cadre vide pour le gérant. Jusqu'ici, sa signature
+-- n'apparaissait que sur la page de preuve ajoutée en fin de document : le bas
+-- de la première page restait vide, et un contrat dont le cadre est vide se
+-- lit comme un contrat non signé, quoi qu'en dise l'annexe.
+--
+-- Les coordonnées du cadre sont mémorisées à l'envoi plutôt que recalculées à
+-- la signature : la mise en page dépend du contenu de la fiche, qui peut avoir
+-- changé entre les deux.
+alter table contrat_signatures add column if not exists cadre_lieu jsonb;
