@@ -242,6 +242,12 @@ export default function LandingPage() {
           <Link href="/legal/autorites" className="text-xs text-bone-faint hover:text-bone-dim">
             {lang === 'fr' ? 'Autorités' : 'Law Enforcement'}
           </Link>
+          <Link href="/tarifs" className="text-xs text-bone-faint hover:text-bone-dim">
+            {lang === 'fr' ? 'Tarifs' : 'Pricing'}
+          </Link>
+          <Link href="/legal/contact" className="text-xs text-bone-faint hover:text-bone-dim">
+            {lang === 'fr' ? 'Contact' : 'Contact'}
+          </Link>
         </div>
       </footer>
     </main>
