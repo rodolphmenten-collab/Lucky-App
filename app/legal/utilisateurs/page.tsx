@@ -85,6 +85,11 @@ export default function CGUUtilisateurs() {
             l'occasion de l'utilisation du Service :
           </p>
           <ul className="mt-2 list-disc space-y-1.5 pl-5">
+            <li>
+              Utiliser le Service aux fins de traite des &ecirc;tres humains, y compris l&rsquo;exploitation
+              sexuelle, ou pour aider, encourager, faciliter ou favoriser de tels agissements ou toute
+              forme d&rsquo;abus ;
+            </li>
             <li>Harceler, menacer, injurier ou importuner un autre Utilisateur ;</li>
             <li>Publier ou transmettre un contenu à caractère illicite, violent, pornographique, discriminatoire ou diffamatoire ;</li>
             <li>Utiliser le Service à des fins commerciales, publicitaires, ou de sollicitation non autorisées ;</li>
@@ -92,6 +97,21 @@ export default function CGUUtilisateurs() {
             <li>Contourner ou tenter de contourner les dispositifs de vérification de présence ;</li>
             <li>Porter atteinte, de quelque manière que ce soit, à la sécurité ou à l'intégrité d'un autre Utilisateur.</li>
           </ul>
+          <div className="mt-4 rounded-xl border border-brass/40 bg-brass/5 p-4">
+            <p className="text-bone">
+              <strong className="text-bone">
+                Le Service ne peut en aucun cas être utilisé à des fins de traite des êtres humains, y
+                compris l&rsquo;exploitation sexuelle, ni pour aider, encourager ou favoriser un abus.
+              </strong>{' '}
+              Tout compte pour lequel nous avons des raisons sérieuses de penser qu&rsquo;il sert à de telles
+              fins est supprimé immédiatement, sans préavis, et signalé aux autorités compétentes.
+            </p>
+            <p className="mt-2 italic text-bone-faint">
+              The Service may not be used for human trafficking, including sexual exploitation, or to aid,
+              abet or encourage abuse. Any account we have serious reason to believe is used for such
+              purposes is deleted immediately, without notice, and reported to the competent authorities.
+            </p>
+          </div>
           <p className="mt-2">
             Tout manquement à ces engagements pourra entraîner la suspension ou la suppression immédiate du
             compte de l'Utilisateur concerné, sans préavis.
