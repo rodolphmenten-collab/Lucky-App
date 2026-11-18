@@ -7,6 +7,8 @@ import {
   DEFAULT_COMMITMENT,
   isOneShot,
   monthlyCentsAfterDiscount,
+  soireeCentsAfterDiscount,
+  REMISES_SOIREE,
   formatCentsExclTax,
   type PlanKey,
   type CommitmentMonths,
@@ -26,6 +28,13 @@ const COMMITMENT_OPTIONS = (Object.values(COMMITMENTS) as (typeof COMMITMENTS)[C
   label: c.discountPercent ? `${c.label} — remise de ${c.discountPercent} %` : `${c.label} — plein tarif`,
 }));
 
+const REMISE_OPTIONS = REMISES_SOIREE.map((pct) => ({
+  value: pct,
+  label: pct
+    ? `Remise de ${pct} % — ${formatCentsExclTax(soireeCentsAfterDiscount(pct))} HT`
+    : `Plein tarif — ${formatCentsExclTax(soireeCentsAfterDiscount(0))} HT`,
+}));
+
 export function BillingPanel({
   venueId,
   currentPlan,
@@ -39,6 +48,7 @@ export function BillingPanel({
   soireePaidAt,
   soireeAmountCents,
   soireeOfferte,
+  soireeRemisePct,
 }: {
   venueId: string;
   currentPlan: string;
@@ -54,8 +64,11 @@ export function BillingPanel({
   soireeAmountCents: number | null;
   /** Soirée convenue comme offerte : 0 €, mais pas encore honorée. */
   soireeOfferte?: boolean;
+  /** Remise déjà enregistrée pour la soirée, en pourcentage. */
+  soireeRemisePct?: number | null;
 }) {
   const [plan, setPlan] = useState(currentPlan);
+  const [remiseSoiree, setRemiseSoiree] = useState<number>(soireeRemisePct ?? 0);
   const [commitment, setCommitment] = useState<CommitmentMonths>(
     (currentCommitment as CommitmentMonths) || DEFAULT_COMMITMENT
   );
@@ -74,7 +87,13 @@ export function BillingPanel({
       const res = await fetch('/api/admin/billing/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ venueId, plan, send, commitmentMonths: commitment }),
+        body: JSON.stringify({
+          venueId,
+          plan,
+          send,
+          commitmentMonths: commitment,
+          soireeRemisePct: remiseSoiree,
+        }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -196,6 +215,23 @@ export function BillingPanel({
         </select>
       )}
 
+      {/* Une soirée se négocie en rendez-vous. La remise est choisie dans une
+          liste fermée : chaque valeur a son coupon Stripe, donc le montant du
+          lien et celui du contrat ne peuvent pas diverger. */}
+      {soiree && (
+        <select
+          value={remiseSoiree}
+          onChange={(e) => setRemiseSoiree(Number(e.target.value))}
+          className="mt-3 w-full rounded-full border hairline bg-ink-900 px-5 py-3 text-sm text-bone"
+        >
+          {REMISE_OPTIONS.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </select>
+      )}
+
       {/* Le montant affiché ici est celui qui partira dans le lien de paiement :
           c'est le seul endroit où l'on voit, avant d'envoyer, ce que le lieu
           verra sur sa facture. */}
@@ -203,10 +239,17 @@ export function BillingPanel({
         <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-brass">Ce que paiera le lieu</p>
         <p className="mt-1 font-display text-2xl text-bone">
           {soiree
-            ? formatCentsExclTax(PLANS[plan as PlanKey].monthlyCentsExclTax)
+            ? formatCentsExclTax(soireeCentsAfterDiscount(remiseSoiree))
             : formatCentsExclTax(monthlyCentsAfterDiscount(plan as PlanKey, commitment))}
           <span className="text-sm text-bone-dim">{soiree ? ' HT la soirée' : ' HT / mois'}</span>
         </p>
+        {soiree && remiseSoiree > 0 && (
+          <p className="mt-1 text-[11px] text-bone-dim">
+            au lieu de{' '}
+            <span className="line-through">{formatCentsExclTax(soireeCentsAfterDiscount(0))}</span> ·{' '}
+            <span className="text-brass">−{remiseSoiree} %</span> sur cette soirée
+          </p>
+        )}
         {!soiree && COMMITMENTS[commitment].discountPercent > 0 && (
           <p className="mt-1 text-[11px] text-bone-dim">
             au lieu de{' '}
