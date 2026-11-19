@@ -76,7 +76,14 @@ export async function POST(request: Request) {
   });
 
   if (error || !data?.properties?.email_otp) {
-    return NextResponse.json({ error: error?.message ?? 'Could not generate code' }, { status: 400 });
+    // Le message de Supabase est en anglais et parle de validation d'adresse :
+    // la personne qui vient de taper son e-mail de travers merite une phrase
+    // qui lui dise quoi faire.
+    console.error('send-code: code non genere', error?.message);
+    return NextResponse.json(
+      { error: "Cette adresse e-mail ne semble pas valide. Verifiez-la et reessayez.", code: 'email_invalide' },
+      { status: 400 }
+    );
   }
 
   const code = data.properties.email_otp;
