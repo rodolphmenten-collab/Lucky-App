@@ -108,6 +108,23 @@ export default async function RoadshowPage({
    * La tournée se découpe par secteur et non par date : un secteur se fait
    * sur plusieurs passages, au rythme de Cédric.
    */
+  // Le nom de ville garde ses traits d'union : couper au premier mot donnait
+  // « Saint » pour Saint-Denis, et il y a trop de Saint-quelque-chose pour que
+  // l'onglet veuille dire quelque chose. Les particules restent en minuscules,
+  // comme on les ecrit : Neuilly-sur-Seine, L'Hay-les-Roses, Le Pre-Saint-Gervais.
+  const PARTICULES = new Set(['sur', 'sous', 'de', 'du', 'des', 'la', 'le', 'les', 'lez', 'les', 'en', 'et', 'au', 'aux', 'd', 'l']);
+  const nomDeVille = (brut: string): string =>
+    brut
+      .toLowerCase()
+      .split(/([-\s'\u2019])/)
+      .map((morceau, i, tous) => {
+        if (/^[-\s'\u2019]$/.test(morceau) || !morceau) return morceau;
+        const apresApostrophe = i > 0 && /['\u2019]/.test(tous[i - 1]);
+        if (i > 0 && !apresApostrophe && PARTICULES.has(morceau)) return morceau;
+        return morceau.charAt(0).toUpperCase() + morceau.slice(1);
+      })
+      .join('');
+
   const secteurDe = (r: any): string => {
     const adresse = String(r.address ?? '');
     const ville = String(r.city ?? '').trim().replace(/\s+/g, ' ');
@@ -123,8 +140,7 @@ export default async function RoadshowPage({
     }
     if (/boulogne/i.test(ville) || /92100/.test(adresse)) return 'Boulogne';
     if (!ville) return 'Autres';
-    const nom = ville.replace(/\s*\(.*\)\s*$/, '').split(/[-\s]/)[0];
-    return nom.charAt(0).toUpperCase() + nom.slice(1).toLowerCase();
+    return nomDeVille(ville.replace(/\s*\(.*\)\s*$/, ''));
   };
 
   // Les arrondissements dans l'ordre (1er → 20e), puis les autres villes.
