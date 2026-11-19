@@ -65,8 +65,14 @@ export default async function CrmVenuePage({
   // ajoutait quatre allers-retours Supabase en serie avant le premier pixel.
   // Elles partent ensemble, la page attend la plus lente et non leur somme.
   const depuis30Jours = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-  const [{ data: notes }, { data: venue }, { data: orders }, { data: menuRows }, { data: membres }] =
-    await Promise.all([
+  const [
+    { data: notes },
+    { data: venue },
+    { data: orders },
+    { data: menuRows },
+    { data: membres },
+    { data: signatures },
+  ] = await Promise.all([
       service
         .from('crm_notes')
         .select('id, author_email, body, stage_from, stage_to, kind, created_at')
@@ -110,6 +116,15 @@ export default async function CrmVenuePage({
             .eq('group_id', c.id)
             .order('name')
         : Promise.resolve({ data: [] as any[] }),
+      // Les contrats envoyes a la signature, et celui qui a ete signe. On ne
+      // lit jamais `pdf_base64` ici : le document pese plusieurs centaines de
+      // kilo-octets et la page n'a besoin que de savoir qu'il existe.
+      service
+        .from('contrat_signatures')
+        .select('id, destinataire_email, signataire_attendu, envoye_le, signe_le, signe_par, annule_le')
+        .eq('crm_venue_id', c.id)
+        .is('annule_le', null)
+        .order('envoye_le', { ascending: false }),
     ]);
 
   const servedCount = (orders ?? []).length;
@@ -340,6 +355,45 @@ export default async function CrmVenuePage({
               </form>
             )}
           </div>
+
+          {/* Le document lui-meme. Une date de signature sans le PDF qui va
+              avec n'est pas un suivi : au renouvellement, c'est le contrat
+              qu'on relit, pas la date. Celui-ci est celui qui a ete signe,
+              page de preuve comprise — pas une regeneration d'aujourd'hui. */}
+          {(signatures ?? []).length > 0 && (
+            <div className="w-full space-y-2 border-t hairline pt-4">
+              {(signatures ?? []).map((sig: any) => (
+                <div
+                  key={sig.id}
+                  className="flex flex-wrap items-center justify-between gap-3 text-sm"
+                >
+                  <p className="text-bone-dim">
+                    {sig.signe_le ? (
+                      <>
+                        <span className="text-emerald-300">Contrat signé</span> par{' '}
+                        {sig.signe_par} le{' '}
+                        {new Date(sig.signe_le).toLocaleDateString('fr-FR')}
+                      </>
+                    ) : (
+                      <>
+                        Envoyé à {sig.destinataire_email} le{' '}
+                        {new Date(sig.envoye_le).toLocaleDateString('fr-FR')} —{' '}
+                        <span className="text-bone-faint">en attente de signature</span>
+                      </>
+                    )}
+                  </p>
+                  <a
+                    href={`/api/admin/contrat/signe?id=${sig.id}`}
+                    target="_blank"
+                    rel="noopener"
+                    className="flex min-h-[40px] items-center rounded-full border hairline px-5 text-xs text-bone hover:border-brass/50 hover:text-brass"
+                  >
+                    {sig.signe_le ? 'Télécharger le PDF signé' : 'Voir le PDF envoyé'}
+                  </a>
+                </div>
+              ))}
+            </div>
+          )}
         </section>
           </>
         )}
