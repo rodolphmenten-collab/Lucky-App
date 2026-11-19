@@ -106,7 +106,11 @@ export default async function VenuePage({ params }: { params: { slug: string } }
         <div className="relative w-full px-6 pb-6">
           <p className="font-mono text-xs uppercase tracking-[0.3em] text-brass">{venue.city}</p>
           <h1 className="mt-2 font-display text-4xl italic text-bone">{venue.name}</h1>
-          <PeopleCountLine peopleHere={counts?.people_here ?? 0} openToMeeting={counts?.open_to_meeting ?? 0} />
+          <PeopleCountLine
+            venueSlug={venue.slug}
+            peopleHere={counts?.people_here ?? 0}
+            openToMeeting={counts?.open_to_meeting ?? 0}
+          />
         </div>
       </header>
 

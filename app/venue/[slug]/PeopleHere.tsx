@@ -39,7 +39,6 @@ export function PeopleHere({
   const [lastVerifiedAt, setLastVerifiedAt] = useState<string | null>(null);
   const [showReverify, setShowReverify] = useState(false);
   const [leftMessage, setLeftMessage] = useState<string | null>(null);
-  const [waveToast, setWaveToast] = useState<string | null>(null);
   const currentUserId = useRef<string | null>(null);
 
   const loadPeople = useCallback(async () => {
@@ -147,31 +146,11 @@ export function PeopleHere({
     return () => clearInterval(interval);
   }, [lastVerifiedAt]);
 
-  // Live notification the moment someone waves at you, while you're in the room.
-  useEffect(() => {
-    const channel = supabase
-      .channel(`waves:${venueId}`)
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'waves', filter: `venue_id=eq.${venueId}` },
-        async (payload) => {
-          const wave = payload.new as { to_user: string; from_user: string };
-          if (wave.to_user !== currentUserId.current) return;
-          const { data: sender } = await supabase
-            .from('profiles')
-            .select('first_name')
-            .eq('id', wave.from_user)
-            .maybeSingle();
-          setWaveToast(`${sender?.first_name ?? 'Someone'} waved at you \u{1F44B}`);
-          setTimeout(() => setWaveToast(null), 5000);
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [supabase, venueId]);
+  // L'abonnement temps reel « waves » a ete retire avec la mecanique du meme
+  // nom : ouvrir une conversation ne previent plus personne, c'est le premier
+  // message qui fait signe. Il restait un bandeau « X waved at you » en
+  // anglais, jamais traduit, qui s'affichait a chaque conversation ouverte.
+  // Les messages non lus sont signales par la pastille du bouton Messages.
 
   async function confirmStillHere() {
     if (!checkInId) return;
@@ -224,12 +203,6 @@ export function PeopleHere({
 
   return (
     <div>
-      {waveToast && (
-        <div className="fixed left-1/2 top-4 z-50 -translate-x-1/2 rounded-full bg-brass px-5 py-2.5 text-sm font-medium text-ink shadow-lg">
-          {waveToast}
-        </div>
-      )}
-
       {showReverify && (
         <div className="mb-6 flex items-center justify-between rounded-2xl border border-brass/40 bg-brass/5 px-5 py-4">
           <p className="text-sm text-bone">{t.room.stillHere}</p>
