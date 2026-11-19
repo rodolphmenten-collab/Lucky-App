@@ -2,6 +2,63 @@ export type ConsumerLang = 'en' | 'fr' | 'es';
 
 export const SUPPORTED_LANGS: ConsumerLang[] = ['en', 'fr', 'es'];
 
+/**
+ * Contractions francaises devant un nom de lieu.
+ *
+ * Les noms d'etablissements portent presque toujours leur article : « le
+ * lucky », « la Belle Equipe », « l'Entrepot », « Les Princes ». Colle dans une
+ * phrase sans precaution, cela donnait « assez proche de le lucky » et « les
+ * actualites du le lucky » — une faute que tout le monde voit, affichee au
+ * moment exact ou l'on demande a quelqu'un de faire confiance au service.
+ *
+ * Ces deux fonctions ne font que ce que fait la langue : elles contractent
+ * quand il faut, et laissent le nom tranquille quand il n'a pas d'article.
+ */
+function articleInitial(nom: string): 'le' | 'la' | 'les' | 'elision' | null {
+  const n = nom.trim().toLowerCase();
+  if (/^l[\u2019']/.test(n)) return 'elision';
+  if (/^les\s/.test(n)) return 'les';
+  if (/^le\s/.test(n)) return 'le';
+  if (/^la\s/.test(n)) return 'la';
+  return null;
+}
+
+/** « le lucky » -> « du lucky » ; « Cherine » -> « de Cherine ». */
+export function duLieu(nom: string): string {
+  const sansArticle = nom.trim().replace(/^(le|la|les)\s+/i, '');
+  switch (articleInitial(nom)) {
+    case 'le':
+      return `du ${sansArticle}`;
+    case 'les':
+      return `des ${sansArticle}`;
+    case 'la':
+      return `de la ${sansArticle}`;
+    case 'elision':
+      return `de ${nom.trim()}`;
+    default:
+      return /^[aeiouyhAEIOUYH\u00e0\u00e9\u00e8\u00ea]/.test(nom.trim())
+        ? `d\u2019${nom.trim()}`
+        : `de ${nom.trim()}`;
+  }
+}
+
+/** « le lucky » -> « au lucky » ; « Cherine » -> « a Cherine ». */
+export function auLieu(nom: string): string {
+  const sansArticle = nom.trim().replace(/^(le|la|les)\s+/i, '');
+  switch (articleInitial(nom)) {
+    case 'le':
+      return `au ${sansArticle}`;
+    case 'les':
+      return `aux ${sansArticle}`;
+    case 'la':
+      return `\u00e0 la ${sansArticle}`;
+    case 'elision':
+      return `\u00e0 ${nom.trim()}`;
+    default:
+      return `\u00e0 ${nom.trim()}`;
+  }
+}
+
 export function detectBrowserLang(): ConsumerLang {
   if (typeof navigator === 'undefined') return 'en';
   const raw = navigator.language?.toLowerCase() ?? 'en';
@@ -247,9 +304,9 @@ const copie = {
     join: {
       title: 'Rejoindre la salle',
       subtitle: (venue: string) =>
-        `Nous confirmons que vous êtes bien à ${venue} grâce à votre position — juste une fois, juste pour vérifier. Nous ne partageons jamais votre position exacte avec qui que ce soit.`,
+        `Nous confirmons que vous êtes bien ${auLieu(venue)} grâce à votre position — juste une fois, juste pour vérifier. Nous ne partageons jamais votre position exacte avec qui que ce soit.`,
       confirming: 'Confirmation…',
-      outOfRange: (venue: string) => `Vous ne semblez pas assez proche de ${venue} pour l'instant. Rapprochez-vous et réessayez.`,
+      outOfRange: (venue: string) => `Vous ne semblez pas assez proche ${duLieu(venue)} pour l'instant. Rapprochez-vous et réessayez.`,
       noGeoSupport: 'Votre navigateur ne supporte pas la localisation — essayez un autre appareil.',
       needsLocation: 'La localisation est désactivée. Vérifiez les réglages de votre navigateur ou de votre téléphone (Confidentialité → Position) et autorisez-la pour ce site, puis réessayez.',
       locationHelpTitle: 'La localisation est désactivée',
@@ -277,7 +334,7 @@ const copie = {
       iosInstallDismiss: 'Plus tard',
     },
     suivre: {
-      label: (venue: string) => `Je veux recevoir les actualités du ${venue}`,
+      label: (venue: string) => `Je veux recevoir les actualités ${duLieu(venue)}`,
       aide: (venue: string) =>
         `${venue} recevra votre adresse e-mail et pourra vous écrire à propos de ses actualités. C'est facultatif, et vous pouvez arrêter à tout moment, ici même.`,
       actif: (venue: string) => `Vous suivez ${venue}.`,
@@ -290,7 +347,7 @@ const copie = {
       report: 'Signaler',
       block: 'Bloquer',
       justMatched: 'Vous devriez vous rencontrer.',
-      justMatchedBody: (venue: string) => `Vous êtes tous les deux à ${venue}. Dites bonjour.`,
+      justMatchedBody: (venue: string) => `Vous êtes tous les deux ${auLieu(venue)}. Dites bonjour.`,
       dismiss: 'Fermer',
       suggestOpener: '✨ Suggérer un message',
       suggesting: 'Réflexion…',
