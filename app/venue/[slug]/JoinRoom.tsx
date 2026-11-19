@@ -161,8 +161,13 @@ export function JoinRoom({
       )}
 
       <Button onClick={handleJoin} disabled={state === 'locating'} className="mt-6 w-full">
-        {state === 'locating' ? t.join.confirming : t.join.title}
+        {state === 'locating' ? t.join.confirming : t.join.cta}
       </Button>
+
+      {/* La popup du telephone est le vrai moment de bascule : elle surgit sans
+          prevenir, et beaucoup refusent par reflexe. Annoncee une ligne plus
+          tot, elle cesse d'etre une surprise et devient une etape attendue. */}
+      {state !== 'locating' && <p className="mt-3 text-[11px] leading-relaxed text-bone-faint">{t.join.promptHint}</p>}
 
       {state === 'out_of_range' && <p className="mt-4 text-xs text-brass">{t.join.outOfRange(venueName)}</p>}
       {errorMsg && <p className="mt-4 text-xs text-red-400">{errorMsg}</p>}
