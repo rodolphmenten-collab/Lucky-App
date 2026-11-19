@@ -118,7 +118,7 @@ export function RoadshowDay({
       const res = await fetch('/api/admin/geocoder', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ jour }),
+        body: JSON.stringify({ jour, ids: rows.map((r) => r.id) }),
       });
       const data = await res.json();
       if (!res.ok) {
