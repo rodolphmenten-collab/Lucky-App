@@ -18,7 +18,7 @@ export const dynamic = 'force-dynamic';
 export default async function RoadshowPage({
   searchParams,
 }: {
-  searchParams?: { jour?: string; agent?: string };
+  searchParams?: { secteur?: string; jour?: string; agent?: string };
 }) {
   const supabase = createClient();
   const {
@@ -101,38 +101,68 @@ export default async function RoadshowPage({
 
   const nomAgent = (e: string) => titreAgent(e).replace(/^Roadshow\s+/i, '');
 
-  // Une journée = une date. Le libellé vient des lieux eux-mêmes, donc
-  // déplacer un lieu d'un jour à l'autre suffit à réorganiser la tournée.
-  const days: string[] = Array.from(
-    new Set(rows.map((r: any) => String(r.roadshow_date)))
-  ).sort();
-  const labelFor = (d: string): string =>
-    (rows.find((r: any) => r.roadshow_date === d && r.roadshow_label)?.roadshow_label as
-      | string
-      | undefined) ??
-    // Dedoublonnage insensible a la casse : « Lille » et « lille » saisis le
-    // meme jour donnaient un libelle « Lille, lille ».
-    [
-      ...rows
-        .filter((r: any) => r.roadshow_date === d)
-        .map((r: any) => String(r.city ?? '').trim().replace(/\s+/g, ' '))
-        .filter(Boolean)
-        .reduce((acc: Map<string, string>, ville: string) => {
-          const cle = ville.toLowerCase();
-          if (!acc.has(cle)) acc.set(cle, ville);
-          return acc;
-        }, new Map<string, string>())
-        .values(),
-    ].join(', ');
+  /**
+   * Le secteur d'un lieu : l'arrondissement pour Paris (« 9e », « 16e »),
+   * la ville sinon (« Boulogne », « Lille »). On le lit d'abord dans le code
+   * postal de l'adresse, puis dans la ville saisie (« Paris 9e »).
+   * La tournée se découpe par secteur et non par date : un secteur se fait
+   * sur plusieurs passages, au rythme de Cédric.
+   */
+  const secteurDe = (r: any): string => {
+    const adresse = String(r.address ?? '');
+    const ville = String(r.city ?? '').trim().replace(/\s+/g, ' ');
+    const cp = adresse.match(/\b75(?:0(\d{2})|116)\b/);
+    if (cp) {
+      const n = cp[1] ? parseInt(cp[1], 10) : 16;
+      if (n >= 1 && n <= 20) return n === 1 ? '1er' : `${n}e`;
+    }
+    const arr = ville.match(/paris\s*(\d{1,2})\s*(?:e|er|ème|eme)?\b/i);
+    if (arr) {
+      const n = parseInt(arr[1], 10);
+      if (n >= 1 && n <= 20) return n === 1 ? '1er' : `${n}e`;
+    }
+    if (/boulogne/i.test(ville) || /92100/.test(adresse)) return 'Boulogne';
+    if (!ville) return 'Autres';
+    const nom = ville.replace(/\s*\(.*\)\s*$/, '').split(/[-\s]/)[0];
+    return nom.charAt(0).toUpperCase() + nom.slice(1).toLowerCase();
+  };
+
+  // Les arrondissements dans l'ordre (1er → 20e), puis les autres villes.
+  const rangSecteur = (z: string): [number, string] => {
+    const m = z.match(/^(\d{1,2})(?:e|er)$/);
+    return m ? [parseInt(m[1], 10), ''] : [100, z];
+  };
+  const days: string[] = Array.from(new Set(rows.map(secteurDe))).sort((a, b) => {
+    const [na, sa] = rangSecteur(a);
+    const [nb, sb] = rangSecteur(b);
+    return na !== nb ? na - nb : sa.localeCompare(sb, 'fr');
+  });
+
+  // Le titre d'un secteur : le libellé de tournée le plus fréquent de ses+  // lieux (« Roadshow Cédric — 9e : Galeries Lafayette → Grands Boulevards »),
+  // à défaut le secteur lui-même.
+  const labelFor = (z: string): string => {
+    const freq = new Map<string, number>();
+    for (const r of rows) {
+      if (secteurDe(r) !== z || !r.roadshow_label) continue;
+      freq.set(r.roadshow_label, (freq.get(r.roadshow_label) ?? 0) + 1);
+    }
+    const [meilleur] = [...freq.entries()].sort((a, b) => b[1] - a[1]);
+    return meilleur ? meilleur[0] : z === 'Autres' ? 'Autres lieux' : z;
+  };
 
   const todayKey = new Date().toISOString().slice(0, 10);
+  // Ouvert d'office : le secteur demandé, sinon celui qui a des lieux prévus
+  // aujourd'hui ou au plus tôt à venir, sinon le premier.
+  const prochain = rows
+    .filter((r: any) => String(r.roadshow_date) >= todayKey)
+    .sort((a: any, b: any) => String(a.roadshow_date).localeCompare(String(b.roadshow_date)))[0];
   const selected: string | null =
-    (searchParams?.jour && days.includes(searchParams.jour) ? searchParams.jour : null) ??
-    days.find((d) => d >= todayKey) ??
-    days[days.length - 1] ??
+    (searchParams?.secteur && days.includes(searchParams.secteur) ? searchParams.secteur : null) ??
+    (prochain ? secteurDe(prochain) : null) ??
+    days[0] ??
     null;
 
-  const dayRows = rows.filter((r: any) => r.roadshow_date === selected);
+  const dayRows = rows.filter((r: any) => secteurDe(r) === selected);
 
   // La première note de chaque lieu porte le « pourquoi on y va ». On la
   // remonte ici pour l'avoir sous les yeux en poussant la porte, plutôt que
@@ -217,32 +247,29 @@ export default async function RoadshowPage({
           </p>
         ) : (
           <>
-            {/* Les journées. Celle du jour, ou la prochaine, est ouverte d'office. */}
-            <nav className="mt-6 flex gap-2 overflow-x-auto pb-2" aria-label="Journées de tournée">
+            {/* Les secteurs (arrondissements, villes). */}
+            <nav className="mt-6 flex gap-2 overflow-x-auto pb-2" aria-label="Secteurs de tournée">
               {days.map((d) => {
-                const n = rows.filter((r: any) => r.roadshow_date === d).length;
-                const done = rows.filter(
-                  (r: any) => r.roadshow_date === d && r.stage !== 'prospect'
-                ).length;
+                const duSecteur = rows.filter((r: any) => secteurDe(r) === d);
+                const n = duSecteur.length;
+                const done = duSecteur.filter((r: any) => r.stage !== 'prospect').length;
                 const on = d === selected;
                 return (
                   <Link
                     key={d}
-                    href={lien(agentChoisi ? { jour: d, agent: agentChoisi } : { jour: d, agent: 'tous' })}
+                    href={lien(agentChoisi ? { secteur: d, agent: agentChoisi } : { secteur: d, agent: 'tous' })}
                     className={`min-h-[56px] shrink-0 rounded-xl border px-4 py-2 text-left transition-colors ${
                       on ? 'border-brass bg-brass/10' : 'hairline hover:border-white/30'
                     }`}
                   >
                     <span className={`block text-sm ${on ? 'text-brass' : 'text-bone'}`}>
-                      {new Date(d).toLocaleDateString('fr-FR', {
-                        weekday: 'short',
-                        day: 'numeric',
-                        month: 'short',
-                      })}
+                      {d}
                     </span>
                     <span className="block text-[11px] text-bone-faint">
                       {done}/{n}
-                      {d === todayKey ? " · aujourd'hui" : ''}
+                      {duSecteur.some((r: any) => String(r.roadshow_date) === todayKey)
+                        ? " · aujourd'hui"
+                        : ''}
                     </span>
                   </Link>
                 );
@@ -251,12 +278,7 @@ export default async function RoadshowPage({
 
             <h1 className="mt-5 font-display text-3xl italic text-bone">{labelFor(selected!)}</h1>
             <p className="mt-1 text-sm text-bone-dim">
-              {new Date(selected!).toLocaleDateString('fr-FR', {
-                weekday: 'long',
-                day: 'numeric',
-                month: 'long',
-                year: 'numeric',
-              })}
+              {dayRows.length} lieu{dayRows.length > 1 ? 'x' : ''} · {dayRows.filter((r: any) => r.stage !== 'prospect').length} visité{dayRows.filter((r: any) => r.stage !== 'prospect').length > 1 ? 's' : ''}
             </p>
 
             {/* La cle vaut la journee : sans elle, React garde le meme
@@ -274,8 +296,8 @@ export default async function RoadshowPage({
 
             <p className="mt-10 border-t hairline pt-4 text-xs leading-relaxed text-bone-faint">
               Ce que tu coches ici est écrit dans le pipeline, et ce que Julien coche, tu le vois.
-              Pour sortir un lieu de la tournée ou le déplacer d&rsquo;un jour à l&rsquo;autre,
-              ouvre sa fiche et change sa date de tournée.
+              Les lieux sont rangés par secteur, d&rsquo;après leur adresse. Pour sortir un lieu
+              de la tournée, ouvre sa fiche et efface sa date de tournée.
             </p>
           </>
         )}
