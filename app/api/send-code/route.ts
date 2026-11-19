@@ -1,6 +1,51 @@
 import { NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
 
+/**
+ * Attentes successives avant de reessayer un envoi refuse, en millisecondes.
+ *
+ * Resend plafonne a dix requetes par seconde. Ce plafond ne se voit jamais en
+ * demonstration, mais une tablee qui scanne le QR en meme temps le depasse en
+ * une fraction de seconde : lors d'un essai a quarante-quatre demandes
+ * simultanees, dix-huit personnes recevaient une erreur et non leur code.
+ *
+ * Chaque attente est tiree au hasard entre la valeur ci-dessous et le double :
+ * sans ce desordre, toutes les demandes refusees reviennent ensemble a la
+ * milliseconde pres et se font refuser ensemble. Au total, une rafale se
+ * repartit sur quelques secondes, ce qui la ramene sous le plafond.
+ */
+const ATTENTES_MS = [300, 900, 2000];
+
+/** Un refus temporaire : trop de monde en meme temps, ou un incident passager. */
+function reessayable(status: number) {
+  return status === 429 || status >= 500;
+}
+
+async function envoyerLeCode(apiKey: string, corps: unknown) {
+  let dernier = { status: 0, texte: '' };
+
+  for (let essai = 0; essai <= ATTENTES_MS.length; essai++) {
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(corps),
+    });
+
+    if (res.ok) return { envoye: true, essais: essai + 1, status: 200, texte: '' };
+
+    dernier = { status: res.status, texte: await res.text() };
+    if (!reessayable(res.status) || essai === ATTENTES_MS.length) break;
+
+    const base = ATTENTES_MS[essai];
+    await new Promise((r) => setTimeout(r, base + Math.floor(Math.random() * base)));
+  }
+
+  return { envoye: false, essais: ATTENTES_MS.length + 1, ...dernier };
+}
+
 export async function POST(request: Request) {
   const { email, venueSlug } = await request.json();
   if (!email) return NextResponse.json({ error: 'Missing email' }, { status: 400 });
@@ -42,13 +87,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Email sending is not configured (missing RESEND_API_KEY).' }, { status: 500 });
   }
 
-  const emailRes = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${resendApiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
+  const envoi = await envoyerLeCode(resendApiKey, {
       from: `${expediteur} <${fromAddress}>`,
       to: email,
       subject: `Votre code de connexion : ${code}`,
@@ -67,12 +106,24 @@ export async function POST(request: Request) {
           </p>
         </div>
       `,
-    }),
   });
 
-  if (!emailRes.ok) {
-    const errBody = await emailRes.text();
-    return NextResponse.json({ error: `Email failed to send: ${errBody}` }, { status: 500 });
+  if (!envoi.envoye) {
+    // Le message du fournisseur ne dit rien a la personne qui attend son code,
+    // et dire "erreur 429" a quelqu'un debout dans un bar ne l'aide pas. On
+    // renvoie un code que l'ecran sait traduire, et on garde le detail dans les
+    // journaux pour nous.
+    console.error('send-code: envoi refuse', envoi.status, envoi.texte.slice(0, 300));
+    const sature = reessayable(envoi.status);
+    return NextResponse.json(
+      {
+        error: sature
+          ? 'Trop de demandes en meme temps. Patientez quelques secondes et redemandez votre code.'
+          : "Nous n'avons pas pu envoyer le code. Verifiez l'adresse et reessayez.",
+        code: sature ? 'email_sature' : 'email_echec',
+      },
+      { status: sature ? 429 : 500 }
+    );
   }
 
   return NextResponse.json({ ok: true });
