@@ -16,6 +16,18 @@ import { createServiceClient } from '@/lib/supabase/server';
  */
 const ATTENTES_MS = [300, 900, 2000];
 
+/**
+ * Temps maximal que l'on s'autorise a passer en reprises, en millisecondes.
+ *
+ * La fonction serverless est coupee au bout de dix secondes. Une coupure ne
+ * renvoie rien du tout : pas de message, pas d'explication, l'ecran reste
+ * muet. Mieux vaut donc renoncer a la derniere reprise et repondre « patientez
+ * quelques secondes », qui au moins dit quoi faire. Mesure a l'appui : sur une
+ * rafale de quarante-cinq demandes simultanees, la plus lente atteignait 9,4
+ * secondes avant ce garde-fou.
+ */
+const BUDGET_REPRISES_MS = 5_500;
+
 /** Un refus temporaire : trop de monde en meme temps, ou un incident passager. */
 function reessayable(status: number) {
   return status === 429 || status >= 500;
@@ -23,6 +35,7 @@ function reessayable(status: number) {
 
 async function envoyerLeCode(apiKey: string, corps: unknown) {
   let dernier = { status: 0, texte: '' };
+  const depart = Date.now();
 
   for (let essai = 0; essai <= ATTENTES_MS.length; essai++) {
     const res = await fetch('https://api.resend.com/emails', {
@@ -40,7 +53,9 @@ async function envoyerLeCode(apiKey: string, corps: unknown) {
     if (!reessayable(res.status) || essai === ATTENTES_MS.length) break;
 
     const base = ATTENTES_MS[essai];
-    await new Promise((r) => setTimeout(r, base + Math.floor(Math.random() * base)));
+    const attente = base + Math.floor(Math.random() * base);
+    if (Date.now() - depart + attente > BUDGET_REPRISES_MS) break;
+    await new Promise((r) => setTimeout(r, attente));
   }
 
   return { envoye: false, essais: ATTENTES_MS.length + 1, ...dernier };
