@@ -35,15 +35,24 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Non autorisé' }, { status: 403 });
   }
 
-  const { jour } = await request.json().catch(() => ({}));
-  if (!jour) return NextResponse.json({ error: 'Journée manquante' }, { status: 400 });
+  // La tournée se lit par secteur (arrondissement, ville) : un secteur peut
+  // mêler plusieurs dates, donc la page envoie la liste de ses lieux. La
+  // journée seule reste acceptée pour les anciens appels.
+  const { jour, ids } = await request.json().catch(() => ({}));
+  const listeIds: string[] = Array.isArray(ids) ? ids.filter((x: unknown) => typeof x === 'string') : [];
+  if (!jour && listeIds.length === 0) {
+    return NextResponse.json({ error: 'Secteur manquant' }, { status: 400 });
+  }
 
   const service = createServiceClient();
-  const { data: lieux } = await service
+  let requeteLieux = service
     .from('crm_venues')
     .select('id, name, city, address, latitude, longitude')
-    .eq('roadshow_date', jour)
     .or('latitude.is.null,longitude.is.null');
+  requeteLieux = listeIds.length
+    ? requeteLieux.in('id', listeIds.slice(0, 200))
+    : requeteLieux.eq('roadshow_date', jour);
+  const { data: lieux } = await requeteLieux;
 
   const aTraiter = (lieux ?? []).slice(0, 40);
   const places: string[] = [];
