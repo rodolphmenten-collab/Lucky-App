@@ -21,6 +21,13 @@ export function VenueEditForm({ venue }: { venue: Venue }) {
       ? { lat: venue.latitude, lng: venue.longitude }
       : null
   );
+  // Le releve GPS ne vaut rien tant que le formulaire n'a pas ete envoye. Tant
+  // qu'on affichait « enregistree » des l'appui sur le bouton, on relevait sa
+  // position dans le lieu, on refermait l'ecran, et le point restait celui de
+  // la veille — sans que personne ne s'en doute avant qu'un client echoue a
+  // valider sa presence. On distingue donc ce qui est releve de ce qui est en
+  // base.
+  const [coordsEnregistrees, setCoordsEnregistrees] = useState(coords);
   const [locating, setLocating] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -86,10 +93,16 @@ export function VenueEditForm({ venue }: { venue: Venue }) {
     }
 
     setSaved(true);
+    setCoordsEnregistrees(coords);
     router.refresh();
   }
 
   const locationNeedsSetup = !coords;
+  const positionNonEnregistree =
+    !!coords &&
+    (!coordsEnregistrees ||
+      coordsEnregistrees.lat !== coords.lat ||
+      coordsEnregistrees.lng !== coords.lng);
 
   return (
     <main className="mx-auto min-h-screen max-w-lg px-6 py-16">
@@ -162,9 +175,19 @@ export function VenueEditForm({ venue }: { venue: Venue }) {
         <div className="rounded-2xl border hairline p-4">
           <p className="text-sm text-bone">Position de l’établissement</p>
           {coords ? (
-            <p className="mt-1 font-mono text-xs text-bone-dim">
-              {coords.lat.toFixed(5)}, {coords.lng.toFixed(5)} — enregistrée
-            </p>
+            <>
+              <p className="mt-1 font-mono text-xs text-bone-dim">
+                {coords.lat.toFixed(5)}, {coords.lng.toFixed(5)}
+              </p>
+              {positionNonEnregistree ? (
+                <p className="mt-1 text-xs text-brass">
+                  Relevée, mais pas encore enregistrée — appuyez sur « Enregistrer les
+                  modifications » en bas de la page.
+                </p>
+              ) : (
+                <p className="mt-1 text-xs text-bone-faint">Enregistrée.</p>
+              )}
+            </>
           ) : (
             <p className="mt-1 text-xs text-bone-faint">Pas encore définie.</p>
           )}
