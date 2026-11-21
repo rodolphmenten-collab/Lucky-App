@@ -28,6 +28,7 @@ export function JoinRoom({
   const [termsChecked, setTermsChecked] = useState(Boolean(termsAcceptedAt));
   const [showLocationHelp, setShowLocationHelp] = useState(false);
   const [knownDenied, setKnownDenied] = useState(false);
+  const [distance, setDistance] = useState<number | null>(null);
 
   useEffect(() => {
     if (!('permissions' in navigator)) return;
@@ -58,6 +59,7 @@ export function JoinRoom({
           return;
         }
         if (!data.withinRadius) {
+          setDistance(typeof data.distance === 'number' ? data.distance : null);
           setState('out_of_range');
           return;
         }
@@ -169,7 +171,14 @@ export function JoinRoom({
           tot, elle cesse d'etre une surprise et devient une etape attendue. */}
       {state !== 'locating' && <p className="mt-3 text-[11px] leading-relaxed text-bone-faint">{t.join.promptHint}</p>}
 
-      {state === 'out_of_range' && <p className="mt-4 text-xs text-brass">{t.join.outOfRange(venueName)}</p>}
+      {state === 'out_of_range' && (
+        <div className="mt-4 space-y-1">
+          <p className="text-xs text-brass">{t.join.outOfRange(venueName)}</p>
+          {distance !== null && (
+            <p className="text-[11px] text-bone-faint">{t.join.outOfRangeDistance(distance)}</p>
+          )}
+        </div>
+      )}
       {errorMsg && <p className="mt-4 text-xs text-red-400">{errorMsg}</p>}
 
       {showLocationHelp && (
