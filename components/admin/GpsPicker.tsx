@@ -41,6 +41,7 @@ export function GpsPicker({
   const [precision, setPrecision] = useState<number | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
   const [refusee, setRefusee] = useState(false);
+  const [releve, setReleve] = useState(false);
 
   function relever() {
     if (!('geolocation' in navigator)) {
@@ -56,6 +57,7 @@ export function GpsPicker({
         setLat(pos.coords.latitude.toFixed(6));
         setLon(pos.coords.longitude.toFixed(6));
         setPrecision(Math.round(pos.coords.accuracy));
+        setReleve(true);
         setEnCours(false);
       },
       (err) => {
@@ -142,6 +144,17 @@ export function GpsPicker({
       >
         {enCours ? 'Relevé en cours…' : 'Relever ma position actuelle'}
       </button>
+
+      {/* Le releve remplit les champs, il n'ecrit rien : tant que le formulaire
+          n'est pas envoye, le lieu garde son ancien point. Le dire ici, sous le
+          bouton, evite de repartir d'un rendez-vous en croyant la position
+          posee. */}
+      {releve && (
+        <p className="mt-3 text-xs leading-relaxed text-brass">
+          Position relevée — elle n&rsquo;est <strong>pas encore enregistrée</strong> : appuie
+          sur «&nbsp;Enregistrer les réglages&nbsp;» en bas du formulaire.
+        </p>
+      )}
 
       <p className="mt-2 text-xs leading-relaxed text-bone-faint">
         Le relevé n&rsquo;a de sens que sur place, depuis le téléphone. Sur ordinateur, la
