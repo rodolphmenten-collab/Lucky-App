@@ -26,9 +26,16 @@ export async function POST(request: Request) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
 
+  // La distance mesuree remonte jusqu'a l'ecran. Sans elle, un refus ne dit
+  // rien : « trop loin » peut vouloir dire dix metres de derive GPS comme un
+  // point de lieu reste sur une autre adresse, et les deux se corrigent
+  // autrement. Le chiffre tranche en une seconde, sur place.
+  const distance = (data as any).distance_meters;
+
   return NextResponse.json({
     checkInId: (data as any).check_in_id,
     status: (data as any).status,
     withinRadius: (data as any).within_radius,
+    distance: distance === null || distance === undefined ? null : Math.round(Number(distance)),
   });
 }
