@@ -80,8 +80,12 @@ export default function CGUUtilisateurs() {
             Les règles d'usage sont détaillées dans la{' '}
             <Link href="/legal/usage" className="text-brass underline">
               Politique d'usage acceptable
+            </Link>{' '}
+            (
+            <Link href="/legal/acceptable-use" className="text-brass underline">
+              English version
             </Link>
-            , qui fait partie intégrante des présentes CGU. En synthèse, l'Utilisateur s'engage à ne pas, à
+            ), qui fait partie intégrante des présentes CGU. En synthèse, l'Utilisateur s'engage à ne pas, à
             l'occasion de l'utilisation du Service :
           </p>
           <ul className="mt-2 list-disc space-y-1.5 pl-5">
