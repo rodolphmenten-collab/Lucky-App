@@ -10,7 +10,12 @@ export default function CGUUtilisateurs() {
       </Link>
       <p className="mt-6 font-mono text-xs uppercase tracking-[0.3em] text-brass">Conditions générales</p>
       <h1 className="mt-2 font-display text-3xl italic text-bone">Conditions Générales d'Utilisation</h1>
-      <p className="mt-3 text-xs text-bone-faint">Dernière mise à jour : {new Date().toLocaleDateString('fr-FR')}</p>
+      <p className="mt-3 text-xs text-bone-faint">
+        Dernière mise à jour : 22/11/2026 ·{' '}
+        <Link href="/legal/terms" className="text-brass underline">
+          English version
+        </Link>
+      </p>
 
       <div className="prose-legal mt-10 space-y-8 text-sm leading-relaxed text-bone-dim">
         <section>
