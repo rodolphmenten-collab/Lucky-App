@@ -19,7 +19,12 @@ export default function PolitiqueUsage() {
       </Link>
       <p className="mt-6 font-mono text-xs uppercase tracking-[0.3em] text-brass">Règles d'usage</p>
       <h1 className="mt-2 font-display text-3xl italic text-bone">Politique d'usage acceptable</h1>
-      <p className="mt-3 text-xs text-bone-faint">Dernière mise à jour : 22/11/2026</p>
+      <p className="mt-3 text-xs text-bone-faint">
+        Dernière mise à jour : 22/11/2026 ·{' '}
+        <Link href="/legal/acceptable-use" className="text-brass underline">
+          English version
+        </Link>
+      </p>
 
       <div className="prose-legal mt-10 space-y-8 text-sm leading-relaxed text-bone-dim">
         <section>
