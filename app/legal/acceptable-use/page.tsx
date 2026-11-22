@@ -37,7 +37,7 @@ export default function AcceptableUsePolicy() {
             Lucky connects people who are present at the same time in the same venue. The service only works
             if everyone feels safe using it. The rules below apply to every user, without exception, and
             supplement our{' '}
-            <Link href="/legal/utilisateurs" className="text-brass underline">
+            <Link href="/legal/terms" className="text-brass underline">
               Terms of Service
             </Link>
             . They are published by LUCKY, a French simplified joint-stock company (SAS) with a share capital
