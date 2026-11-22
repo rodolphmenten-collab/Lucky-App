@@ -19,7 +19,7 @@ export default function PolitiqueUsage() {
       </Link>
       <p className="mt-6 font-mono text-xs uppercase tracking-[0.3em] text-brass">Règles d'usage</p>
       <h1 className="mt-2 font-display text-3xl italic text-bone">Politique d'usage acceptable</h1>
-      <p className="mt-3 text-xs text-bone-faint">Dernière mise à jour : 18/11/2026</p>
+      <p className="mt-3 text-xs text-bone-faint">Dernière mise à jour : 22/11/2026</p>
 
       <div className="prose-legal mt-10 space-y-8 text-sm leading-relaxed text-bone-dim">
         <section>
@@ -58,6 +58,21 @@ export default function PolitiqueUsage() {
               sexuelle, ou pour aider, encourager, faciliter ou favoriser de tels agissements ou toute
               forme d&rsquo;abus ;
             </li>
+            <li>
+              d&rsquo;utiliser le Service pour l&rsquo;exploitation ou les abus sexuels concernant des
+              enfants (CSEA), sous quelque forme que ce soit, y compris la production, la sollicitation, la
+              détention, la diffusion ou la promotion de contenus pédocriminels (CSAM), ainsi que toute
+              tentative d&rsquo;entrer en contact avec un mineur à des fins sexuelles ;
+            </li>
+            <li>
+              de commettre, préparer, faciliter, menacer de commettre ou glorifier des violences sexuelles —
+              viol, agression sexuelle, ou tout acte sexuel imposé sans consentement libre et éclairé ;
+            </li>
+            <li>
+              de créer, demander, partager ou menacer de partager des images ou des vidéos intimes d&rsquo;une
+              personne sans son consentement, y compris des contenus générés ou modifiés par ordinateur
+              (hypertrucages) ;
+            </li>
             <li>de harceler, menacer, injurier, intimider ou importuner une autre personne ;</li>
             <li>
               d'insister auprès de quelqu'un qui ne répond pas, ou de reprendre contact après un blocage ;
@@ -95,18 +110,49 @@ export default function PolitiqueUsage() {
 
         <section>
           <div className="rounded-xl border border-brass/40 bg-brass/5 p-4">
-            <p className="text-bone">
-              <strong className="text-bone">
-                Lucky ne peut en aucun cas être utilisé à des fins de traite des êtres humains, y compris
-                l&rsquo;exploitation sexuelle, ni pour aider, encourager ou favoriser un abus.
-              </strong>{' '}
-              Tout compte pour lequel nous avons des raisons sérieuses de penser qu&rsquo;il sert à de telles
-              fins est supprimé immédiatement, sans préavis, et signalé aux autorités compétentes.
+            <p className="font-mono text-xs uppercase tracking-[0.2em] text-brass">Tolérance zéro</p>
+            <p className="mt-3 text-bone">
+              <strong className="text-bone">Lucky ne peut en aucun cas être utilisé :</strong>
             </p>
-            <p className="mt-2 italic text-bone-faint">
-              Lucky may not be used for human trafficking, including sexual exploitation, or to aid, abet
-              or encourage abuse. Any account we have serious reason to believe is used for such purposes
-              is deleted immediately, without notice, and reported to the competent authorities.
+            <ul className="mt-2 list-disc space-y-1.5 pl-5 text-bone">
+              <li>
+                à des fins de traite des êtres humains, y compris l&rsquo;exploitation sexuelle, ni pour
+                aider, encourager ou favoriser un abus ;
+              </li>
+              <li>
+                pour l&rsquo;exploitation ou les abus sexuels concernant des enfants (Child Sexual
+                Exploitation and Abuse, CSEA), sous quelque forme que ce soit, y compris la production, la
+                sollicitation, la détention, la diffusion ou la promotion de contenus pédocriminels (Child
+                Sexual Abuse Material, CSAM), ainsi que toute tentative d&rsquo;entrer en contact avec un
+                mineur à des fins sexuelles ;
+              </li>
+              <li>
+                pour commettre, préparer, faciliter, menacer de commettre ou glorifier des violences
+                sexuelles — viol, agression sexuelle, ou tout acte sexuel imposé sans consentement libre et
+                éclairé ;
+              </li>
+              <li>
+                pour créer, demander, partager ou menacer de partager des images ou des vidéos intimes
+                d&rsquo;une personne sans son consentement, y compris des contenus générés ou modifiés par
+                ordinateur (hypertrucages).
+              </li>
+            </ul>
+            <p className="mt-3 text-bone">
+              Tout compte pour lequel nous avons des raisons sérieuses de penser qu&rsquo;il sert à de telles
+              fins est supprimé immédiatement, sans préavis, et signalé aux autorités compétentes — en
+              France, la plateforme PHAROS du ministère de l&rsquo;Intérieur.
+            </p>
+            <p className="mt-4 italic text-bone-faint">
+              <strong className="not-italic text-bone-faint">Zero tolerance.</strong> Lucky may not be used:
+              for human trafficking, including sexual exploitation, or to aid, abet or encourage abuse; for
+              child sexual exploitation and abuse (CSEA) in any form, including the production, solicitation,
+              possession, distribution or promotion of child sexual abuse material (CSAM), or any attempt to
+              contact a minor for sexual purposes; to commit, prepare, facilitate, threaten or glorify sexual
+              violence — rape, sexual assault, or any sexual act imposed without free and informed consent;
+              to create, request, share or threaten to share intimate images or videos of a person without
+              their consent (non-consensual intimate imagery, including computer-generated or altered
+              content). Any account we have serious reason to believe is used for such purposes is deleted
+              immediately, without notice, and reported to the competent authorities.
             </p>
           </div>
         </section>
