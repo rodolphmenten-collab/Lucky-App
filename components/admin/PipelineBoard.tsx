@@ -64,6 +64,9 @@ function normaliserVille(v: unknown): string {
   return String(v ?? '').trim().replace(/\s+/g, ' ').toLowerCase();
 }
 
+/** Valeur du filtre pour les fiches que personne ne suit. */
+const SANS_PROPRIETAIRE = '(sans)';
+
 export function PipelineBoard({
   cards,
   setStageAction,
@@ -76,7 +79,12 @@ export function PipelineBoard({
   me: string;
 }) {
   const [rows, setRows] = useState(cards);
-  const [mineOnly, setMineOnly] = useState(false);
+  // Qui s'occupe du lieu. Avant, il n'y avait qu'un bouton « Mes lieux » :
+  // on voyait les siens ou tout le monde, jamais le portefeuille d'un seul
+  // commercial — impossible de preparer un point avec Cedric sans faire defiler
+  // trois cents cartes. La valeur vide vaut « tous », et SANS_PROPRIETAIRE
+  // rassemble les fiches que personne ne suit, qui autrement se noient.
+  const [owner, setOwner] = useState('');
   const [query, setQuery] = useState('');
   const [country, setCountry] = useState('');
   const [city, setCity] = useState('');
@@ -129,6 +137,26 @@ export function PipelineBoard({
       ) as string[],
     [rows]
   );
+  // Les proprietaires presents dans le pipeline, les plus charges d'abord :
+  // le compte dans l'intitule evite d'avoir a filtrer pour savoir si le
+  // portefeuille de quelqu'un est bien rempli.
+  const comptesParProprietaire = useMemo(() => {
+    const compte = new Map<string, number>();
+    for (const r of rows) {
+      const cle = (r.ownerEmail ?? '').trim().toLowerCase() || SANS_PROPRIETAIRE;
+      compte.set(cle, (compte.get(cle) ?? 0) + 1);
+    }
+    return compte;
+  }, [rows]);
+
+  const owners = useMemo(
+    () =>
+      [...comptesParProprietaire.entries()]
+        .sort((a, b) => b[1] - a[1])
+        .map(([email]) => email),
+    [comptesParProprietaire]
+  );
+
   const sources = useMemo(
     () => [...new Set(rows.map((r) => r.source).filter(Boolean))].sort() as string[],
     [rows]
@@ -142,7 +170,10 @@ export function PipelineBoard({
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
     return rows.filter((r) => {
-      if (mineOnly && (r.ownerEmail ?? '').toLowerCase() !== me) return false;
+      if (owner) {
+        const le = (r.ownerEmail ?? '').trim().toLowerCase();
+        if (owner === SANS_PROPRIETAIRE ? le !== '' : le !== owner) return false;
+      }
       if (country && r.country !== country) return false;
       if (city && normaliserVille(r.city) !== normaliserVille(city)) return false;
       if (category && r.category !== category) return false;
@@ -154,15 +185,15 @@ export function PipelineBoard({
         (r.contactName ?? '').toLowerCase().includes(q)
       );
     });
-  }, [rows, mineOnly, me, query, country, city, category, source]);
+  }, [rows, owner, query, country, city, category, source]);
 
-  const activeFilters = [country, city, category, source].filter(Boolean).length + (mineOnly ? 1 : 0);
+  const activeFilters = [country, city, category, source, owner].filter(Boolean).length;
   function resetFilters() {
     setCountry('');
     setCity('');
     setCategory('');
     setSource('');
-    setMineOnly(false);
+    setOwner('');
     setQuery('');
   }
 
@@ -362,11 +393,17 @@ export function PipelineBoard({
           placeholder="Chercher un lieu, une ville, un contact…"
           className="min-h-[48px] min-w-0 flex-1 rounded-full border hairline bg-transparent px-5 text-sm text-bone placeholder:text-bone-faint focus:border-brass focus:outline-none sm:max-w-sm"
         />
-        <Toggle on={mineOnly} onClick={() => setMineOnly((v) => !v)} label="Mes lieux" />
         <Toggle on={showLost} onClick={() => setShowLost((v) => !v)} label="Perdus" />
       </div>
 
       <div className="mt-2 flex flex-wrap items-center gap-2">
+        <Select
+          value={owner}
+          onChange={setOwner}
+          label="Tout le monde"
+          options={owners}
+          format={(v) => `${proprietaireLabel(v, me)} (${comptesParProprietaire.get(v) ?? 0})`}
+        />
         <Select value={country} onChange={setCountry} label="Tous pays" options={countries} format={paysLabel} />
         <Select value={city} onChange={setCity} label="Toutes villes" options={cities} />
         <Select value={category} onChange={setCategory} label="Toutes catégories" options={categories} />
@@ -603,6 +640,26 @@ function Select({
       ))}
     </select>
   );
+}
+
+/**
+ * Le nom lisible d'un proprietaire.
+ *
+ * Les fiches ne portent qu'une adresse e-mail : il n'existe pas de table de
+ * noms. On affiche donc la partie avant l'arobase, debarrassee de ses points
+ * et de ses chiffres — « dr.dessertenne.julien » devient « Dr Dessertenne
+ * Julien ». C'est approximatif, mais c'est reconnaissable d'un coup d'oeil,
+ * ce qu'une adresse complete tronquee dans un menu deroulant n'est pas.
+ */
+function proprietaireLabel(valeur: string, moi: string): string {
+  if (valeur === SANS_PROPRIETAIRE) return 'Sans propriétaire';
+  if (valeur === moi) return 'Moi';
+  const local = valeur.split('@')[0] ?? valeur;
+  return local
+    .split(/[._-]+/)
+    .filter(Boolean)
+    .map((mot) => mot.charAt(0).toUpperCase() + mot.slice(1))
+    .join(' ');
 }
 
 function Toggle({ on, onClick, label }: { on: boolean; onClick: () => void; label: string }) {
