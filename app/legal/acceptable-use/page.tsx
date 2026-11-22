@@ -26,7 +26,7 @@ export default function AcceptableUsePolicy() {
       <h1 className="mt-2 font-display text-3xl italic text-bone">Acceptable Use Policy</h1>
       <p className="mt-3 text-xs text-bone-faint">
         Last updated: 22/11/2026 ·{' '}
-        <Link href="/legal/usage" className="text-brass underline">
+        <Link href="/legal/usage?fr=1" className="text-brass underline">
           Version française
         </Link>
       </p>
@@ -225,7 +225,7 @@ export default function AcceptableUsePolicy() {
         <section>
           <p className="text-xs text-bone-faint">
             This is a translation provided for convenience. The{' '}
-            <Link href="/legal/usage" className="text-brass underline">
+            <Link href="/legal/usage?fr=1" className="text-brass underline">
               French version
             </Link>{' '}
             is the binding text; in the event of any discrepancy, the French version prevails.
