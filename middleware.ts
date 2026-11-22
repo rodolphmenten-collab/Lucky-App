@@ -19,6 +19,7 @@ import { updateSession } from '@/lib/supabase/middleware';
  */
 const VERSIONS_ANGLAISES: Record<string, string> = {
   '/legal/usage': '/legal/acceptable-use',
+  '/legal/utilisateurs': '/legal/terms',
 };
 
 const COOKIE_LANGUE = 'lucky_legal_lang';
