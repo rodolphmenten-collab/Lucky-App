@@ -80,12 +80,8 @@ export default function CGUUtilisateurs() {
             Les règles d'usage sont détaillées dans la{' '}
             <Link href="/legal/usage" className="text-brass underline">
               Politique d'usage acceptable
-            </Link>{' '}
-            (
-            <Link href="/legal/acceptable-use" className="text-brass underline">
-              English version
             </Link>
-            ), qui fait partie intégrante des présentes CGU. En synthèse, l'Utilisateur s'engage à ne pas, à
+            , qui fait partie intégrante des présentes CGU. En synthèse, l'Utilisateur s'engage à ne pas, à
             l'occasion de l'utilisation du Service :
           </p>
           <ul className="mt-2 list-disc space-y-1.5 pl-5">
@@ -147,18 +143,6 @@ export default function CGUUtilisateurs() {
               Tout compte pour lequel nous avons des raisons sérieuses de penser qu&rsquo;il sert à de telles
               fins est supprimé immédiatement, sans préavis, et signalé aux autorités compétentes — en
               France, la plateforme PHAROS du ministère de l&rsquo;Intérieur.
-            </p>
-            <p className="mt-4 italic text-bone-faint">
-              <strong className="not-italic text-bone-faint">Zero tolerance.</strong> The Service may not be
-              used: for human trafficking, including sexual exploitation, or to aid, abet or encourage abuse;
-              for child sexual exploitation and abuse (CSEA) in any form, including the production,
-              solicitation, possession, distribution or promotion of child sexual abuse material (CSAM), or
-              any attempt to contact a minor for sexual purposes; to commit, prepare, facilitate, threaten or
-              glorify sexual violence — rape, sexual assault, or any sexual act imposed without free and
-              informed consent; to create, request, share or threaten to share intimate images or videos of a
-              person without their consent (non-consensual intimate imagery, including computer-generated or
-              altered content). Any account we have serious reason to believe is used for such purposes is
-              deleted immediately, without notice, and reported to the competent authorities.
             </p>
           </div>
           <p className="mt-2">
