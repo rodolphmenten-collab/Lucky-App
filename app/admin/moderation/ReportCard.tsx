@@ -32,9 +32,17 @@ export function ReportCard({
   signalements,
   reviewAction,
   dismissAction,
+  urgent = false,
+  escaladeLe = null,
+  escaladeVers = null,
+  escaladeAction,
 }: {
   id: string;
   motif: string;
+  urgent?: boolean;
+  escaladeLe?: string | null;
+  escaladeVers?: string | null;
+  escaladeAction?: (formData: FormData) => void;
   details: string | null;
   createdAt: string;
   signale: Profil;
@@ -49,7 +57,15 @@ export function ReportCard({
   const dejaSuspendu = Boolean(signale?.suspended_at);
 
   return (
-    <div className="rounded-2xl border hairline px-5 py-4">
+    <div className={`rounded-2xl border px-5 py-4 ${urgent ? 'border-red-500/50 bg-red-500/5' : 'hairline'}`}>
+      {/* Un signalement prioritaire a deja produit ses effets avant d'arriver
+          ici. Le dire en tete evite qu'un moderateur refasse le geste, ou pire,
+          croie qu'il reste a le faire. */}
+      {urgent && (
+        <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.2em] text-red-400">
+          Prioritaire · compte suspendu et photo retirée automatiquement
+        </p>
+      )}
       <div className="flex items-start gap-3">
         {signale?.photo_url ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -70,7 +86,7 @@ export function ReportCard({
           </p>
           {signale?.job && <p className="mt-0.5 text-xs text-bone-faint">{signale.job}</p>}
 
-          <p className="mt-2 text-sm text-brass">{motif}</p>
+          <p className={`mt-2 text-sm ${urgent ? 'text-red-400' : 'text-brass'}`}>{motif}</p>
           {details && <p className="mt-1 text-xs leading-relaxed text-bone-dim">{details}</p>}
 
           <p className="mt-2 font-mono text-[11px] text-bone-faint">
@@ -83,6 +99,41 @@ export function ReportCard({
           </p>
         </div>
       </div>
+
+        {/* Transmission aux autorites. Nos CGU s'y engagent pour les contenus
+            pedocriminels : l'horodatage ici est ce qui transforme l'engagement
+            en fait verifiable. */}
+        {urgent && escaladeAction && (
+          <div className="mt-4 rounded-xl border border-red-500/30 bg-red-500/5 p-3">
+            {escaladeLe ? (
+              <p className="text-[11px] leading-relaxed text-bone-dim">
+                Transmis à <span className="text-bone">{escaladeVers}</span> le{' '}
+                {new Date(escaladeLe).toLocaleString('fr-FR')}.
+              </p>
+            ) : (
+              <form className="flex flex-wrap items-center gap-2">
+                <input type="hidden" name="reportId" value={id} />
+                <label className="text-[11px] text-bone-dim">Transmis à</label>
+                <select
+                  name="destinataire"
+                  defaultValue="PHAROS"
+                  className="min-h-[36px] rounded-full border hairline bg-ink-800 px-3 text-[11px] text-bone"
+                >
+                  <option value="PHAROS">PHAROS (ministère de l&rsquo;Intérieur)</option>
+                  <option value="Police / gendarmerie">Police ou gendarmerie</option>
+                  <option value="Procureur de la République">Procureur de la République</option>
+                </select>
+                <button
+                  formAction={escaladeAction}
+                  className="min-h-[36px] rounded-full border border-red-500/50 px-4 text-[11px] text-red-300"
+                >
+                  Enregistrer la transmission
+                </button>
+              </form>
+            )}
+          </div>
+        )}
+
 
       {confirmation === null && (
         <div className="mt-4 flex flex-wrap gap-2">

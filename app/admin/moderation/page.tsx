@@ -2,13 +2,15 @@ import { redirect } from 'next/navigation';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { isPlatformAdminEmail } from '@/lib/admin';
 import { AdminNav } from '@/components/admin/AdminNav';
-import { reviewReport, dismissReport } from '../actions';
+import { reviewReport, dismissReport, escalerSignalement } from '../actions';
 import { ReportCard } from './ReportCard';
 import { SuspendedList } from './SuspendedList';
 
 export const dynamic = 'force-dynamic';
 
 const MOTIFS: Record<string, string> = {
+  csae: 'Image à caractère sexuel impliquant un mineur',
+  ncii: 'Image intime diffusée sans consentement',
   inappropriate: 'Comportement inapproprié',
   harassment: 'Harcèlement ou insultes',
   fake: 'Faux profil',
@@ -26,8 +28,11 @@ export default async function ModerationPage() {
   const service = createServiceClient();
   const { data: reports } = await service
     .from('reports')
-    .select('id, reason, details, status, created_at, reporter_id, reported_id')
+    .select('id, reason, details, status, created_at, reporter_id, reported_id, priority, escalated_at, escalated_to')
     .eq('status', 'pending')
+    // Les signalements prioritaires d'abord, quelle que soit leur date : c'est
+    // le seul tri qui compte quand il y en a un dans la file.
+    .order('priority', { ascending: true })
     .order('created_at', { ascending: false })
     .limit(50);
 
@@ -70,6 +75,12 @@ export default async function ModerationPage() {
           Le blocage entre les deux personnes est déjà actif : il s&rsquo;applique au moment du
           signalement, sans attendre cet écran. Ce qui se décide ici, c&rsquo;est la sanction.
         </p>
+        <p className="mt-2 text-xs leading-relaxed text-bone-faint">
+          Les signalements marqués <span className="text-red-400">prioritaires</span> — image à
+          caractère sexuel impliquant un mineur, image intime diffusée sans consentement — ont déjà
+          entraîné la suspension du compte et le retrait de la photo. Il reste à confirmer le
+          contenu et à transmettre aux autorités.
+        </p>
 
         <div className="mt-4 space-y-3">
           {(reports ?? []).map((r: any) => (
@@ -77,6 +88,10 @@ export default async function ModerationPage() {
               key={r.id}
               id={r.id}
               motif={MOTIFS[r.reason] ?? r.reason}
+              urgent={r.priority === 'urgent'}
+              escaladeLe={r.escalated_at}
+              escaladeVers={r.escalated_to}
+              escaladeAction={escalerSignalement}
               details={r.details}
               createdAt={r.created_at}
               signale={parId.get(r.reported_id) ?? null}
