@@ -477,6 +477,33 @@ export async function reviewReport(formData: FormData) {
   revalidatePath('/admin/moderation');
 }
 
+/**
+ * Trace du signalement aux autorites.
+ *
+ * Nos documents publics s'engagent a signaler les contenus pedocriminels aux
+ * autorites competentes. Un engagement qui ne laisse aucune trace n'en est pas
+ * un : si on nous demande un jour ce qui a ete transmis, il faut pouvoir le
+ * montrer. Cet horodatage, c'est cette preuve — qui a transmis, a qui, quand.
+ */
+export async function escalerSignalement(formData: FormData) {
+  const user = await requireAdmin();
+  if (!user) return;
+  const id = formData.get('reportId') as string;
+  const destinataire = ((formData.get('destinataire') as string) || '').trim();
+  if (!id || !destinataire) return;
+
+  const service = createServiceClient();
+  await service
+    .from('reports')
+    .update({
+      escalated_at: new Date().toISOString(),
+      escalated_to: destinataire,
+      escalated_by: user.email,
+    })
+    .eq('id', id);
+  revalidatePath('/admin/moderation');
+}
+
 export async function dismissReport(formData: FormData) {
   const user = await requireAdmin();
   if (!user) return;
