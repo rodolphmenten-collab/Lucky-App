@@ -200,9 +200,80 @@ export default function AcceptableUsePolicy() {
             without prior warning.
           </p>
           <p className="mt-2">
-            Where the facts may amount to a criminal offence, we preserve the relevant material and may refer
-            the matter to the competent authorities. Requests from authorities are handled according to the
-            procedure described in our{' '}
+            Two breaches do not follow that path and are handled by our servers before any human
+            review: a report of a photo showing a minor in a sexual context, and a report of an
+            intimate image shared without the person&rsquo;s consent. In both cases the account is
+            suspended and the photo stops being visible at the moment of the report, the image is
+            preserved for twelve months as evidence, and the case is reviewed as a priority.
+          </p>
+
+          <div className="mt-4 overflow-hidden rounded-xl border hairline">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-white/5 text-bone-faint">
+                <tr>
+                  <th className="px-3 py-2 font-normal">Breach</th>
+                  <th className="px-3 py-2 font-normal">What we do</th>
+                  <th className="px-3 py-2 font-normal">Authorities</th>
+                </tr>
+              </thead>
+              <tbody className="text-bone-dim">
+                <tr className="border-t hairline">
+                  <td className="px-3 py-2 align-top">
+                    Child sexual exploitation and abuse (CSEA, CSAM)
+                  </td>
+                  <td className="px-3 py-2 align-top">
+                    Immediate removal of the content and immediate suspension of the account, then
+                    permanent deletion once confirmed
+                  </td>
+                  <td className="px-3 py-2 align-top text-bone">Always reported</td>
+                </tr>
+                <tr className="border-t hairline">
+                  <td className="px-3 py-2 align-top">Non-consensual intimate imagery</td>
+                  <td className="px-3 py-2 align-top">
+                    Immediate removal of the content and immediate suspension of the account, then
+                    permanent deletion once confirmed
+                  </td>
+                  <td className="px-3 py-2 align-top text-bone">Always reported</td>
+                </tr>
+                <tr className="border-t hairline">
+                  <td className="px-3 py-2 align-top">Sexual violence, human trafficking</td>
+                  <td className="px-3 py-2 align-top">
+                    Permanent deletion of the account, without notice
+                  </td>
+                  <td className="px-3 py-2 align-top text-bone">Always reported</td>
+                </tr>
+                <tr className="border-t hairline">
+                  <td className="px-3 py-2 align-top">
+                    Harassment, threats, unsolicited sexual content, impersonation, account
+                    belonging to a minor
+                  </td>
+                  <td className="px-3 py-2 align-top">
+                    Immediate deletion of the account, without prior warning
+                  </td>
+                  <td className="px-3 py-2 align-top">
+                    Referred where the facts may amount to a criminal offence
+                  </td>
+                </tr>
+                <tr className="border-t hairline">
+                  <td className="px-3 py-2 align-top">Other breaches of these rules</td>
+                  <td className="px-3 py-2 align-top">
+                    Warning, restricted access, suspension or deletion depending on seriousness and
+                    repetition
+                  </td>
+                  <td className="px-3 py-2 align-top">
+                    Referred where the facts may amount to a criminal offence
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p className="mt-4">
+            &laquo;&nbsp;Always reported&nbsp;&raquo; means that we refer the case to the competent
+            authorities as soon as the content is confirmed, without the victim having to ask — in
+            France, the Ministry of the Interior&rsquo;s PHAROS platform. We preserve the relevant
+            material and a record of that referral. Requests from authorities are handled according
+            to the procedure described in our{' '}
             <Link href="/legal/autorites" className="text-brass underline">
               law enforcement response guidelines
             </Link>
