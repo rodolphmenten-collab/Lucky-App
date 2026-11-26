@@ -23,7 +23,13 @@ export function ReportProfile({ userId, onDone }: { userId: string; onDone?: () 
 
   const c = t.chat;
 
+  // Les deux premiers motifs declenchent un retrait immediat de la photo et la
+  // suspension du compte signale, avant toute revue humaine. Ils sont en tete
+  // de liste : quelqu'un qui tombe sur une image de ce genre ne doit pas avoir
+  // a lire quatre intitules avant de trouver le bon.
   const motifs = [
+    { cle: 'csae', label: c.reportReasonCsae, urgent: true },
+    { cle: 'ncii', label: c.reportReasonNcii, urgent: true },
     { cle: 'inappropriate', label: c.reportReasonInappropriate },
     { cle: 'harassment', label: c.reportReasonHarassment },
     { cle: 'fake', label: c.reportReasonFake },
