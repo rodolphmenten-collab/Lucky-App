@@ -200,6 +200,21 @@ export default function TermsOfService() {
             to review any report and to suspend or delete, at its sole discretion, any account whose behaviour
             breaches these Terms or the law.
           </p>
+          <p className="mt-2">
+            Two measures must be distinguished: the internal sanction — warning, restriction,
+            suspension or deletion of the account — and external reporting to the competent
+            authorities. For the breaches covered by the zero-tolerance statement in Article 4,
+            reporting to the authorities is systematic and does not depend on a request from the
+            victim. For other breaches, LUCKY may refer the matter to the authorities where the facts
+            may amount to a criminal offence. What is applied to each breach is set out in section 5
+            of the{' '}
+            <Link href="/legal/acceptable-use" className="text-brass underline">
+              Acceptable Use Policy
+            </Link>
+            . A report of a photo showing a minor in a sexual context, or of an intimate image shared
+            without consent, triggers the removal of the photo and the suspension of the account
+            concerned upon receipt, before any human review.
+          </p>
         </section>
 
         <section>
