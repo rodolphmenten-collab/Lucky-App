@@ -201,8 +201,84 @@ export default function PolitiqueUsage() {
             entraînent la suppression immédiate du compte, sans avertissement préalable.
           </p>
           <p className="mt-2">
-            Lorsque les faits sont susceptibles de constituer une infraction pénale, nous conservons les
-            éléments utiles et pouvons en saisir les autorités compétentes. Les demandes émanant des autorités
+            Deux manquements ne suivent pas ce chemin et sont traités par le serveur avant toute
+            revue humaine&nbsp;: le signalement d&rsquo;une photo montrant un mineur dans un contexte
+            sexuel, et celui d&rsquo;une image intime diffusée sans le consentement de la personne.
+            Dans ces deux cas, le compte est suspendu et la photo cesse d&rsquo;être visible à
+            l&rsquo;instant du signalement, l&rsquo;image est conservée douze mois comme élément de
+            preuve, et le dossier est examiné en priorité.
+          </p>
+
+          <div className="mt-4 overflow-hidden rounded-xl border hairline">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-white/5 text-bone-faint">
+                <tr>
+                  <th className="px-3 py-2 font-normal">Manquement</th>
+                  <th className="px-3 py-2 font-normal">Ce que nous faisons</th>
+                  <th className="px-3 py-2 font-normal">Autorités</th>
+                </tr>
+              </thead>
+              <tbody className="text-bone-dim">
+                <tr className="border-t hairline">
+                  <td className="px-3 py-2 align-top">
+                    Exploitation ou abus sexuels concernant des enfants (CSEA, CSAM)
+                  </td>
+                  <td className="px-3 py-2 align-top">
+                    Retrait immédiat du contenu et suspension immédiate du compte, puis suppression
+                    définitive après confirmation
+                  </td>
+                  <td className="px-3 py-2 align-top text-bone">Signalement systématique</td>
+                </tr>
+                <tr className="border-t hairline">
+                  <td className="px-3 py-2 align-top">
+                    Image intime diffusée sans consentement
+                  </td>
+                  <td className="px-3 py-2 align-top">
+                    Retrait immédiat du contenu et suspension immédiate du compte, puis suppression
+                    définitive après confirmation
+                  </td>
+                  <td className="px-3 py-2 align-top text-bone">Signalement systématique</td>
+                </tr>
+                <tr className="border-t hairline">
+                  <td className="px-3 py-2 align-top">
+                    Violences sexuelles, traite des êtres humains
+                  </td>
+                  <td className="px-3 py-2 align-top">
+                    Suppression définitive du compte, sans préavis
+                  </td>
+                  <td className="px-3 py-2 align-top text-bone">Signalement systématique</td>
+                </tr>
+                <tr className="border-t hairline">
+                  <td className="px-3 py-2 align-top">
+                    Harcèlement, menaces, contenu sexuel non sollicité, usurpation d&rsquo;identité,
+                    compte appartenant à un mineur
+                  </td>
+                  <td className="px-3 py-2 align-top">
+                    Suppression immédiate du compte, sans avertissement préalable
+                  </td>
+                  <td className="px-3 py-2 align-top">
+                    Saisine lorsque les faits sont susceptibles de constituer une infraction
+                  </td>
+                </tr>
+                <tr className="border-t hairline">
+                  <td className="px-3 py-2 align-top">Autres manquements aux présentes règles</td>
+                  <td className="px-3 py-2 align-top">
+                    Avertissement, restriction d&rsquo;accès, suspension ou suppression selon la
+                    gravité et la répétition
+                  </td>
+                  <td className="px-3 py-2 align-top">
+                    Saisine lorsque les faits sont susceptibles de constituer une infraction
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p className="mt-4">
+            « Signalement systématique » signifie que nous transmettons le dossier aux autorités
+            compétentes dès confirmation du contenu, sans que la victime ait à le demander — en
+            France, la plateforme PHAROS du ministère de l&rsquo;Intérieur. Nous conservons les
+            éléments utiles et la trace de cette transmission. Les demandes émanant des autorités
             sont traitées selon la procédure décrite dans nos{' '}
             <Link href="/legal/autorites" className="text-brass underline">
               modalités de réponse aux autorités
