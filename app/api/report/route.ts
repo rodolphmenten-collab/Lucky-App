@@ -12,8 +12,21 @@ import { sendEmail, emailShell } from '@/lib/email';
  * même si l'app est fermée aussitôt après.
  *
  * La sanction, elle, reste humaine : le signalement part en revue, il ne
- * suspend personne automatiquement.
+ * suspend personne automatiquement — sauf pour deux motifs.
+ *
+ * Une photo montrant un mineur dans un contexte sexuel, ou l'image intime
+ * d'une personne diffusee sans son accord, ne peuvent pas rester visibles le
+ * temps qu'un humain se connecte. Pour ces deux motifs, le compte est suspendu
+ * immediatement — ce qui retire la photo de toutes les salles — et l'URL de
+ * l'image est copiee dans le signalement avant de disparaitre avec le compte,
+ * parce que sans elle on ne pourrait rien transmettre aux autorites ensuite.
+ * La revue humaine garde son role : decider de la suite, pas conditionner le
+ * retrait.
  */
+const MOTIFS_URGENTS = new Set(['csae', 'ncii']);
+
+/** Douze mois : de quoi repondre a une requisition sans garder l'image pour toujours. */
+const CONSERVATION_PREUVE_MOIS = 12;
 export async function POST(request: Request) {
   const supabase = createClient();
   const {
@@ -29,11 +42,51 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Cannot report yourself' }, { status: 400 });
   }
 
-  const { error } = await supabase
-    .from('reports')
-    .insert({ reporter_id: user.id, reported_id: reportedId, reason, details: details ?? null });
+  const urgent = MOTIFS_URGENTS.has(String(reason));
+  const service = createServiceClient();
+
+  // La photo est lue avant toute suspension : apres, le profil n'est plus
+  // lisible par les requetes ordinaires et la preuve serait perdue.
+  let photoAuSignalement: string | null = null;
+  if (urgent) {
+    const { data: vise } = await service
+      .from('profiles')
+      .select('photo_url')
+      .eq('id', reportedId)
+      .maybeSingle();
+    photoAuSignalement = vise?.photo_url ?? null;
+  }
+
+  const expiration = new Date();
+  expiration.setMonth(expiration.getMonth() + CONSERVATION_PREUVE_MOIS);
+
+  const { error } = await supabase.from('reports').insert({
+    reporter_id: user.id,
+    reported_id: reportedId,
+    reason,
+    details: details ?? null,
+    priority: urgent ? 'urgent' : 'standard',
+    photo_url_at_report: photoAuSignalement,
+    evidence_expires_at: urgent ? expiration.toISOString() : null,
+  });
 
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+
+  // Suspension immediate pour les deux motifs urgents. Un compte deja suspendu
+  // n'est pas re-suspendu : on ne reecrit pas la raison d'une decision deja
+  // prise par un moderateur.
+  if (urgent) {
+    const { error: erreurSuspension } = await service
+      .from('profiles')
+      .update({
+        suspended_at: new Date().toISOString(),
+        suspended_reason: `Signalement ${reason} — suspension automatique en attente de revue`,
+        suspended_by: 'systeme',
+      })
+      .eq('id', reportedId)
+      .is('suspended_at', null);
+    if (erreurSuspension) console.error('Signalement urgent : suspension impossible —', erreurSuspension.message);
+  }
 
   // Blocage réciproque immédiat. Le doublon n'est pas une erreur : quelqu'un
   // qui signale une personne déjà bloquée doit obtenir une réponse normale.
@@ -48,7 +101,6 @@ export async function POST(request: Request) {
   // l'écran de quelqu'un qui est en train de se protéger.
   void (async () => {
     try {
-      const service = createServiceClient();
       const [{ data: admins }, { data: signale }, { data: auteur }] = await Promise.all([
         service.from('platform_admins').select('email'),
         service.from('profiles').select('first_name, city').eq('id', reportedId).maybeSingle(),
@@ -66,15 +118,30 @@ export async function POST(request: Request) {
         </p>
         <p style="font-size:14px; line-height:1.6; margin:0 0 8px;">Motif : ${reason}</p>
         ${details ? `<p style="font-size:14px; line-height:1.6; margin:0 0 8px;">Précisions : ${details}</p>` : ''}
-        <p style="font-size:13px; color:#666; line-height:1.6; margin:16px 0 0;">
-          Le blocage est déjà actif entre ces deux personnes. Aucune suspension n'a été appliquée :
-          c'est à vous de décider.
-        </p>
+        ${
+          urgent
+            ? `<p style="font-size:14px; line-height:1.6; margin:16px 0 0; padding:12px; background:#fdecea; border-radius:8px; color:#8a1c12;">
+                 <strong>Motif à traitement prioritaire.</strong> Le compte a été suspendu
+                 automatiquement et la photo n'est plus visible. L'image a été conservée dans le
+                 signalement comme élément de preuve. À examiner sans délai, puis à transmettre
+                 aux autorités compétentes depuis l'écran de modération si le contenu est confirmé.
+               </p>`
+            : `<p style="font-size:13px; color:#666; line-height:1.6; margin:16px 0 0;">
+                 Le blocage est déjà actif entre ces deux personnes. Aucune suspension n'a été appliquée :
+                 c'est à vous de décider.
+               </p>`
+        }
       `);
 
       await Promise.all(
         destinataires.map((to: string) =>
-          sendEmail({ to, subject: 'Lucky — un profil vient d’être signalé', html: corps })
+          sendEmail({
+            to,
+            subject: urgent
+              ? 'Lucky — URGENT : signalement de contenu à caractère sexuel'
+              : 'Lucky — un profil vient d’être signalé',
+            html: corps,
+          })
         )
       );
     } catch (err) {
@@ -82,5 +149,5 @@ export async function POST(request: Request) {
     }
   })();
 
-  return NextResponse.json({ ok: true, blocked: true });
+  return NextResponse.json({ ok: true, blocked: true, suspended: urgent });
 }
