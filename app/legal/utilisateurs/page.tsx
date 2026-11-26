@@ -194,6 +194,21 @@ export default function CGUUtilisateurs() {
             LUCKY se réserve le droit d'examiner tout signalement et de suspendre ou supprimer, à sa seule
             discrétion, tout compte dont le comportement contreviendrait aux présentes CGU ou à la loi.
           </p>
+          <p className="mt-2">
+            Deux mesures doivent être distinguées : la sanction interne — avertissement, restriction,
+            suspension ou suppression du compte — et le signalement externe aux autorités compétentes.
+            Pour les manquements relevant de la tolérance zéro énoncée à l&rsquo;article 4, le
+            signalement aux autorités est systématique et ne dépend pas d&rsquo;une demande de la
+            victime. Pour les autres manquements, LUCKY peut saisir les autorités lorsque les faits
+            sont susceptibles de constituer une infraction. Le détail de ce qui est appliqué à chaque
+            manquement figure au point 5 de la{' '}
+            <Link href="/legal/usage" className="text-brass underline">
+              Politique d&rsquo;usage acceptable
+            </Link>
+            . Le signalement d&rsquo;une photo montrant un mineur dans un contexte sexuel ou
+            d&rsquo;une image intime diffusée sans consentement entraîne, dès sa réception et avant
+            toute revue humaine, le retrait de la photo et la suspension du compte visé.
+          </p>
         </section>
 
         <section>
